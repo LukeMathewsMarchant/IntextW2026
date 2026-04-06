@@ -4,7 +4,20 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Lighthouse.Web</RootNamespace>
+    <!-- Avoid name clash with Lighthouse.Web/ content folder under bin/ -->
+    <AssemblyName>LighthouseWeb</AssemblyName>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Lighthouse.Web/**/*.cs" Exclude="Lighthouse.Web/**/obj/**;Lighthouse.Web/**/bin/**" />
+    <Content Include="Lighthouse.Web/**/*.cshtml" />
+    <Content Include="Lighthouse.Web/**/*.css" />
+    <Content Include="Lighthouse.Web/wwwroot/**/*" Exclude="Lighthouse.Web/**/bin/**;Lighthouse.Web/**/obj/**" />
+    <None Include="Lighthouse.Web/appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Lighthouse.Web/appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
