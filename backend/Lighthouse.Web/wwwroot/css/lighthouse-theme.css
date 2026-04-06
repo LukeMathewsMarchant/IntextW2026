@@ -11,6 +11,9 @@
   --lh-border: #e2e8f0;
   --lh-surface: #f1f5f9;
   --lh-card: #ffffff;
+  --lh-ribbon-bg: #e8eef5;
+  --lh-ribbon-edge: 28px;
+  --lh-ribbon-content-pad: 20px;
   --lh-radius: 14px;
   --lh-radius-pill: 999px;
   --bs-primary: #5d8bf4;
@@ -24,6 +27,7 @@
   --lh-surface: #0f172a;
   --lh-card: #1e293b;
   --lh-primary-soft: #1e3a5f;
+  --lh-ribbon-bg: #1a2332;
 }
 
 html {
@@ -48,13 +52,119 @@ body.lh-body {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
+.lh-brand {
+  min-width: 0;
+}
+
+.lh-nav .lh-brand {
+  min-width: unset;
+}
+
 .lh-brand-text {
   letter-spacing: -0.02em;
 }
 
-.lh-brand-logo {
+.lh-brand-org {
+  font-size: clamp(0.9rem, 2.5vw, 1.125rem);
+  line-height: 1.2;
+  max-width: min(100%, 16rem);
+}
+
+@media (min-width: 992px) {
+  .lh-brand-org {
+    max-width: 20rem;
+  }
+}
+
+/*
+ * Nav: full-height left ribbon (soft curve into white) + main strip. Logo scales with object-fit: contain (no crop).
+ */
+.lh-nav .lh-navbar-shell.navbar {
+  --lh-nav-row: 6rem;
+  --lh-nav-logo-width: calc(var(--lh-nav-row) * 1.62);
+  --lh-nav-link-pad-x: 0.35rem;
+  --lh-nav-link-fs: 0.78rem;
+  min-height: var(--lh-nav-row);
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: stretch !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 991.98px) {
+  .lh-nav .lh-navbar-shell.navbar {
+    --lh-nav-row: 4.5rem;
+    --lh-nav-logo-width: calc(var(--lh-nav-row) * 1.55);
+  }
+}
+
+.lh-nav .lh-navbar-trail {
+  min-height: var(--lh-nav-row);
+  align-items: center;
+  box-sizing: border-box;
+  background: var(--lh-card);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lh-brand-ribbon {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  align-self: stretch;
+  margin: 0;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: calc(var(--lh-ribbon-edge) + var(--lh-ribbon-content-pad));
+  gap: 0.65rem;
+  background: var(--lh-ribbon-bg);
+  border-radius: 0 1.75rem 1.75rem 0;
+}
+
+.lh-brand-logo-frame {
+  flex: 0 0 auto;
+  width: var(--lh-nav-logo-width);
+  height: var(--lh-nav-row);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.2rem 0;
+  box-sizing: border-box;
+}
+
+.lh-brand-logo-frame .lh-brand-logo {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  object-position: left center;
   border-radius: 8px;
+}
+
+.lh-nav .lh-navbar-shell .navbar-nav .nav-link {
+  font-weight: 500;
+  color: var(--lh-ink) !important;
+  padding-left: var(--lh-nav-link-pad-x) !important;
+  padding-right: var(--lh-nav-link-pad-x) !important;
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+  font-size: var(--lh-nav-link-fs) !important;
+  border-radius: 8px;
+}
+
+.lh-nav .lh-navbar-shell .navbar-nav .nav-link:hover {
+  color: var(--lh-primary) !important;
+  background: var(--lh-primary-soft);
+}
+
+.lh-nav .lh-navbar-shell .navbar-nav .nav-link.active {
+  color: var(--lh-primary) !important;
 }
 
 .navbar .nav-link {
@@ -78,6 +188,11 @@ body.lh-body {
   padding-left: 1.25rem !important;
   padding-right: 1.25rem !important;
   font-weight: 600;
+}
+
+.lh-nav .navbar .lh-btn-donate.lh-btn-pill {
+  padding-left: 0.85rem !important;
+  padding-right: 0.85rem !important;
 }
 
 .lh-btn-donate {

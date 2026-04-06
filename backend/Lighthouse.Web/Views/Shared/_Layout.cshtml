@@ -19,15 +19,19 @@
 </head>
 <body class="d-flex flex-column min-vh-100 lh-body">
     <header class="lh-nav sticky-top">
-        <nav class="navbar navbar-expand-lg navbar-light container py-2">
-            <a class="navbar-brand d-flex align-items-center gap-2 lh-brand text-decoration-none" asp-controller="Home" asp-action="Index">
-                <img src="~/img/lighthouse-logo.png" alt="" width="40" height="40" class="lh-brand-logo" />
-                <span class="fw-bold lh-brand-text text-dark">Lighthouse</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNav">
+        <nav class="navbar navbar-expand-lg navbar-light lh-navbar-shell w-100">
+            <div class="container-fluid px-0 d-flex align-items-stretch flex-wrap">
+                <a class="lh-brand-ribbon navbar-brand lh-brand d-flex align-items-center text-decoration-none m-0 py-0" asp-controller="Home" asp-action="Index">
+                    <span class="lh-brand-logo-frame">
+                        <img src="~/img/lighthouse-logo.png" alt="Lighthouse Sanctuary" class="lh-brand-logo" />
+                    </span>
+                    <span class="fw-bold lh-brand-text text-body">Lighthouse</span>
+                </a>
+                <div class="lh-navbar-trail d-flex flex-grow-1 flex-wrap align-items-center min-w-0 ps-2 pe-3">
+                    <button class="navbar-toggler ms-auto my-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse flex-grow-1" id="mainNav">
                 <ul class="navbar-nav mx-lg-auto mb-2 mb-lg-0 align-items-lg-center">
                     <li class="nav-item"><a class="@NavClass("Home", "Index")" asp-controller="Home" asp-action="Index">Home</a></li>
                     <li class="nav-item"><a class="@NavClass("Home", "Impact")" asp-controller="Home" asp-action="Impact">Impact</a></li>
@@ -52,6 +56,8 @@
                     <a class="btn btn-primary lh-btn-pill lh-btn-donate d-inline-flex align-items-center gap-2" asp-controller="Home" asp-action="Contact">
                         <span aria-hidden="true">&#9829;</span> Donate
                     </a>
+                    </div>
+                </div>
                 </div>
             </div>
         </nav>
