@@ -14,7 +14,7 @@ export default defineConfig({
       '@webrootcss': webRootCss,
     },
   },
-  base: '/app/',
+  base: '/',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
