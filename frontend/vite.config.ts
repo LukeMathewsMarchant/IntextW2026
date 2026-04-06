@@ -33,10 +33,10 @@ export default defineConfig({
       allow: [path.resolve(__dirname, '..')],
     },
     proxy: {
-      '/api': { target: 'https://localhost:7120', secure: false },
-      '/Account': { target: 'https://localhost:7120', secure: false },
-      '/Donor': { target: 'https://localhost:7120', secure: false },
-      '/Admin': { target: 'https://localhost:7120', secure: false },
+      '/api': { target: 'http://localhost:5182' },
+      '/Account': { target: 'http://localhost:5182' },
+      '/Donor': { target: 'http://localhost:5182' },
+      '/Admin': { target: 'http://localhost:5182' },
     },
   },
 })

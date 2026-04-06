@@ -8,7 +8,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+var contentRoot = Directory.GetCurrentDirectory();
+var nestedApp = Path.Combine(contentRoot, "Lighthouse.Web");
+if (Directory.Exists(Path.Combine(nestedApp, "wwwroot")))
+    contentRoot = Path.GetFullPath(nestedApp);
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = contentRoot,
+});
 
 // Load .env from repo root (two levels up from backend/Lighthouse.Web) in Development
 if (builder.Environment.IsDevelopment())
@@ -84,7 +93,7 @@ if (builder.Environment.IsDevelopment())
     {
         options.AddPolicy("ViteDev", policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+            policy.WithOrigins("http://localhost:5173")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -93,6 +102,13 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment()
+    && connectionString.Contains("YOUR_PROJECT", StringComparison.OrdinalIgnoreCase))
+{
+    Log.Warning(
+        "ConnectionStrings__DefaultConnection still contains YOUR_PROJECT — set a real host in .env at the repo root (or use local Postgres: Host=127.0.0.1;Port=5432;...).");
+}
 
 try
 {
@@ -105,19 +121,22 @@ catch (Exception ex)
     Log.Warning(ex, "Database migration skipped or failed; ensure PostgreSQL is reachable.");
 }
 
-await DbInitializer.SeedAsync(app.Services);
+try
+{
+    await DbInitializer.SeedAsync(app.Services);
+}
+catch (Exception ex)
+{
+    Log.Warning(ex, "Database seed skipped or failed (roles/admin user); fix the connection string and restart.");
+}
 
 if (!app.Environment.IsDevelopment())
-{
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
 
 if (app.Environment.IsDevelopment())
     app.UseCors("ViteDev");
 
 app.UseSerilogRequestLogging();
-app.UseHttpsRedirection();
 
 app.UseMiddleware<ContentSecurityPolicyMiddleware>();
 

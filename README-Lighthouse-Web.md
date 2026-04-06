@@ -2,7 +2,7 @@
 
 Visual design is aligned with the reference mockups in [`UI_Examples/`](../UI_Examples) (landing page, scrolled impact section, and dashboard screens). The logo asset is copied to `backend/Lighthouse.Web/wwwroot/img/lighthouse-logo.png` for serving.
 
-This project implements the INTEX scaffold: **ASP.NET Core MVC** (controllers + Razor layouts), **React (Vite + TypeScript)** in [`frontend/`](../frontend) embedded in views, **ASP.NET Core Identity** with roles **Admin** and **Donor**, **PostgreSQL** (Supabase) using the case schema in [`database_setup/schema.sql`](database_setup/schema.sql), plus **admin audit logging**, **CSP**, **HTTPS redirection**, and **Serilog** file logs under [`backend/Lighthouse.Web/Logs`](backend/Lighthouse.Web/Logs).
+This project implements the INTEX scaffold: **ASP.NET Core MVC** (controllers + Razor layouts), **React (Vite + TypeScript)** in [`frontend/`](../frontend) embedded in views, **ASP.NET Core Identity** with roles **Admin** and **Donor**, **PostgreSQL** (Supabase) using the case schema in [`database_setup/schema.sql`](database_setup/schema.sql), plus **admin audit logging**, **CSP**, and **Serilog** file logs under [`backend/Lighthouse.Web/Logs`](backend/Lighthouse.Web/Logs).
 
 ## Prerequisites
 
@@ -24,8 +24,8 @@ In **Development**, `Program.cs` loads `.env` from the repo root. In production,
 2. Run EF migrations so **AspNet\*** tables, **`admin_audit_logs`**, and the **FK from `AspNetUsers.SupporterId` → `supporters`** exist:
 
 ```powershell
-cd backend/Lighthouse.Web
-dotnet ef database update --project Lighthouse.Web.csproj
+cd backend
+dotnet ef database update
 ```
 
 Use `dotnet tool run dotnet-ef` from the repository root if the local tool manifest is present.
@@ -36,15 +36,15 @@ Use `dotnet tool run dotnet-ef` from the repository root if the local tool manif
 
 The React app **imports Bootstrap and the backend `wwwroot/css/site.css` in `frontend/src/main.tsx`**, so **`npm run dev`** (Vite at `http://localhost:5173`) matches the design system even though that dev server does **not** use Razor `_Layout.cshtml` (which is why the UI looked unstyled before: Vite’s `index.html` had no CSS links).
 
-For the full experience (server nav, logo, auth links in the chrome), still run the ASP.NET app and browse its HTTPS URL.
+For the full experience (server nav, logo, auth links in the chrome), run the ASP.NET app and use the Vite dev URL below, or browse the API directly at `http://localhost:5182`.
 
 ## Run locally
 
-**Terminal 1 — API (HTTPS, port from launchSettings):**
+**Terminal 1 — API:**
 
 ```powershell
-cd backend/Lighthouse.Web
-dotnet run --launch-profile https
+cd backend
+dotnet run
 ```
 
 **Terminal 2 — React (optional, HMR):**
@@ -54,7 +54,7 @@ cd frontend
 npm run dev
 ```
 
-Browse the HTTPS URL from `launchSettings.json` (e.g. `https://localhost:7120`). The Vite dev server proxies `/api`, `/Account`, `/Donor`, and `/Admin` to that origin.
+Browse **`http://localhost:5173`** for the React app with hot reload. The Vite dev server proxies `/api`, `/Account`, `/Donor`, and `/Admin` to `http://localhost:5182`.
 
 **Production-style React bundle:**
 
