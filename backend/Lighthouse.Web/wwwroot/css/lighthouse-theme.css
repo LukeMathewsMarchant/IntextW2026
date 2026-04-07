@@ -64,6 +64,15 @@ body.lh-body {
   letter-spacing: -0.02em;
 }
 
+.lh-brand-wordmark {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: clamp(0.68rem, 1.5vw, 0.92rem);
+  line-height: 1.2;
+  max-width: min(14rem, 46vw);
+  text-wrap: balance;
+}
+
 .lh-brand-org {
   font-size: clamp(0.9rem, 2.5vw, 1.125rem);
   line-height: 1.2;
@@ -80,10 +89,11 @@ body.lh-body {
  * Nav: full-height left ribbon (soft curve into white) + main strip. Logo scales with object-fit: contain (no crop).
  */
 .lh-nav .lh-navbar-shell.navbar {
-  --lh-nav-row: 6rem;
-  --lh-nav-logo-width: calc(var(--lh-nav-row) * 1.62);
-  --lh-nav-link-pad-x: 0.35rem;
-  --lh-nav-link-fs: 0.78rem;
+  --lh-nav-row: 8.5rem;
+  --lh-nav-logo-width: calc(var(--lh-nav-row) * 1.82);
+  --lh-nav-link-pad-x: 0.85rem;
+  --lh-nav-link-gap: 1.05rem;
+  --lh-nav-link-fs: 0.95rem;
   min-height: var(--lh-nav-row);
   padding-top: 0 !important;
   padding-bottom: 0 !important;
@@ -93,8 +103,8 @@ body.lh-body {
 
 @media (max-width: 991.98px) {
   .lh-nav .lh-navbar-shell.navbar {
-    --lh-nav-row: 4.5rem;
-    --lh-nav-logo-width: calc(var(--lh-nav-row) * 1.55);
+    --lh-nav-row: 6.25rem;
+    --lh-nav-logo-width: calc(var(--lh-nav-row) * 1.72);
   }
 }
 
@@ -145,6 +155,12 @@ body.lh-body {
   object-fit: contain;
   object-position: left center;
   border-radius: 8px;
+}
+
+@media (min-width: 992px) {
+  .lh-nav .lh-navbar-shell .navbar-nav {
+    column-gap: var(--lh-nav-link-gap);
+  }
 }
 
 .lh-nav .lh-navbar-shell .navbar-nav .nav-link {

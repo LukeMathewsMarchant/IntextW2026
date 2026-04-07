@@ -1,6 +1,6 @@
 # Lighthouse.Web (ASP.NET Core MVC + React)
 
-Visual design is aligned with the reference mockups in [`UI_Examples/`](../UI_Examples) (landing page, scrolled impact section, and dashboard screens). The logo asset is copied to `backend/Lighthouse.Web/wwwroot/img/lighthouse-logo.png` for serving.
+Visual design is aligned with the reference mockups in [`UI_Examples/`](../UI_Examples) (landing page, scrolled impact section, and dashboard screens). The logo asset should be placed at `backend/Lighthouse.Web/wwwroot/img/Logo.png` for serving (and `frontend/public/img/Logo.png` for Vite dev).
 
 This project implements the INTEX scaffold: **ASP.NET Core MVC** (controllers + Razor layouts), **React (Vite + TypeScript)** in [`frontend/`](../frontend) embedded in views, **ASP.NET Core Identity** with roles **Admin** and **Donor**, **PostgreSQL** (Supabase) using the case schema in [`database_setup/schema.sql`](database_setup/schema.sql), plus **admin audit logging**, **CSP**, and **Serilog** file logs under [`backend/Lighthouse.Web/Logs`](backend/Lighthouse.Web/Logs).
 
