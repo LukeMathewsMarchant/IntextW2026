@@ -7,6 +7,7 @@ using Lighthouse.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Lighthouse.Web.Controllers.Api;
 
@@ -183,15 +184,55 @@ public class AdminApiController : ControllerBase
     public async Task<IActionResult> Delete(string entity, string id, CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
-        var existing = await FindTrackedAsync(entity, id, cancellationToken);
+        var normalizedEntity = entity.ToLowerInvariant();
+        var existing = await FindTrackedAsync(normalizedEntity, id, cancellationToken);
         if (existing == null)
             return NotFound();
 
         var oldJson = JsonSerializer.Serialize(existing, JsonOptions);
-        _db.Remove(existing);
-        await _db.SaveChangesAsync(cancellationToken);
-        await _audit.LogAsync(userId, "Delete", entity, id, oldJson, null, HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.TraceIdentifier, cancellationToken);
-        return NoContent();
+        try
+        {
+            if (normalizedEntity == "supporters" && existing is Supporter supporter)
+            {
+                // Delete dependent rows first so supporter delete succeeds under FK constraints.
+                var donationIds = await _db.Donations
+                    .Where(d => d.SupporterId == supporter.SupporterId)
+                    .Select(d => d.DonationId)
+                    .ToListAsync(cancellationToken);
+
+                if (donationIds.Count > 0)
+                {
+                    var allocations = await _db.DonationAllocations
+                        .Where(a => donationIds.Contains(a.DonationId))
+                        .ToListAsync(cancellationToken);
+                    if (allocations.Count > 0)
+                        _db.DonationAllocations.RemoveRange(allocations);
+
+                    var inKindItems = await _db.InKindDonationItems
+                        .Where(i => donationIds.Contains(i.DonationId))
+                        .ToListAsync(cancellationToken);
+                    if (inKindItems.Count > 0)
+                        _db.InKindDonationItems.RemoveRange(inKindItems);
+
+                    var donations = await _db.Donations
+                        .Where(d => donationIds.Contains(d.DonationId))
+                        .ToListAsync(cancellationToken);
+                    _db.Donations.RemoveRange(donations);
+                }
+            }
+
+            _db.Remove(existing);
+            await _db.SaveChangesAsync(cancellationToken);
+            await _audit.LogAsync(userId, "Delete", entity, id, oldJson, null, HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.TraceIdentifier, cancellationToken);
+            return NoContent();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException pg && pg.SqlState == "23503")
+        {
+            return Conflict(new
+            {
+                error = "Cannot delete this record because it is referenced by other records. Remove dependent records first."
+            });
+        }
     }
 
     private async Task<object?> FindTrackedAsync(string entity, string id, CancellationToken cancellationToken)
