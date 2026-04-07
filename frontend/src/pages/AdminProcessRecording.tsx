@@ -252,7 +252,7 @@ export function AdminProcessRecording() {
                     <option value="">Select resident</option>
                     {residents.map((r) => (
                       <option key={r.residentId} value={r.residentId}>
-                        {r.residentId} - {`${r.firstName ?? ''} ${r.lastName ?? ''}`.trim()}
+                        {r.residentId ?? '—'}
                       </option>
                     ))}
                   </select>
@@ -335,7 +335,7 @@ export function AdminProcessRecording() {
                   <option value="">All residents</option>
                   {residents.map((r) => (
                     <option key={r.residentId} value={r.residentId}>
-                      {r.residentId} - {`${r.firstName ?? ''} ${r.lastName ?? ''}`.trim()}
+                      {r.residentId ?? '—'}
                     </option>
                   ))}
                 </select>
