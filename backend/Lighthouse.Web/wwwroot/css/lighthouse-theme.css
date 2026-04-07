@@ -596,6 +596,25 @@ body.lh-body {
   box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.04);
 }
 
+.lh-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--lh-border);
+  background: var(--lh-card);
+  color: var(--lh-muted);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.lh-social-link:hover {
+  color: var(--lh-primary);
+  border-color: color-mix(in srgb, var(--lh-primary) 40%, var(--lh-border));
+  background: var(--lh-primary-soft);
+}
+
 /* Cookie banner (GDPR) */
 .lh-cookie-banner {
   background: rgba(15, 23, 42, 0.96);
