@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { fetchJson, type AuthMe } from '../api/client'
 
 const THEME_KEY = 'lh-theme'
@@ -10,6 +10,7 @@ function navLinkClass(active: boolean) {
 
 export function AppNav() {
   const [me, setMe] = useState<AuthMe>({ isAuthenticated: false, roles: [] })
+  const navigate = useNavigate()
 
   function applyTheme(theme: 'light' | 'dark') {
     document.documentElement.setAttribute('data-bs-theme', theme)
@@ -35,9 +36,11 @@ export function AppNav() {
     try {
       await fetchJson<void>('/api/auth/logout', { method: 'POST' })
       setMe({ isAuthenticated: false, roles: [] })
+      navigate('/', { replace: true })
     } catch {
       // If logout fails, force refresh auth state anyway.
       setMe({ isAuthenticated: false, roles: [] })
+      navigate('/', { replace: true })
     }
   }
 

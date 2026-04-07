@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppNav } from './components/AppNav'
 import { CookieBanner } from './components/CookieBanner'
+import { RequireRole } from './components/RequireRole'
 import { About } from './pages/About'
 import { AdminAnalytics } from './pages/AdminAnalytics'
 import { AdminAudit } from './pages/AdminAudit'
@@ -37,11 +38,11 @@ export default function App() {
           <Route path="/Donor" element={<DonorDashboard />} />
           <Route path="/Donor/History" element={<DonorHistory />} />
           <Route path="/Donor/Insights" element={<DonorInsights />} />
-          <Route path="/Admin" element={<AdminDashboard />} />
-          <Route path="/Admin/Crud/:entity" element={<AdminCrud />} />
-          <Route path="/Admin/Audit" element={<AdminAudit />} />
-          <Route path="/Admin/Okr" element={<AdminOkr />} />
-          <Route path="/Admin/Analytics" element={<AdminAnalytics />} />
+          <Route path="/Admin" element={<RequireRole role="Admin"><AdminDashboard /></RequireRole>} />
+          <Route path="/Admin/Crud/:entity" element={<RequireRole role="Admin"><AdminCrud /></RequireRole>} />
+          <Route path="/Admin/Audit" element={<RequireRole role="Admin"><AdminAudit /></RequireRole>} />
+          <Route path="/Admin/Okr" element={<RequireRole role="Admin"><AdminOkr /></RequireRole>} />
+          <Route path="/Admin/Analytics" element={<RequireRole role="Admin"><AdminAnalytics /></RequireRole>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
