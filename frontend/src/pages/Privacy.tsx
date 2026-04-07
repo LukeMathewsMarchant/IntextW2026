@@ -4,9 +4,7 @@ export function Privacy() {
       <h1 className="h3 mb-3">Privacy Policy</h1>
       <p className="text-secondary">Last updated: April 7, 2026</p>
 
-      <p>
-        This Privacy Policy explains how Light on a Hill Foundation ("we", "us", or "our") collects, uses, stores, and protects personal data when you use this website and related services.
-      </p>
+      <p>This Privacy Policy explains how Light on a Hill Foundation ("we", "us", or "our") handles personal data when you use this website and related services.</p>
 
       <h2 className="h5 mt-4">1. Data Controller</h2>
       <p>
@@ -20,7 +18,7 @@ export function Privacy() {
       <h2 className="h5 mt-4">2. Personal Data We Collect</h2>
       <p>Depending on your use of the site, we may collect:</p>
       <ul>
-        <li>Account data (email address, encrypted password hash, role assignments such as Donor/Admin).</li>
+        <li>Account data (email address, password hash, role assignments such as Donor/Admin).</li>
         <li>Donation form data (first name, last name, email, amount, optional notes, donation metadata).</li>
         <li>Technical and security data (request metadata, browser/user agent, cookie/session identifiers, authentication events, audit/security logs).</li>
         <li>Support or contact data you submit through site forms.</li>
