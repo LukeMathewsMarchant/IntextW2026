@@ -1,6 +1,15 @@
-export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+function getApiBaseUrl() {
   const baseUrlRaw = import.meta.env.VITE_API_URL || ''
-  const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw.slice(0, -1) : baseUrlRaw
+  return baseUrlRaw.endsWith('/') ? baseUrlRaw.slice(0, -1) : baseUrlRaw
+}
+
+export function toApiUrl(path: string) {
+  const baseUrl = getApiBaseUrl()
+  return path.startsWith('/') ? `${baseUrl}${path}` : path
+}
+
+export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const baseUrl = getApiBaseUrl()
   const finalUrl = url.startsWith('/') ? `${baseUrl}${url}` : url
   const res = await fetch(finalUrl, {
     ...init,

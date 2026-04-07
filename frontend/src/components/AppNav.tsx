@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { fetchJson, type AuthMe } from '../api/client'
+import { fetchJson, toApiUrl, type AuthMe } from '../api/client'
 
 const THEME_KEY = 'lh-theme'
 
@@ -10,6 +10,7 @@ function navLinkClass(active: boolean) {
 
 export function AppNav() {
   const [me, setMe] = useState<AuthMe>({ isAuthenticated: false, roles: [] })
+  const loginUrl = toApiUrl('/Account/Login')
 
   function applyTheme(theme: 'light' | 'dark') {
     document.documentElement.setAttribute('data-bs-theme', theme)
@@ -113,7 +114,7 @@ export function AppNav() {
                   &#9789;
                 </button>
                 {!me.isAuthenticated ? (
-                  <a className="btn btn-sm lh-btn-ghost lh-btn-pill" href="/Account/Login">
+                  <a className="btn btn-sm lh-btn-ghost lh-btn-pill" href={loginUrl}>
                     Login
                   </a>
                 ) : null}

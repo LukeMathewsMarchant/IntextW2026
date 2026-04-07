@@ -76,6 +76,8 @@ Public registration creates **Donor** accounts only. Admins are created via seed
 
 Vercel is ideal for **static frontends** and serverless Node workloads. A full **ASP.NET Core MVC** app (Razor + Kestrel) is typically hosted on **Azure App Service**, **Render**, **Railway**, or similar, with HTTPS and environment-based connection strings. You can still deploy the **Vite build** to Vercel as a static site that calls a separately hosted API (configure CORS and cookie `SameSite` appropriately), or ship the API and MVC together on a container-friendly host.
 
+If the deployed static site shows `404` for `/Account/Login`, set `VITE_API_URL` on the frontend deployment to your hosted ASP.NET base URL. The login button and API calls use that base URL in production.
+
 ## EF Core and excluded tables
 
 Domain tables from the case SQL script are mapped in EF Core but marked **excluded from migrations** so `dotnet ef` does not recreate them. Only Identity tables and `admin_audit_logs` are managed by migrations.
