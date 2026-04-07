@@ -173,11 +173,13 @@ body.lh-body {
   padding-bottom: 0.45rem !important;
   font-size: var(--lh-nav-link-fs) !important;
   border-radius: 8px;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .lh-nav .lh-navbar-shell .navbar-nav .nav-link:hover {
   color: var(--lh-primary) !important;
   background: var(--lh-primary-soft);
+  transform: translateY(-1px);
 }
 
 .lh-nav .lh-navbar-shell .navbar-nav .nav-link.active {
@@ -214,17 +216,28 @@ body.lh-body {
 
 .lh-btn-donate {
   box-shadow: 0 2px 8px rgba(93, 139, 244, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .lh-btn-donate:hover {
   background: var(--lh-primary-hover) !important;
   border-color: var(--lh-primary-hover) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(31, 47, 107, 0.28);
 }
 
 .lh-btn-ghost {
   border: 1px solid var(--lh-border);
   background: var(--lh-card);
   color: var(--lh-ink);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lh-btn-ghost:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border-color: var(--lh-primary);
+  color: var(--lh-primary);
 }
 
 .lh-theme-toggle {
@@ -300,12 +313,13 @@ body.lh-body {
   padding: 1.75rem 1.25rem;
   text-align: center;
   height: 100%;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.2s ease;
 }
 
 .lh-stat-card:hover {
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1);
   transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--lh-primary) 35%, var(--lh-border));
 }
 
 .lh-stat-icon-wrap {
@@ -416,6 +430,12 @@ body.lh-body {
   padding: 1.25rem;
   min-height: 280px;
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.lh-chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .lh-chart-placeholder {
@@ -447,6 +467,31 @@ body.lh-body {
 
 .lh-photo-lg {
   min-height: 260px;
+}
+
+/* Scroll reveal */
+.lh-reveal {
+  opacity: 0;
+  transform: translateY(20px) scale(0.995);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  will-change: opacity, transform;
+}
+
+.lh-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-reveal,
+  .lh-nav .lh-navbar-shell .navbar-nav .nav-link,
+  .lh-btn-donate,
+  .lh-btn-ghost,
+  .lh-stat-card,
+  .lh-chart-card {
+    transition: none !important;
+    transform: none !important;
+  }
 }
 
 /* Footer */

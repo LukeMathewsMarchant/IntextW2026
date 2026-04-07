@@ -18,4 +18,33 @@
       apply(current)
     })
   })
+
+  const revealSelector = "section, .card, .lh-stat-card, .lh-kpi-card, .lh-chart-card, .lh-photo-placeholder"
+  const observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible")
+          observer.unobserve(entry.target)
+        }
+      })
+    },
+    { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
+  )
+
+  function wireReveal() {
+    document.querySelectorAll(revealSelector).forEach(function (el) {
+      if (!el.classList.contains("lh-reveal") && !el.classList.contains("is-visible")) {
+        el.classList.add("lh-reveal")
+        observer.observe(el)
+      }
+    })
+  }
+
+  wireReveal()
+
+  const mutationObserver = new MutationObserver(function () {
+    wireReveal()
+  })
+  mutationObserver.observe(document.body, { childList: true, subtree: true })
 })()
