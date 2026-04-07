@@ -131,7 +131,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendIntegration", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://intext-w2026.vercel.app")
+        policy.SetIsOriginAllowed(static origin =>
+            IsAllowedFrontendOrigin(origin))
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -255,4 +256,37 @@ static IEnumerable<string> GetFallbackStaticRoots(string contentRootPath)
         if (Directory.Exists(candidate))
             yield return candidate;
     }
+}
+
+static bool IsAllowedFrontendOrigin(string? origin)
+{
+    if (string.IsNullOrWhiteSpace(origin))
+        return false;
+
+    if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+        return false;
+
+    // Local frontend dev server.
+    if ((uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+        && string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
+        && uri.Port == 5173)
+    {
+        return true;
+    }
+
+    // Production + preview deployments on Vercel for this app.
+    if (uri.Scheme == Uri.UriSchemeHttps
+        && string.Equals(uri.Host, "intext-w2026.vercel.app", StringComparison.OrdinalIgnoreCase))
+    {
+        return true;
+    }
+
+    if (uri.Scheme == Uri.UriSchemeHttps
+        && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase)
+        && uri.Host.StartsWith("intext-w2026-", StringComparison.OrdinalIgnoreCase))
+    {
+        return true;
+    }
+
+    return false;
 }

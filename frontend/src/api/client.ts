@@ -1,5 +1,6 @@
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const baseUrl = import.meta.env.VITE_API_URL || ''
+  const baseUrlRaw = import.meta.env.VITE_API_URL || ''
+  const baseUrl = baseUrlRaw.endsWith('/') ? baseUrlRaw.slice(0, -1) : baseUrlRaw
   const finalUrl = url.startsWith('/') ? `${baseUrl}${url}` : url
   const res = await fetch(finalUrl, {
     ...init,
