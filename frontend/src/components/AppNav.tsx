@@ -115,11 +115,18 @@ export function AppNav() {
                   </li>
                 ) : null}
                 {me.isAuthenticated && me.roles.includes('Admin') ? (
-                  <li className="nav-item">
-                    <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/Admin">
-                      Dashboard
-                    </NavLink>
-                  </li>
+                  <>
+                    <li className="nav-item">
+                      <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/Admin">
+                        Dashboard
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
+                      <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/Admin/DonorsContributions">
+                        Contributions
+                      </NavLink>
+                    </li>
+                  </>
                 ) : null}
               </ul>
               <div className="d-flex flex-wrap align-items-center gap-2 ms-lg-2">

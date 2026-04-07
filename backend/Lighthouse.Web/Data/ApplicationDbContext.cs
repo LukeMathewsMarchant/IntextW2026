@@ -152,6 +152,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(i => i.DonationId).HasColumnName("donation_id");
             entity.Property(i => i.ItemName).HasColumnName("item_name");
             entity.Property(i => i.ItemCategory).HasColumnName("item_category");
+            entity.Property(i => i.Quantity).HasColumnName("quantity");
             entity.Property(i => i.UnitOfMeasure).HasColumnName("unit_of_measure");
             entity.Property(i => i.EstimatedUnitValue).HasColumnName("estimated_unit_value");
             entity.Property(i => i.IntendedUse).HasColumnName("intended_use");

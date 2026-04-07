@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchJson } from '../api/client'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 type Supporter = {
   supporterId?: number
@@ -38,6 +39,14 @@ const donationTypeLabelMap: Record<number, string> = {
   2: 'Time',
   3: 'Skills',
   4: 'Social media',
+}
+
+const donationTypeValueMap: Record<string, number> = {
+  Monetary: 0,
+  InKind: 1,
+  Time: 2,
+  Skills: 3,
+  SocialMedia: 4,
 }
 
 function donationTypeLabel(value: string | number | undefined) {
@@ -87,6 +96,11 @@ export function AdminDonorsContributions() {
   const [editingSupporterEmail, setEditingSupporterEmail] = useState('')
   const [editingDonationId, setEditingDonationId] = useState<number | null>(null)
   const [editingDonationAmount, setEditingDonationAmount] = useState('')
+  const [viewMode, setViewMode] = useState<'supporters' | 'contributions'>('supporters')
+  const [showSupporterModal, setShowSupporterModal] = useState(false)
+  const [showDonationModal, setShowDonationModal] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'supporter' | 'donation'; id: number } | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -177,12 +191,15 @@ export function AdminDonorsContributions() {
       await fetchJson('/api/admin/data/supporters', {
         method: 'POST',
         body: JSON.stringify({
-          ...supporterForm,
-          supporterType: 'MonetaryDonor',
-          status: 'Active',
+          displayName: supporterForm.displayName,
+          firstName: supporterForm.firstName,
+          lastName: supporterForm.lastName,
+          email: supporterForm.email,
         }),
       })
       setSupporterForm(emptySupporter)
+      setShowSupporterModal(false)
+      setSuccessMsg('Supporter created successfully.')
       await load()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Failed to create supporter.')
@@ -209,8 +226,6 @@ export function AdminDonorsContributions() {
           ...existing,
           displayName: name,
           email: editingSupporterEmail.trim() || null,
-          supporterType: 'MonetaryDonor',
-          status: 'Active',
         }),
       })
       setEditingSupporterId(null)
@@ -253,22 +268,25 @@ export function AdminDonorsContributions() {
     try {
       setBusy(true)
       setErr(null)
+      const donationTypeValue = donationTypeValueMap[String(donationForm.donationType)] ?? 0
       await fetchJson('/api/admin/data/donations', {
         method: 'POST',
         body: JSON.stringify({
           supporterId: sid,
-          donationType: donationForm.donationType,
+          donationType: donationTypeValue,
           amount: amt,
           estimatedValue: amt,
           donationDate: new Date().toISOString().slice(0, 10),
           createdAt: new Date().toISOString(),
           currencyCode: 'USD',
-          channelSource: 'Direct',
-          impactUnit: 'pesos',
+          channelSource: 0,
+          impactUnit: 0,
           isRecurring: false,
         }),
       })
       setDonationForm(emptyDonation)
+      setShowDonationModal(false)
+      setSuccessMsg('Contribution added successfully.')
       await load()
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Failed to create donation.')
@@ -329,70 +347,31 @@ export function AdminDonorsContributions() {
       <h1 className="h3 mb-2">Donors & Contributions</h1>
       <p className="text-secondary mb-3">Supporters on this page are donor profiles. You can add/edit/delete supporters, add/edit/delete donations, and view allocations with safehouse/program labels.</p>
       {err ? <div className="alert alert-warning">{err}</div> : null}
+      {successMsg ? <div className="alert alert-success">{successMsg}</div> : null}
 
-      <div className="row g-3 mb-3">
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h2 className="h5 mb-3">Create supporter</h2>
-              <div className="row g-2">
-                <div className="col-md-6">
-                  <input className="form-control" placeholder="Display name" value={supporterForm.displayName} onChange={(e) => setSupporterForm((p) => ({ ...p, displayName: e.target.value }))} />
-                </div>
-                <div className="col-md-6">
-                  <input className="form-control" placeholder="Email" value={supporterForm.email} onChange={(e) => setSupporterForm((p) => ({ ...p, email: e.target.value }))} />
-                </div>
-                <div className="col-md-6">
-                  <input className="form-control" placeholder="First name" value={supporterForm.firstName} onChange={(e) => setSupporterForm((p) => ({ ...p, firstName: e.target.value }))} />
-                </div>
-                <div className="col-md-6">
-                  <input className="form-control" placeholder="Last name" value={supporterForm.lastName} onChange={(e) => setSupporterForm((p) => ({ ...p, lastName: e.target.value }))} />
-                </div>
-                <div className="col-12">
-                  <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={createSupporter}>
-                    Add supporter
-                  </button>
-                </div>
-              </div>
+      <div className="card border-0 shadow-sm h-100">
+        <div className="card-body">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h2 className="h5 mb-0">{viewMode === 'supporters' ? 'Supporters' : 'Contributions and allocations'}</h2>
+            <div className="d-flex flex-wrap gap-2">
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowSupporterModal(true)}>
+                Add supporter
+              </button>
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowDonationModal(true)}>
+                Add contribution
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setViewMode((m) => (m === 'supporters' ? 'contributions' : 'supporters'))}
+              >
+                {viewMode === 'supporters' ? 'View Contributions' : 'View Supporters'}
+              </button>
             </div>
           </div>
-        </div>
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h2 className="h5 mb-3">Record contribution (donation)</h2>
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <input className="form-control" placeholder="Supporter ID" value={donationForm.supporterId} onChange={(e) => setDonationForm((p) => ({ ...p, supporterId: e.target.value }))} />
-                </div>
-                <div className="col-md-4">
-                  <input className="form-control" type="number" min={1} placeholder="Amount" value={donationForm.amount} onChange={(e) => setDonationForm((p) => ({ ...p, amount: e.target.value }))} />
-                </div>
-                <div className="col-md-4">
-                  <select className="form-select" value={donationForm.donationType} onChange={(e) => setDonationForm((p) => ({ ...p, donationType: e.target.value }))}>
-                    <option value="Monetary">Monetary</option>
-                    <option value="InKind">In-kind</option>
-                    <option value="Time">Time</option>
-                    <option value="Skills">Skills</option>
-                    <option value="SocialMedia">Social media</option>
-                  </select>
-                </div>
-                <div className="col-12">
-                  <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={createDonation}>
-                    Add contribution
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="row g-3">
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h2 className="h5 mb-2">Supporters</h2>
+          {viewMode === 'supporters' ? (
+            <>
               <div className="row g-2 mb-2">
                 <div className="col-md-8">
                   <input className="form-control form-control-sm" placeholder="Search name/email" value={supporterFilter} onChange={(e) => setSupporterFilter(e.target.value)} />
@@ -455,7 +434,16 @@ export function AdminDonorsContributions() {
                                 Edit
                               </button>
                             )}
-                            <button type="button" className="btn btn-outline-danger btn-sm" disabled={busy} onClick={() => deleteSupporter(s.supporterId)}>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm"
+                              disabled={busy}
+                              onClick={() => {
+                                if (typeof s.supporterId === 'number') {
+                                  setPendingDelete({ kind: 'supporter', id: s.supporterId })
+                                }
+                              }}
+                            >
                               Delete
                             </button>
                           </div>
@@ -466,13 +454,9 @@ export function AdminDonorsContributions() {
                 </table>
               </div>
               {filteredSupporters.length === 0 ? <p className="small text-secondary mb-0">No supporter rows yet. Add one above.</p> : null}
-            </div>
-          </div>
-        </div>
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h2 className="h5 mb-2">Contributions and allocations</h2>
+            </>
+          ) : (
+            <>
               <div className="row g-2 mb-2">
                 <div className="col-md-6">
                   <select className="form-select form-select-sm" value={contributionFilter} onChange={(e) => setContributionFilter(e.target.value)}>
@@ -539,7 +523,16 @@ export function AdminDonorsContributions() {
                                 Edit
                               </button>
                             )}
-                            <button type="button" className="btn btn-outline-danger btn-sm" disabled={busy} onClick={() => deleteDonation(d.donationId)}>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm"
+                              disabled={busy}
+                              onClick={() => {
+                                if (typeof d.donationId === 'number') {
+                                  setPendingDelete({ kind: 'donation', id: d.donationId })
+                                }
+                              }}
+                            >
                               Delete
                             </button>
                           </div>
@@ -575,10 +568,110 @@ export function AdminDonorsContributions() {
                   </tbody>
                 </table>
               </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {showSupporterModal ? (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.45)', zIndex: 1050 }}>
+          <div className="card border-0 shadow-sm" style={{ width: 'min(680px, 92vw)' }}>
+            <div className="card-body">
+              <h3 className="h5 mb-3">Add supporter</h3>
+              <div className="row g-2">
+                <div className="col-md-6">
+                  <input className="form-control" placeholder="Display name" value={supporterForm.displayName} onChange={(e) => setSupporterForm((p) => ({ ...p, displayName: e.target.value }))} />
+                </div>
+                <div className="col-md-6">
+                  <input className="form-control" placeholder="Email" value={supporterForm.email} onChange={(e) => setSupporterForm((p) => ({ ...p, email: e.target.value }))} />
+                </div>
+                <div className="col-md-6">
+                  <input className="form-control" placeholder="First name" value={supporterForm.firstName} onChange={(e) => setSupporterForm((p) => ({ ...p, firstName: e.target.value }))} />
+                </div>
+                <div className="col-md-6">
+                  <input className="form-control" placeholder="Last name" value={supporterForm.lastName} onChange={(e) => setSupporterForm((p) => ({ ...p, lastName: e.target.value }))} />
+                </div>
+              </div>
+              <div className="d-flex gap-2 mt-3">
+                <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={createSupporter}>
+                  Create supporter
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  disabled={busy}
+                  onClick={() => {
+                    setShowSupporterModal(false)
+                    setSupporterForm(emptySupporter)
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : null}
+
+      {showDonationModal ? (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.45)', zIndex: 1050 }}>
+          <div className="card border-0 shadow-sm" style={{ width: 'min(680px, 92vw)' }}>
+            <div className="card-body">
+              <h3 className="h5 mb-3">Add contribution</h3>
+              <div className="row g-2">
+                <div className="col-md-4">
+                  <input className="form-control" placeholder="Supporter ID" value={donationForm.supporterId} onChange={(e) => setDonationForm((p) => ({ ...p, supporterId: e.target.value }))} />
+                </div>
+                <div className="col-md-4">
+                  <input className="form-control" type="number" min={1} placeholder="Amount" value={donationForm.amount} onChange={(e) => setDonationForm((p) => ({ ...p, amount: e.target.value }))} />
+                </div>
+                <div className="col-md-4">
+                  <select className="form-select" value={donationForm.donationType} onChange={(e) => setDonationForm((p) => ({ ...p, donationType: e.target.value }))}>
+                    <option value="Monetary">Monetary</option>
+                    <option value="InKind">In-kind</option>
+                    <option value="Time">Time</option>
+                    <option value="Skills">Skills</option>
+                    <option value="SocialMedia">Social media</option>
+                  </select>
+                </div>
+              </div>
+              <div className="d-flex gap-2 mt-3">
+                <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={createDonation}>
+                  Add contribution
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  disabled={busy}
+                  onClick={() => {
+                    setShowDonationModal(false)
+                    setDonationForm(emptyDonation)
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {pendingDelete ? (
+        <ConfirmModal
+          title="Confirm delete"
+          message="Are you sure you want to delete this record?"
+          confirmLabel="Yes, delete"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            const item = pendingDelete
+            setPendingDelete(null)
+            if (item.kind === 'supporter') {
+              void deleteSupporter(item.id)
+            } else {
+              void deleteDonation(item.id)
+            }
+          }}
+        />
+      ) : null}
     </div>
   )
 }
