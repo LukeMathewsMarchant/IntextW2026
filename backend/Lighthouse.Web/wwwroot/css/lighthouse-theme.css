@@ -679,6 +679,10 @@ body.lh-body {
   letter-spacing: -0.02em;
 }
 
+.lh-kpi-value-strong {
+  color: var(--lh-ink);
+}
+
 .lh-kpi-meta {
   font-size: 0.8rem;
   opacity: 0.9;

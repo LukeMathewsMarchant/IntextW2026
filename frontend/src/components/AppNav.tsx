@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { fetchJson, type AuthMe } from '../api/client'
 
 const THEME_KEY = 'lh-theme'
+const COOKIE_PREF_KEY = 'cookie_preferences_enabled'
 
 function navLinkClass(active: boolean) {
   return active ? 'nav-link active' : 'nav-link'
@@ -17,6 +18,12 @@ export function AppNav() {
   }
 
   useEffect(() => {
+    const canStorePrefs = localStorage.getItem(COOKIE_PREF_KEY) !== 'false'
+    if (!canStorePrefs) {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      applyTheme(prefersDark ? 'dark' : 'light')
+      return
+    }
     const stored = localStorage.getItem(THEME_KEY)
     if (stored === 'light' || stored === 'dark') {
       applyTheme(stored)
@@ -45,6 +52,11 @@ export function AppNav() {
   }
 
   function toggleTheme() {
+    if (localStorage.getItem(COOKIE_PREF_KEY) === 'false') {
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light'
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark')
+      return
+    }
     const current = (localStorage.getItem(THEME_KEY) as 'light' | 'dark' | null) ?? 'light'
     const next = current === 'dark' ? 'light' : 'dark'
     localStorage.setItem(THEME_KEY, next)

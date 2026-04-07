@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 
 const CONSENT_KEY = 'cookie_consent'
+const CONSENT_VALUE_ACCEPTED = 'accepted'
+const CONSENT_VALUE_REJECTED = 'rejected'
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
@@ -25,7 +27,7 @@ export function CookieBanner() {
     >
       <div className="container d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
         <p className="mb-0 small">
-          We use functional cookies to keep you signed in and remember your consent choice. By continuing you agree to our{' '}
+          We use essential cookies for authentication/session behavior and optional preference cookies only after consent. Review our{' '}
           <a className="link-light" href="/privacy">
             Privacy
           </a>{' '}
@@ -36,14 +38,24 @@ export function CookieBanner() {
             type="button"
             className="btn btn-light btn-sm"
             onClick={() => {
-              document.cookie = `${CONSENT_KEY}=accepted; path=/; max-age=31536000; SameSite=Lax`
+              document.cookie = `${CONSENT_KEY}=${CONSENT_VALUE_ACCEPTED}; path=/; max-age=31536000; SameSite=Lax`
+              localStorage.setItem('cookie_preferences_enabled', 'true')
               setVisible(false)
             }}
           >
-            Accept
+            Accept optional cookies
           </button>
-          <button type="button" className="btn btn-outline-light btn-sm" onClick={() => setVisible(false)}>
-            Dismiss
+          <button
+            type="button"
+            className="btn btn-outline-light btn-sm"
+            onClick={() => {
+              document.cookie = `${CONSENT_KEY}=${CONSENT_VALUE_REJECTED}; path=/; max-age=31536000; SameSite=Lax`
+              localStorage.removeItem('lh-theme')
+              localStorage.setItem('cookie_preferences_enabled', 'false')
+              setVisible(false)
+            }}
+          >
+            Reject optional cookies
           </button>
         </div>
       </div>

@@ -201,9 +201,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(r => r.InternalCode).HasColumnName("internal_code");
             entity.Property(r => r.SafehouseId).HasColumnName("safehouse_id");
             entity.Property(r => r.CaseStatus).HasColumnName("case_status");
+            entity.Property(r => r.Sex).HasColumnName("sex");
             entity.Property(r => r.DateOfBirth).HasColumnName("date_of_birth");
             entity.Property(r => r.BirthStatus).HasColumnName("birth_status");
             entity.Property(r => r.PlaceOfBirth).HasColumnName("place_of_birth");
+            entity.Property(r => r.Religion).HasColumnName("religion");
             entity.Property(r => r.CaseCategory).HasColumnName("case_category");
             entity.Property(r => r.SubCatOrphaned).HasColumnName("sub_cat_orphaned");
             entity.Property(r => r.SubCatTrafficked).HasColumnName("sub_cat_trafficked");

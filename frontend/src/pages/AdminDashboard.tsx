@@ -1,26 +1,24 @@
 import { Link } from 'react-router-dom'
-
-const entities = [
-  'users',
-  'safehouses',
-  'supporters',
-  'donations',
-  'donation_allocations',
-  'in_kind_donation_items',
-  'partners',
-  'partner_assignments',
-  'residents',
-  'education_records',
-  'health_wellbeing_records',
-  'intervention_plans',
-  'home_visitations',
-  'process_recordings',
-  'incident_reports',
-  'safehouse_monthly_metrics',
-  'public_impact_snapshots',
-]
+import { useEffect, useState } from 'react'
+import { fetchJson } from '../api/client'
 
 export function AdminDashboard() {
+  const [metrics, setMetrics] = useState<{ activeSupporters: number; totalDonationValue: number; donationsLast90Days: number } | null>(null)
+  const [residentCount, setResidentCount] = useState<number | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    Promise.all([
+      fetchJson<{ activeSupporters: number; totalDonationValue: number; donationsLast90Days: number }>('/api/admin/metrics/okr'),
+      fetchJson<unknown[]>('/api/admin/data/residents'),
+    ])
+      .then(([m, residents]) => {
+        setMetrics(m)
+        setResidentCount(Array.isArray(residents) ? residents.length : 0)
+      })
+      .catch((e: Error) => setErr(e.message))
+  }, [])
+
   return (
     <div>
       <div className="lh-dash-header">
@@ -28,27 +26,16 @@ export function AdminDashboard() {
           <h1 className="lh-dash-title h3 mb-1">Dashboard</h1>
           <p className="lh-dash-sub mb-0">Welcome back — here&apos;s what&apos;s happening today.</p>
         </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <span className="lh-search-pill small text-secondary d-none d-md-inline">&#128269; Search…</span>
-          <span className="position-relative" title="Notifications">
-            &#128276;
-            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.55rem' }}>
-              3
-            </span>
-          </span>
-          <span className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style={{ width: 36, height: 36, fontSize: '0.8rem' }}>
-            AD
-          </span>
-        </div>
       </div>
+      {err ? <div className="alert alert-warning">{err}</div> : null}
 
       <div className="lh-kpi-row">
         <div className="lh-kpi-card lh-kpi-primary">
           <div className="d-flex justify-content-between align-items-start">
             <div>
               <div className="small opacity-75">Total donations</div>
-              <div className="lh-kpi-value mt-1">$127,400</div>
-              <div className="lh-kpi-meta mt-1">+12.5% from last month</div>
+              <div className="lh-kpi-value mt-1">{metrics ? metrics.totalDonationValue.toLocaleString() : '—'}</div>
+              <div className="lh-kpi-meta mt-1">Live from current dataset</div>
             </div>
             <span className="lh-kpi-icon fs-4">&#36;</span>
           </div>
@@ -57,8 +44,8 @@ export function AdminDashboard() {
           <div className="d-flex justify-content-between align-items-start">
             <div>
               <div className="text-secondary small">Active donors</div>
-              <div className="lh-kpi-value text-dark mt-1">342</div>
-              <div className="lh-kpi-meta text-success small mt-1">+8.2% from last month</div>
+              <div className="lh-kpi-value lh-kpi-value-strong mt-1">{metrics ? metrics.activeSupporters : '—'}</div>
+              <div className="lh-kpi-meta text-success small mt-1">Current active supporters</div>
             </div>
             <span className="text-primary fs-4">&#9829;</span>
           </div>
@@ -67,8 +54,8 @@ export function AdminDashboard() {
           <div className="d-flex justify-content-between align-items-start">
             <div>
               <div className="text-secondary small">Active residents</div>
-              <div className="lh-kpi-value text-dark mt-1">47</div>
-              <div className="lh-kpi-meta text-danger small mt-1">-2.1% from last month</div>
+              <div className="lh-kpi-value lh-kpi-value-strong mt-1">{residentCount ?? '—'}</div>
+              <div className="lh-kpi-meta text-danger small mt-1">Current resident records</div>
             </div>
             <span className="text-secondary fs-4">&#128101;</span>
           </div>
@@ -76,9 +63,9 @@ export function AdminDashboard() {
         <div className="lh-kpi-card lh-kpi-success">
           <div className="d-flex justify-content-between align-items-start">
             <div>
-              <div className="small opacity-90">Donor retention</div>
-              <div className="lh-kpi-value mt-1">78%</div>
-              <div className="lh-kpi-meta mt-1">+5.3% from last month</div>
+              <div className="small opacity-90">Donations (90 days)</div>
+              <div className="lh-kpi-value mt-1">{metrics ? metrics.donationsLast90Days : '—'}</div>
+              <div className="lh-kpi-meta mt-1">Live rolling count</div>
             </div>
             <span className="lh-kpi-icon fs-4">&#128200;</span>
           </div>
@@ -89,16 +76,16 @@ export function AdminDashboard() {
         <div className="col-lg-8">
           <div className="lh-chart-card h-100">
             <div className="fw-semibold mb-1">Donation trends</div>
-            <div className="text-secondary small mb-3">Monthly totals (placeholder chart — wire to /api/admin metrics)</div>
-            <div className="lh-chart-placeholder">Chart area (Recharts)</div>
+            <div className="text-secondary small mb-3">Use Reports & Analytics for detailed trend charts.</div>
+            <div className="lh-chart-placeholder">Trend visual summary available after data import expansion</div>
           </div>
         </div>
         <div className="col-lg-4">
           <div className="lh-chart-card h-100">
             <div className="fw-semibold mb-1">Program enrollment</div>
-            <div className="text-secondary small mb-3">Residents per program</div>
+            <div className="text-secondary small mb-3">Residents per program and safehouse</div>
             <div className="lh-chart-placeholder" style={{ height: 200 }}>
-              Bar chart placeholder
+              Available after data import
             </div>
           </div>
         </div>
@@ -138,23 +125,23 @@ export function AdminDashboard() {
             <div className="fw-semibold mb-3">Quick actions</div>
             <div className="row g-2">
               <div className="col-6">
-                <Link className="btn btn-primary w-100 lh-btn-pill btn-sm" to="/Admin/Crud/supporters">
-                  Add donor
+                <Link className="btn btn-primary w-100 lh-btn-pill btn-sm" to="/Admin/DonorsContributions">
+                  Donors & contrib
                 </Link>
               </div>
               <div className="col-6">
-                <Link className="btn btn-success w-100 lh-btn-pill btn-sm" to="/Admin/Crud/residents">
-                  Case note
+                <Link className="btn btn-success w-100 lh-btn-pill btn-sm" to="/Admin/CaseloadInventory">
+                  Caseload
                 </Link>
               </div>
               <div className="col-6">
-                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/Okr">
-                  OKR report
+                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/ProcessRecording">
+                  Process notes
                 </Link>
               </div>
               <div className="col-6">
-                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/Audit">
-                  Audit log
+                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/HomeVisitationConferences">
+                  Visitations
                 </Link>
               </div>
             </div>
@@ -163,6 +150,18 @@ export function AdminDashboard() {
       </div>
 
       <div className="d-flex flex-wrap gap-2 mb-3">
+        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/DonorsContributions">
+          Donors & contributions
+        </Link>
+        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/CaseloadInventory">
+          Caseload inventory
+        </Link>
+        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/ProcessRecording">
+          Process recording
+        </Link>
+        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/HomeVisitationConferences">
+          Home visitation & conferences
+        </Link>
         <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/Audit">
           Audit log
         </Link>
@@ -174,16 +173,6 @@ export function AdminDashboard() {
         </Link>
       </div>
 
-      <h2 className="h6 text-secondary text-uppercase mb-2">Data tables</h2>
-      <div className="row g-2">
-        {entities.map((e) => (
-          <div className="col-md-4" key={e}>
-            <Link className="btn lh-btn-ghost border w-100 text-start text-truncate lh-btn-pill py-2" to={`/Admin/Crud/${e}`}>
-              {e}
-            </Link>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

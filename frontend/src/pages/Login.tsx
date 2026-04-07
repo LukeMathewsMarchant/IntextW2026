@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchJson } from '../api/client'
 
 export function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,7 +21,8 @@ export function Login() {
         method: 'POST',
         body: JSON.stringify({ email: email.trim(), password }),
       })
-      navigate('/', { replace: true })
+      const returnUrl = searchParams.get('returnUrl') || '/'
+      navigate(returnUrl, { replace: true })
       window.location.reload()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed.')

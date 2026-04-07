@@ -71,6 +71,22 @@ export function AdminOkr() {
               </table>
             </div>
           </div>
+          <div className="col-md-6">
+            <div className="card border-0 shadow-sm h-100">
+              <div className="card-body">
+                <div className="text-secondary small">Resident education progress outcomes</div>
+                <p className="mb-0 small">Available after data import.</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="card border-0 shadow-sm h-100">
+              <div className="card-body">
+                <div className="text-secondary small">Resident health and reintegration success rate</div>
+                <p className="mb-0 small">Available after data import.</p>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <p className="text-muted">Loading…</p>

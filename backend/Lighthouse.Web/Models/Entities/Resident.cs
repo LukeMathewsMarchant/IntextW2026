@@ -20,6 +20,7 @@ public class Resident
     public string CaseStatus { get; set; } = "Active";
 
     [MaxLength(1)]
+    [Column("sex")]
     public string Sex { get; set; } = "F";
 
     public DateOnly DateOfBirth { get; set; }
@@ -31,6 +32,7 @@ public class Resident
     public string? PlaceOfBirth { get; set; }
 
     [MaxLength(50)]
+    [Column("religion")]
     public string? Religion { get; set; }
 
     [MaxLength(30)]
