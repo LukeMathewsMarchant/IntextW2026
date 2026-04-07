@@ -1,9 +1,9 @@
 export function About() {
   return (
-    <article className="vstack gap-4">
+    <article className="vstack gap-3">
       <section className="card border-0 shadow-sm">
-        <div className="card-body p-4 p-lg-5">
-          <div className="row g-4 align-items-center">
+        <div className="card-body p-3 p-lg-4">
+          <div className="row g-3 align-items-center">
             <div className="col-lg-7">
               <h1 className="lh-section-title h2 mb-3">About Light on a Hill Foundation</h1>
               <p className="text-secondary mb-3">
@@ -20,7 +20,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="row g-4">
+      <section className="row g-3">
         <div className="col-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">

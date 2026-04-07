@@ -3,7 +3,7 @@ import { StatCard, IconHeart, IconHouse, IconBook, IconTrend } from '../componen
 
 export function PublicHome() {
   return (
-    <div className="vstack gap-4">
+    <div className="vstack gap-3">
       <section className="lh-hero text-center">
         <p className="lh-overline">Nonprofit organization</p>
         <h1 className="lh-hero-title">
@@ -24,7 +24,7 @@ export function PublicHome() {
         </div>
       </section>
 
-      <section className="row g-4 align-items-center">
+      <section className="row g-3 align-items-center">
         <div className="col-lg-6">
           <div className="lh-photo-placeholder lh-photo-lg">
             <span>Hero photo placeholder (community outreach image)</span>
@@ -32,7 +32,7 @@ export function PublicHome() {
         </div>
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body p-4">
+            <div className="card-body p-3 p-lg-4">
               <h2 className="h4 lh-section-title mb-3">Why Your Support Matters</h2>
               <p className="text-secondary mb-3">
                 Every contribution helps provide emergency shelter, trauma-informed care, education pathways, and practical job-readiness support.
@@ -56,10 +56,10 @@ export function PublicHome() {
         </div>
       </section>
 
-      <section id="our-impact" className="lh-impact mt-4">
+      <section id="our-impact" className="lh-impact mt-2">
         <h2 className="lh-section-title h3 text-center mb-2">Our Impact</h2>
         <p className="lh-section-sub text-center">Real numbers, real lives changed.</p>
-        <div className="row g-4">
+        <div className="row g-3">
           <div className="col-sm-6 col-lg-3">
             <StatCard icon={<IconHeart />} value="2,500+" label="Lives Impacted" />
           </div>
@@ -75,7 +75,7 @@ export function PublicHome() {
         </div>
       </section>
 
-      <section className="row g-4">
+      <section className="row g-3">
         <div className="col-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
