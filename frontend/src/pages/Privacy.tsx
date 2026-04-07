@@ -7,7 +7,7 @@ export function Privacy() {
         sanctuary application.
       </p>
       <ul>
-        <li>Data controller: Lighthouse Sanctuary (course project).</li>
+        <li>Data controller: Light on a Hill Foundation (course project).</li>
         <li>Purpose: authentication, donor insights, and administrative case tooling.</li>
         <li>Retention: follow institutional policy and Supabase project settings.</li>
       </ul>

@@ -1,5 +1,5 @@
 -- ============================================================
--- LIGHTHOUSE SANCTUARY DATABASE SCHEMA
+-- LIGHT ON A HILL FOUNDATION DATABASE SCHEMA
 -- PostgreSQL / Supabase
 -- ============================================================
 -- Run this file first, then run seed_data.sql

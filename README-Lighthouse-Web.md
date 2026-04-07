@@ -1,4 +1,4 @@
-# Lighthouse.Web (ASP.NET Core MVC + React)
+# Light on a Hill Foundation — Lighthouse.Web (ASP.NET Core MVC + React)
 
 Visual design is aligned with the reference mockups in [`UI_Examples/`](../UI_Examples) (landing page, scrolled impact section, and dashboard screens). The logo asset should be placed at `backend/Lighthouse.Web/wwwroot/img/Logo.png` for serving (and `frontend/public/img/Logo.png` for Vite dev).
 
