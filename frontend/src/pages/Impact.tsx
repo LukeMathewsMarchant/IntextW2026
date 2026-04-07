@@ -2,11 +2,11 @@ import { StatCard, IconHeart, IconHouse, IconBook, IconTrend } from '../componen
 
 export function Impact() {
   return (
-    <div className="vstack gap-4">
+    <div className="vstack gap-3">
       <section className="lh-impact">
         <h1 className="lh-section-title h2 text-center mb-2">Our Impact</h1>
         <p className="lh-section-sub text-center">Real numbers, real lives changed.</p>
-        <div className="row g-4">
+        <div className="row g-3">
           <div className="col-sm-6 col-lg-3">
             <StatCard icon={<IconHeart />} value="2,500+" label="Lives Impacted" />
           </div>
@@ -25,7 +25,7 @@ export function Impact() {
         </p>
       </section>
 
-      <section className="row g-4">
+      <section className="row g-3">
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body p-4">
