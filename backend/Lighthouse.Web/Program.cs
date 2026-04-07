@@ -196,12 +196,19 @@ app.MapControllers();
 app.MapControllerRoute("impact", "impact", new { controller = "Home", action = "Impact" });
 app.MapControllerRoute("about", "about", new { controller = "Home", action = "About" });
 app.MapControllerRoute("contact", "contact", new { controller = "Home", action = "Contact" });
+app.MapControllerRoute("donate", "donate", new { controller = "Home", action = "Donate" });
 app.MapControllerRoute("privacy", "privacy", new { controller = "Home", action = "Privacy" });
 
 app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// Allow SPA deep links (e.g., /donate, /Admin/...) to resolve to the app entry point.
+app.MapControllerRoute(
+    name: "spa-fallback",
+    pattern: "{*path:regex(^(?!api).*)}",
+    defaults: new { controller = "Home", action = "Index" });
 
 await app.RunAsync();
 
