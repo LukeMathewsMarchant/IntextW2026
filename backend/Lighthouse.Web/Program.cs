@@ -7,6 +7,7 @@ using Lighthouse.Web.Models.Identity;
 using Lighthouse.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.FileProviders;
 using Npgsql;
 using Serilog;
@@ -68,7 +69,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         npgsqlOptions.MapEnum<DonationType>("donation_type");
         npgsqlOptions.MapEnum<ChannelSource>("channel_source");
         npgsqlOptions.MapEnum<ImpactUnit>("impact_unit");
-    }));
+    })
+    // Existing schema tables are excluded from migrations in this app.
+    // Suppress this warning so startup doesn't log a misleading stack trace.
+    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -117,6 +121,7 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<DonationAnalyticsService>();
 builder.Services.AddScoped<IDonorPredictionService, DonorPredictionService>();
 builder.Services.AddScoped<OkrMetricsService>();
+builder.Services.AddScoped<IEmailCodeSender, SmtpEmailCodeSender>();
 
 builder.Services
     .AddControllersWithViews()

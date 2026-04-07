@@ -29,6 +29,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5182',
+        changeOrigin: true,
+      },
+    },
     fs: {
       allow: [path.resolve(__dirname, '..')],
     },

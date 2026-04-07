@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Lighthouse.Web.Services;
 
 namespace Lighthouse.Web.Controllers.Api;
 
@@ -17,19 +18,24 @@ public class AuthApiController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _db;
+    private readonly IEmailCodeSender _emailCodeSender;
 
     public AuthApiController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
-        ApplicationDbContext db)
+        ApplicationDbContext db,
+        IEmailCodeSender emailCodeSender)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _db = db;
+        _emailCodeSender = emailCodeSender;
     }
 
     public record LoginRequest(string Email, string Password);
+    public record TwoFactorLoginRequest(string Code, bool RememberMachine = false);
     public record RegisterRequest(string Email, string Password, string ConfirmPassword, int? SupporterId);
+    public record TwoFactorEnableRequest(string? Code = null);
 
     [HttpGet("me")]
     [AllowAnonymous]
@@ -55,11 +61,46 @@ public class AuthApiController : ControllerBase
             return Unauthorized(new { error = "Invalid login attempt." });
 
         var result = await _signInManager.PasswordSignInAsync(user, req.Password, isPersistent: true, lockoutOnFailure: true);
+        if (result.RequiresTwoFactor)
+        {
+            try
+            {
+                await SendTwoFactorCodeForCurrentChallengeAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = ex.Message });
+            }
+            return Ok(new { requiresTwoFactor = true });
+        }
+
         if (!result.Succeeded)
             return Unauthorized(new { error = "Invalid login attempt." });
 
         var roles = await _userManager.GetRolesAsync(user);
-        return Ok(new { isAuthenticated = true, name = user.Email, roles });
+        return Ok(new { isAuthenticated = true, requiresTwoFactor = false, name = user.Email, roles });
+    }
+
+    [HttpPost("login-2fa")]
+    [AllowAnonymous]
+    public async Task<IActionResult> LoginTwoFactor([FromBody] TwoFactorLoginRequest req)
+    {
+        var code = req.Code?.Replace(" ", string.Empty).Replace("-", string.Empty);
+        if (string.IsNullOrWhiteSpace(code))
+            return BadRequest(new { error = "Authentication code is required." });
+
+        var result = await _signInManager.TwoFactorSignInAsync(TokenOptions.DefaultEmailProvider, code, isPersistent: true, rememberClient: req.RememberMachine);
+        if (!result.Succeeded)
+            return Unauthorized(new { error = "Invalid authentication code." });
+
+        var user = await _signInManager.UserManager.GetUserAsync(User);
+        if (user is null)
+            user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+            return Ok(new { isAuthenticated = true, requiresTwoFactor = false, roles = Array.Empty<string>() });
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return Ok(new { isAuthenticated = true, requiresTwoFactor = false, name = user.Email, roles });
     }
 
     [HttpPost("register")]
@@ -128,5 +169,77 @@ public class AuthApiController : ControllerBase
     {
         await _signInManager.SignOutAsync();
         return NoContent();
+    }
+
+    [HttpGet("2fa/status")]
+    [Authorize]
+    public async Task<IActionResult> TwoFactorStatus()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
+
+        return Ok(new
+        {
+            enabled = user.TwoFactorEnabled,
+            email = user.Email
+        });
+    }
+
+    [HttpPost("2fa/enable")]
+    [Authorize]
+    public async Task<IActionResult> TwoFactorEnable([FromBody] TwoFactorEnableRequest? req = null)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(user.Email))
+            return BadRequest(new { error = "Account email is required for email-based 2FA." });
+        if (!_emailCodeSender.IsConfigured)
+            return BadRequest(new { error = "SMTP is not configured. Set SMTP_HOST and SMTP_FROM before enabling email 2FA." });
+
+        await _userManager.SetTwoFactorEnabledAsync(user, true);
+        return Ok(new
+        {
+            enabled = true
+        });
+    }
+
+    [HttpPost("2fa/disable")]
+    [Authorize]
+    public async Task<IActionResult> TwoFactorDisable()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
+
+        await _userManager.SetTwoFactorEnabledAsync(user, false);
+        return Ok(new { enabled = false });
+    }
+
+    [HttpPost("2fa/send-code")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SendTwoFactorCode()
+    {
+        try
+        {
+            await SendTwoFactorCodeForCurrentChallengeAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = ex.Message });
+        }
+        return NoContent();
+    }
+
+    private async Task SendTwoFactorCodeForCurrentChallengeAsync()
+    {
+        var challengeUser = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (challengeUser is null || string.IsNullOrWhiteSpace(challengeUser.Email))
+            throw new InvalidOperationException("Two-factor challenge is not in progress.");
+
+        var code = await _userManager.GenerateTwoFactorTokenAsync(challengeUser, TokenOptions.DefaultEmailProvider);
+        await _emailCodeSender.SendTwoFactorCodeAsync(challengeUser.Email, code);
     }
 }

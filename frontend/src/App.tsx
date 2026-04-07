@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppNav } from './components/AppNav'
 import { CookieBanner } from './components/CookieBanner'
 import { RequireRole } from './components/RequireRole'
+import { RequireAuth } from './components/RequireAuth'
 import { About } from './pages/About'
 import { AdminAnalytics } from './pages/AdminAnalytics'
 import { AdminAudit } from './pages/AdminAudit'
@@ -23,6 +24,7 @@ import { Impact } from './pages/Impact'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { Unauthorized } from './pages/Unauthorized'
+import { SecuritySettings } from './pages/SecuritySettings'
 import './App.css'
 
 export default function App() {
@@ -40,6 +42,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/security" element={<RequireAuth><SecuritySettings /></RequireAuth>} />
           <Route path="/Donor" element={<RequireRole role="Donor"><DonorDashboard /></RequireRole>} />
           <Route path="/Donor/History" element={<RequireRole role="Donor"><DonorHistory /></RequireRole>} />
           <Route path="/Donor/Insights" element={<RequireRole role="Donor"><DonorInsights /></RequireRole>} />

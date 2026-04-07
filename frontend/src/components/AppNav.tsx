@@ -142,9 +142,14 @@ export function AppNav() {
                     </Link>
                   </>
                 ) : (
-                  <button type="button" className="btn btn-sm lh-btn-ghost lh-btn-pill" onClick={logout}>
-                    Logout
-                  </button>
+                  <>
+                    <Link className="btn btn-sm lh-btn-ghost lh-btn-pill" to="/security">
+                      Security
+                    </Link>
+                    <button type="button" className="btn btn-sm lh-btn-ghost lh-btn-pill" onClick={logout}>
+                      Logout
+                    </button>
+                  </>
                 )}
                 <Link className="btn btn-primary lh-btn-pill lh-btn-donate d-inline-flex align-items-center gap-2" to="/donate">
                   <span aria-hidden="true">&#9829;</span> Donate
