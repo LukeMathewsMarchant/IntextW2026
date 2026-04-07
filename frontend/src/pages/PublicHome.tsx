@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { StatCard, IconHeart, IconHouse, IconBook, IconTrend } from '../components/StatCard'
 
 export function PublicHome() {
   return (
@@ -56,21 +55,57 @@ export function PublicHome() {
         </div>
       </section>
 
-      <section id="our-impact" className="lh-impact mt-2">
-        <h2 className="lh-section-title h3 text-center mb-2">Our Impact</h2>
-        <p className="lh-section-sub text-center">Real numbers, real lives changed.</p>
-        <div className="row g-3">
+      <section id="our-impact" className="lh-impact lh-impact-whatwedo mt-2">
+        <p className="lh-impact-kicker text-center mb-2">What we do</p>
+        <h2 className="lh-impact-title text-center mb-4">Provide Safety. Healing. And Empowerment</h2>
+        <div className="row g-3 g-lg-4">
           <div className="col-sm-6 col-lg-3">
-            <StatCard icon={<IconHeart />} value="2,500+" label="Lives Impacted" />
+            <article className="lh-impact-item text-center h-100">
+              <div className="lh-impact-icon-wrap lh-impact-icon-peach mx-auto mb-3">
+                <img src="/img/Safety.webp" alt="Safety support icon" className="lh-impact-icon" />
+              </div>
+              <h3 className="lh-impact-item-title">Safety</h3>
+              <p className="lh-impact-item-copy mb-2">
+                Safety is the first focus at Light on a Hill Foundation because protection is the first step to healing.
+              </p>
+              <Link className="lh-impact-item-link" to="/impact">Learn how we make kids safe</Link>
+            </article>
           </div>
           <div className="col-sm-6 col-lg-3">
-            <StatCard icon={<IconHouse />} value="12" label="Safe Houses" />
+            <article className="lh-impact-item text-center h-100">
+              <div className="lh-impact-icon-wrap lh-impact-icon-green mx-auto mb-3">
+                <img src="/img/Healing.jpg" alt="Healing and education icon" className="lh-impact-icon" />
+              </div>
+              <h3 className="lh-impact-item-title">Healing</h3>
+              <p className="lh-impact-item-copy mb-2">
+                Once a child trusts that they are safe, we guide them through emotional recovery and long-term healing.
+              </p>
+              <Link className="lh-impact-item-link" to="/impact">Learn how we help children heal</Link>
+            </article>
           </div>
           <div className="col-sm-6 col-lg-3">
-            <StatCard icon={<IconBook />} value="8" label="Active Programs" />
+            <article className="lh-impact-item text-center h-100">
+              <div className="lh-impact-icon-wrap lh-impact-icon-lilac mx-auto mb-3">
+                <img src="/img/Justice.webp" alt="Justice and advocacy icon" className="lh-impact-icon" />
+              </div>
+              <h3 className="lh-impact-item-title">Justice</h3>
+              <p className="lh-impact-item-copy mb-2">
+                We stand with children in legal and social support processes so justice is pursued with dignity and care.
+              </p>
+              <Link className="lh-impact-item-link" to="/impact">Learn how we seek justice</Link>
+            </article>
           </div>
           <div className="col-sm-6 col-lg-3">
-            <StatCard icon={<IconTrend />} value="89%" label="Success Rate" />
+            <article className="lh-impact-item text-center h-100">
+              <div className="lh-impact-icon-wrap lh-impact-icon-gold mx-auto mb-3">
+                <img src="/img/Empower.webp" alt="Empowerment and growth icon" className="lh-impact-icon" />
+              </div>
+              <h3 className="lh-impact-item-title">Empowerment</h3>
+              <p className="lh-impact-item-copy mb-2">
+                Our goal is to help children move from victimhood to leadership through confidence, skills, and opportunity.
+              </p>
+              <Link className="lh-impact-item-link" to="/impact">Learn how we empower children</Link>
+            </article>
           </div>
         </div>
       </section>
