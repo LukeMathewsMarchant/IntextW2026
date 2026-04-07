@@ -1,9 +1,12 @@
 using Lighthouse.Web.Authorization;
+using Lighthouse.Web.Data;
+using Lighthouse.Web.Models.Entities;
 using Lighthouse.Web.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lighthouse.Web.Controllers.Api;
 
@@ -13,11 +16,16 @@ public class AuthApiController : ControllerBase
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ApplicationDbContext _db;
 
-    public AuthApiController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+    public AuthApiController(
+        SignInManager<ApplicationUser> signInManager,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext db)
     {
         _signInManager = signInManager;
         _userManager = userManager;
+        _db = db;
     }
 
     public record LoginRequest(string Email, string Password);
@@ -69,12 +77,39 @@ public class AuthApiController : ControllerBase
         if (existing is not null)
             return Conflict(new { error = "An account with this email already exists." });
 
+        var normalizedEmail = email.ToLowerInvariant();
+        var supporter = req.SupporterId is > 0
+            ? await _db.Supporters.FirstOrDefaultAsync(s => s.SupporterId == req.SupporterId.Value)
+            : await _db.Supporters.FirstOrDefaultAsync(s => s.Email != null && s.Email.ToLower() == normalizedEmail);
+
+        if (supporter is null)
+        {
+            var displayName = email.Contains('@', StringComparison.Ordinal)
+                ? email[..email.IndexOf('@', StringComparison.Ordinal)]
+                : email;
+
+            supporter = new Supporter
+            {
+                SupporterType = SupporterType.MonetaryDonor,
+                DisplayName = displayName,
+                Email = email,
+                RelationshipType = RelationshipType.International,
+                Country = "United States",
+                Status = SupporterStatus.Active,
+                AcquisitionChannel = AcquisitionChannel.Website,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            _db.Supporters.Add(supporter);
+            await _db.SaveChangesAsync();
+        }
+
         var user = new ApplicationUser
         {
             UserName = email,
             Email = email,
             EmailConfirmed = true,
-            SupporterId = req.SupporterId
+            SupporterId = supporter.SupporterId
         };
 
         var result = await _userManager.CreateAsync(user, req.Password);

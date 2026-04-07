@@ -40,8 +40,10 @@ public class DonateApiController : ControllerBase
             return BadRequest(new { error = "Amount must be greater than zero." });
 
         // ── find or create supporter ────────────────────────────
+        var email = req.Email.Trim();
+        var normalizedEmail = email.ToLowerInvariant();
         var supporter = await _db.Supporters
-            .FirstOrDefaultAsync(s => s.Email == req.Email.Trim(), ct);
+            .FirstOrDefaultAsync(s => s.Email != null && s.Email.ToLower() == normalizedEmail, ct);
 
         if (supporter is null)
         {
@@ -51,7 +53,7 @@ public class DonateApiController : ControllerBase
                 DisplayName = $"{req.FirstName.Trim()} {req.LastName.Trim()}",
                 FirstName = req.FirstName.Trim(),
                 LastName = req.LastName.Trim(),
-                Email = req.Email.Trim(),
+                Email = email,
                 RelationshipType = RelationshipType.International,
                 Country = "United States",
                 Status = SupporterStatus.Active,

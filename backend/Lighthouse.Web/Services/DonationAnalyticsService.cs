@@ -48,8 +48,22 @@ public class DonationAnalyticsService
                 g.Sum(x => x.Amount ?? x.EstimatedValue ?? 0)))
             .ToList();
     }
+
+    public async Task<IReadOnlyList<DonationHistoryRow>> GetDonationHistoryAsync(int supporterId, CancellationToken cancellationToken = default)
+    {
+        return await _db.Donations
+            .AsNoTracking()
+            .Where(d => d.SupporterId == supporterId)
+            .OrderByDescending(d => d.DonationDate)
+            .ThenByDescending(d => d.CreatedAt)
+            .Select(d => new DonationHistoryRow(
+                d.DonationDate,
+                d.Amount ?? d.EstimatedValue ?? 0))
+            .ToListAsync(cancellationToken);
+    }
 }
 
 public record DonorSummaryDto(int Count, decimal TotalEstimated, DateOnly? LastDonationDate, int? DaysSinceLastDonation);
 
 public record MonthlyDonationPoint(string Month, decimal Total);
+public record DonationHistoryRow(DateOnly DonationDate, decimal Amount);
