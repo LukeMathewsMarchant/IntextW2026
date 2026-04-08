@@ -112,3 +112,44 @@ public enum SessionType
     [PgName("Individual")] Individual,
     [PgName("Group")] Group
 }
+
+public enum CooperationLevel
+{
+    [PgName("Highly Cooperative")] HighlyCooperative,
+    [PgName("Cooperative")] Cooperative,
+    [PgName("Neutral")] Neutral,
+    [PgName("Uncooperative")] Uncooperative
+}
+
+public enum VisitType
+{
+    [PgName("Initial Assessment")] InitialAssessment,
+    [PgName("Routine Follow-Up")] RoutineFollowUp,
+    [PgName("Reintegration Assessment")] ReintegrationAssessment,
+    [PgName("Post-Placement Monitoring")] PostPlacementMonitoring,
+    [PgName("Emergency")] Emergency
+}
+
+public enum VisitOutcome
+{
+    [PgName("Favorable")] Favorable,
+    [PgName("Inconclusive")] Inconclusive,
+    [PgName("Needs Improvement")] NeedsImprovement,
+    [PgName("Unfavorable")] Unfavorable
+}
+
+public enum PlanCategory
+{
+    [PgName("Safety")] Safety,
+    [PgName("Education")] Education,
+    [PgName("Physical Health")] PhysicalHealth
+}
+
+public enum PlanStatus
+{
+    [PgName("Open")] Open,
+    [PgName("In Progress")] InProgress,
+    [PgName("On Hold")] OnHold,
+    [PgName("Achieved")] Achieved,
+    [PgName("Closed")] Closed
+}

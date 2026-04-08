@@ -15,8 +15,7 @@ public class HomeVisitation
     [MaxLength(20)]
     public string SocialWorker { get; set; } = string.Empty;
 
-    [MaxLength(40)]
-    public string VisitType { get; set; } = string.Empty;
+    public VisitType VisitType { get; set; }
 
     [MaxLength(150)]
     public string? LocationVisited { get; set; }
@@ -25,13 +24,11 @@ public class HomeVisitation
     public string? Purpose { get; set; }
     public string? Observations { get; set; }
 
-    [MaxLength(30)]
-    public string? FamilyCooperationLevel { get; set; }
+    public CooperationLevel? FamilyCooperationLevel { get; set; }
 
     public bool SafetyConcernsNoted { get; set; }
     public bool FollowUpNeeded { get; set; }
     public string? FollowUpNotes { get; set; }
 
-    [MaxLength(30)]
-    public string? VisitOutcome { get; set; }
+    public VisitOutcome? VisitOutcome { get; set; }
 }

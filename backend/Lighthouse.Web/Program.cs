@@ -59,6 +59,11 @@ dataSourceBuilder.MapEnum<ImpactUnit>("impact_unit");
 dataSourceBuilder.MapEnum<ProgramArea>("program_area");
 dataSourceBuilder.MapEnum<EmotionalState>("emotional_state");
 dataSourceBuilder.MapEnum<SessionType>("session_type");
+dataSourceBuilder.MapEnum<CooperationLevel>("cooperation_level");
+dataSourceBuilder.MapEnum<VisitType>("visit_type");
+dataSourceBuilder.MapEnum<VisitOutcome>("visit_outcome");
+dataSourceBuilder.MapEnum<PlanCategory>("plan_category");
+dataSourceBuilder.MapEnum<PlanStatus>("plan_status");
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -75,6 +80,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         npgsqlOptions.MapEnum<ProgramArea>("program_area");
         npgsqlOptions.MapEnum<EmotionalState>("emotional_state");
         npgsqlOptions.MapEnum<SessionType>("session_type");
+        npgsqlOptions.MapEnum<CooperationLevel>("cooperation_level");
+        npgsqlOptions.MapEnum<VisitType>("visit_type");
+        npgsqlOptions.MapEnum<VisitOutcome>("visit_outcome");
+        npgsqlOptions.MapEnum<PlanCategory>("plan_category");
+        npgsqlOptions.MapEnum<PlanStatus>("plan_status");
     })
     // Existing schema tables are excluded from migrations in this app.
     // Suppress this warning so startup doesn't log a misleading stack trace.

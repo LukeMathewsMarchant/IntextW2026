@@ -11,8 +11,7 @@ public class InterventionPlan
     public int ResidentId { get; set; }
     public Resident Resident { get; set; } = null!;
 
-    [MaxLength(30)]
-    public string PlanCategory { get; set; } = string.Empty;
+    public PlanCategory PlanCategory { get; set; }
 
     public string? PlanDescription { get; set; }
     public string? ServicesProvided { get; set; }
@@ -22,8 +21,7 @@ public class InterventionPlan
 
     public DateOnly? TargetDate { get; set; }
 
-    [MaxLength(20)]
-    public string Status { get; set; } = "Open";
+    public PlanStatus Status { get; set; } = PlanStatus.Open;
 
     public DateOnly? CaseConferenceDate { get; set; }
 

@@ -91,7 +91,7 @@ export function AdminCaseloadInventory() {
 
   return (
     <div>
-      <h1 className="h3 mb-2">Caseload Inventory</h1>
+      <h1 className="h3 mb-2">Resident List</h1>
       <p className="text-secondary mb-3">Resident records with filtering for case status, safehouse, and category.</p>
       {err ? <div className="alert alert-warning">{err}</div> : null}
       <div className="row g-3">
@@ -153,12 +153,11 @@ export function AdminCaseloadInventory() {
               </div>
               <div className="table-responsive">
                 <table className="table table-sm">
-                  <thead><tr><th>ID</th><th>Name</th><th>Safehouse</th><th>Status</th><th>Category</th><th>Social worker</th></tr></thead>
+                  <thead><tr><th>ID</th><th>Safehouse</th><th>Status</th><th>Category</th><th>Social worker</th></tr></thead>
                   <tbody>
                     {filtered.slice(0, 150).map((r) => (
                       <tr key={r.residentId ?? `${r.firstName}-${r.lastName}-${r.safehouseId}`}>
                         <td>{r.residentId ?? '—'}</td>
-                        <td>{`${r.firstName ?? ''} ${r.lastName ?? ''}`.trim() || '—'}</td>
                         <td>{r.safehouseId ?? '—'}</td>
                         <td>{r.caseStatus ?? '—'}</td>
                         <td>{r.caseCategory ?? '—'} {r.caseSubcategory ? `/${r.caseSubcategory}` : ''}</td>

@@ -304,7 +304,7 @@ export function AdminDashboard() {
               </div>
               <div className="col-6">
                 <Link className="btn btn-success w-100 lh-btn-pill btn-sm" to="/Admin/CaseloadInventory">
-                  Caseload
+                  Resident list
                 </Link>
               </div>
               <div className="col-6">
@@ -327,7 +327,7 @@ export function AdminDashboard() {
           Donors & contributions
         </Link>
         <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/CaseloadInventory">
-          Caseload inventory
+          Resident list
         </Link>
         <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/ProcessRecording">
           Process recording
