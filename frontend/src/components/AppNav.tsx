@@ -12,6 +12,7 @@ function navLinkClass(active: boolean) {
 export function AppNav() {
   const [me, setMe] = useState<AuthMe>({ isAuthenticated: false, roles: [] })
   const navigate = useNavigate()
+  const isAdmin = me.isAuthenticated && me.roles.includes('Admin')
 
   function applyTheme(theme: 'light' | 'dark') {
     document.documentElement.setAttribute('data-bs-theme', theme)
@@ -97,16 +98,20 @@ export function AppNav() {
                     Impact
                   </NavLink>
                 </li>
-                <li className="nav-item">
-                  <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/about">
-                    About
-                  </NavLink>
-                </li>
-                <li className="nav-item">
-                  <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/contact">
-                    Contact
-                  </NavLink>
-                </li>
+                {!isAdmin ? (
+                  <>
+                    <li className="nav-item">
+                      <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/about">
+                        About
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
+                      <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/contact">
+                        Contact
+                      </NavLink>
+                    </li>
+                  </>
+                ) : null}
                 {me.isAuthenticated && me.roles.includes('Donor') ? (
                   <li className="nav-item">
                     <NavLink className={({ isActive }) => navLinkClass(isActive)} to="/Donor">
