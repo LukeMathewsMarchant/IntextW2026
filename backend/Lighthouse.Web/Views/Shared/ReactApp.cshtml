@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Light on a Hill Foundation";
+}
+@section Head {
+    <link rel="stylesheet" href="~/app/assets/index.css" asp-append-version="true" />
+}
+<div id="root"
+     data-page="@(ViewBag.Page ?? "home")"
+     data-entity="@(ViewBag.Entity ?? "")"
+     data-contact-sent="@(ViewBag.ContactSent == true ? "true" : "false")"></div>
+@section Scripts {
+    <script type="module" src="~/app/assets/index.js" asp-append-version="true"></script>
+}

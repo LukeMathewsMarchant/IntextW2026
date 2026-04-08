@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <h1 class="h3 mb-3">Sign in</h1>
+        <p class="text-secondary mb-3">Donors are redirected to their giving dashboard. Admins are redirected to analytics and outcomes dashboards.</p>
+        <form method="post" asp-controller="Account" asp-action="Login">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="mb-3">
+                <label class="form-label" for="email">Email</label>
+                <input class="form-control" id="email" name="email" type="email" autocomplete="username" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+    </div>
+    <div class="col-md-5 mt-4 mt-md-0">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6 mb-1">Donor access</h2>
+                <p class="small text-secondary mb-0">View past donations, configure monthly recurring giving, and track your impact.</p>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h6 mb-1">Admin access</h2>
+                <p class="small text-secondary mb-0">Review donation trends, success metrics, and program outcomes from dashboard charts.</p>
+            </div>
+        </div>
+    </div>
+</div>

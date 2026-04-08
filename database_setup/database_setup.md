@@ -1,8 +1,8 @@
-# Lighthouse Sanctuary — Database Setup Guide
+# Light on a Hill Foundation — Database Setup Guide
 
 ## Overview
 
-This document explains the full PostgreSQL schema for the Lighthouse Sanctuary website. It covers every design decision, table, relationship, and deployment instruction. Use this as your reference when continuing development in Cursor, VS Code, or any other environment.
+This document explains the full PostgreSQL schema for the Light on a Hill Foundation website. It covers every design decision, table, relationship, and deployment instruction. Use this as your reference when continuing development in Cursor, VS Code, or any other environment.
 
 The database is hosted in **Supabase** and uses plain PostgreSQL. There are two files:
 
@@ -346,7 +346,7 @@ ORDER BY success_rate_pct DESC;
 To create the first admin user (example using SQL — hash the password in your app first):
 ```sql
 INSERT INTO users (username, email, password_hash, full_name, role)
-VALUES ('admin', 'admin@lighthousesanctuary.ph', '<bcrypt_hash_here>', 'System Admin', 'admin');
+VALUES ('admin', 'admin@lightonahillfoundation.ph', '<bcrypt_hash_here>', 'System Admin', 'admin');
 ```
 
 ---
