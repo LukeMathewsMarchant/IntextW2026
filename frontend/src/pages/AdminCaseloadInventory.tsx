@@ -583,8 +583,9 @@ export function AdminCaseloadInventory() {
                 </div>
 
                 <div className="col-6">
+                  <label className="form-label small mb-1">Safehouse *</label>
                   <select className={`form-select form-select-sm ${fieldErrors.safehouseId ? 'is-invalid' : ''}`} value={form.safehouseId} onChange={(e) => setForm((p) => ({ ...p, safehouseId: e.target.value }))}>
-                    <option value="">Safehouse *</option>
+                    <option value="">Select safehouse</option>
                     {safehouses.map((s) => <option key={s.safehouseId} value={s.safehouseId}>{s.name ?? `Safehouse ${s.safehouseId}`}</option>)}
                   </select>
                   {fieldErrors.safehouseId ? <div className="invalid-feedback d-block">{fieldErrors.safehouseId}</div> : null}
@@ -595,29 +596,33 @@ export function AdminCaseloadInventory() {
                     {caseStatusOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                     {form.caseStatus === 'Closed' ? <option value="Closed">Closed (set via Close button)</option> : null}
                   </select>
-                  <div className="small text-secondary mt-1">Set Closed using the Close button so a closure reason is recorded.</div>
                 </div>
                 <div className="col-6">
+                  <label className="form-label small mb-1">Case category *</label>
                   <select className={`form-select form-select-sm ${fieldErrors.caseCategory ? 'is-invalid' : ''}`} value={form.caseCategory} onChange={(e) => setForm((p) => ({ ...p, caseCategory: e.target.value }))}>
-                    <option value="">Case category *</option>
+                    <option value="">Select case category</option>
                     {caseCategoryOptions.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
                   </select>
                   {fieldErrors.caseCategory ? <div className="invalid-feedback d-block">{fieldErrors.caseCategory}</div> : null}
                 </div>
-                <div className="col-6"><input className="form-control form-control-sm" placeholder="Assigned social worker" value={form.assignedSocialWorker} onChange={(e) => setForm((p) => ({ ...p, assignedSocialWorker: e.target.value }))} /></div>
-                <div className="col-4"><input className="form-control form-control-sm" placeholder="Sex" value={form.sex} onChange={(e) => setForm((p) => ({ ...p, sex: e.target.value }))} /></div>
-                <div className="col-4">
-                  <label className="form-label small mb-1">Date of birth</label>
-                  <input type="date" className="form-control form-control-sm" title="Date of birth" value={form.dateOfBirth} onChange={(e) => setForm((p) => ({ ...p, dateOfBirth: e.target.value }))} />
-                  <div className="small text-secondary mt-1">Resident's birth date.</div>
+                <div className="col-6">
+                  <label className="form-label small mb-1">Case worker</label>
+                  <input className="form-control form-control-sm" placeholder="Assigned social worker" value={form.assignedSocialWorker} onChange={(e) => setForm((p) => ({ ...p, assignedSocialWorker: e.target.value }))} />
                 </div>
-                <div className="col-4">
+                <div className="col-md-2 col-12">
+                  <label className="form-label small mb-1">Sex</label>
+                  <input className="form-control form-control-sm" value={form.sex} onChange={(e) => setForm((p) => ({ ...p, sex: e.target.value }))} />
+                </div>
+                <div className="col-md-5 col-12">
+                  <label className="form-label small mb-1">Date of birth</label>
+                  <input type="date" className="form-control form-control-sm" title="Date of birth" autoComplete="off" data-lpignore="true" data-1p-ignore="true" value={form.dateOfBirth} onChange={(e) => setForm((p) => ({ ...p, dateOfBirth: e.target.value }))} />
+                </div>
+                <div className="col-md-5 col-12">
                   <label className="form-label small mb-1">Date of admission *</label>
-                  <input type="date" className={`form-control form-control-sm ${fieldErrors.dateOfAdmission ? 'is-invalid' : ''}`} title="Date of admission" value={form.dateOfAdmission} onChange={(e) => setForm((p) => ({ ...p, dateOfAdmission: e.target.value }))} />
+                  <input type="date" className={`form-control form-control-sm ${fieldErrors.dateOfAdmission ? 'is-invalid' : ''}`} title="Date of admission" autoComplete="off" data-lpignore="true" data-1p-ignore="true" value={form.dateOfAdmission} onChange={(e) => setForm((p) => ({ ...p, dateOfAdmission: e.target.value }))} />
                   {fieldErrors.dateOfAdmission ? <div className="invalid-feedback d-block">{fieldErrors.dateOfAdmission}</div> : null}
-                  <div className="small text-secondary mt-1">First date admitted to the safehouse.</div>
                 </div>
                 <div className="col-6"><input className="form-control form-control-sm" placeholder="Birth status" value={form.birthStatus} onChange={(e) => setForm((p) => ({ ...p, birthStatus: e.target.value }))} /></div>
                 <div className="col-6"><input className="form-control form-control-sm" placeholder="Religion" value={form.religion} onChange={(e) => setForm((p) => ({ ...p, religion: e.target.value }))} /></div>
