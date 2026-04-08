@@ -1,0 +1,722 @@
+2026-04-08 09:52:05.585 -06:00 [INF] Now listening on: http://localhost:5182
+2026-04-08 09:52:05.632 -06:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-08 09:52:05.642 -06:00 [INF] Hosting environment: Development
+2026-04-08 09:52:05.642 -06:00 [INF] Content root path: /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web
+2026-04-08 09:52:08.241 -06:00 [ERR] Failed executing DbCommand (34ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT count(*)::int
+FROM safehouses AS s
+WHERE s."Status" = 'Active'
+2026-04-08 09:52:08.257 -06:00 [ERR] An exception occurred while iterating over the results of a query for context type 'Lighthouse.Web.Data.ApplicationDbContext'.
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+2026-04-08 09:52:08.269 -06:00 [ERR] HTTP GET /api/impact responded 500 in 278.5704 ms
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Lighthouse.Web.Controllers.Api.ImpactApiController.Get(CancellationToken cancellationToken) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Controllers/Api/ImpactApiController.cs:line 21
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Lighthouse.Web.Middleware.ContentSecurityPolicyMiddleware.InvokeAsync(HttpContext context) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Middleware/ContentSecurityPolicyMiddleware.cs:line 19
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+2026-04-08 09:52:08.286 -06:00 [ERR] An unhandled exception has occurred while executing the request.
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Lighthouse.Web.Controllers.Api.ImpactApiController.Get(CancellationToken cancellationToken) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Controllers/Api/ImpactApiController.cs:line 21
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Lighthouse.Web.Middleware.ContentSecurityPolicyMiddleware.InvokeAsync(HttpContext context) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Middleware/ContentSecurityPolicyMiddleware.cs:line 19
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+2026-04-08 09:52:08.389 -06:00 [ERR] Failed executing DbCommand (32ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT count(*)::int
+FROM safehouses AS s
+WHERE s."Status" = 'Active'
+2026-04-08 09:52:08.391 -06:00 [ERR] An exception occurred while iterating over the results of a query for context type 'Lighthouse.Web.Data.ApplicationDbContext'.
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+2026-04-08 09:52:08.394 -06:00 [ERR] HTTP GET /api/impact responded 500 in 84.2903 ms
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Lighthouse.Web.Controllers.Api.ImpactApiController.Get(CancellationToken cancellationToken) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Controllers/Api/ImpactApiController.cs:line 21
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Lighthouse.Web.Middleware.ContentSecurityPolicyMiddleware.InvokeAsync(HttpContext context) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Middleware/ContentSecurityPolicyMiddleware.cs:line 19
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+2026-04-08 09:52:08.404 -06:00 [ERR] An unhandled exception has occurred while executing the request.
+Npgsql.PostgresException (0x80004005): 42703: column s.Status does not exist
+
+POSITION: 49
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Lighthouse.Web.Controllers.Api.ImpactApiController.Get(CancellationToken cancellationToken) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Controllers/Api/ImpactApiController.cs:line 21
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Lighthouse.Web.Middleware.ContentSecurityPolicyMiddleware.InvokeAsync(HttpContext context) in /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web/Middleware/ContentSecurityPolicyMiddleware.cs:line 19
+   at Serilog.AspNetCore.RequestLoggingMiddleware.Invoke(HttpContext httpContext)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: column s.Status does not exist
+    Hint: Perhaps you meant to reference the column "s.status".
+    Position: 49
+    File: parse_relation.c
+    Line: 3723
+    Routine: errorMissingColumn
+2026-04-08 09:55:41.958 -06:00 [INF] HTTP POST /api/auth/login responded 200 in 532.2457 ms
+2026-04-08 09:55:42.267 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 28.3574 ms
+2026-04-08 09:55:42.274 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 4.8069 ms
+2026-04-08 09:55:42.302 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 24.8851 ms
+2026-04-08 09:55:42.306 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.2867 ms
+2026-04-08 09:55:43.769 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 10.9323 ms
+2026-04-08 09:55:43.773 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.0925 ms
+2026-04-08 09:55:43.841 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 09:55:44.173 -06:00 [INF] HTTP GET /api/admin/metrics/okr responded 200 in 388.8115 ms
+2026-04-08 09:55:44.303 -06:00 [INF] HTTP GET /api/admin/data/residents responded 200 in 518.9168 ms
+2026-04-08 09:55:44.442 -06:00 [INF] HTTP GET /api/admin/data/residents responded 200 in 137.8723 ms
+2026-04-08 09:55:44.482 -06:00 [INF] HTTP GET /api/admin/metrics/okr responded 200 in 307.4638 ms
+2026-04-08 10:04:27.121 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 10:04:27.121 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 10:04:27.124 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 10:04:27.535 -06:00 [INF] HTTP GET /api/admin/data/donation_allocations responded 200 in 436.1931 ms
+2026-04-08 10:04:27.538 -06:00 [INF] HTTP GET /api/admin/data/supporters responded 200 in 440.5477 ms
+2026-04-08 10:04:27.567 -06:00 [INF] HTTP GET /api/admin/data/donations responded 200 in 469.0215 ms
+2026-04-08 10:04:27.661 -06:00 [INF] HTTP GET /api/admin/data/supporters responded 200 in 114.0286 ms
+2026-04-08 10:04:27.749 -06:00 [INF] HTTP GET /api/admin/data/donation_allocations responded 200 in 208.4180 ms
+2026-04-08 10:04:27.778 -06:00 [INF] HTTP GET /api/admin/data/donations responded 200 in 213.2420 ms
+2026-04-08 10:54:30.818 -06:00 [INF] Application is shutting down...
+2026-04-08 10:54:49.970 -06:00 [INF] Now listening on: http://localhost:5182
+2026-04-08 10:54:50.009 -06:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-08 10:54:50.009 -06:00 [INF] Hosting environment: Development
+2026-04-08 10:54:50.009 -06:00 [INF] Content root path: /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web
+2026-04-08 10:54:57.097 -06:00 [INF] HTTP POST /api/auth/login responded 200 in 701.3482 ms
+2026-04-08 10:54:57.456 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 28.2719 ms
+2026-04-08 10:54:57.472 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 14.6935 ms
+2026-04-08 10:54:57.474 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 0.7724 ms
+2026-04-08 10:54:57.477 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.9427 ms
+2026-04-08 10:54:58.434 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 9.0786 ms
+2026-04-08 10:54:58.439 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.3683 ms
+2026-04-08 10:54:58.529 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 10:54:58.529 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 10:54:58.584 -06:00 [INF] HTTP request failed after 53.7699ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 10:54:58.596 -06:00 [INF] HTTP request failed after 68.9643ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 10:54:58.601 -06:00 [ERR] HTTP GET /api/admin/analytics/social-media responded 502 in 134.5669 ms
+2026-04-08 10:54:58.612 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 10:54:58.613 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 10:54:58.617 -06:00 [INF] HTTP request failed after 4.1232ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 10:54:58.619 -06:00 [INF] HTTP request failed after 7.8029ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 10:54:58.620 -06:00 [ERR] HTTP GET /api/admin/analytics/social-media responded 502 in 18.0402 ms
+2026-04-08 10:59:58.002 -06:00 [INF] Application is shutting down...
+2026-04-08 11:00:06.126 -06:00 [INF] Now listening on: http://localhost:5182
+2026-04-08 11:00:06.168 -06:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-08 11:00:06.168 -06:00 [INF] Hosting environment: Development
+2026-04-08 11:00:06.168 -06:00 [INF] Content root path: /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web
+2026-04-08 11:00:08.199 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 68.0943 ms
+2026-04-08 11:00:08.206 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 7.5259 ms
+2026-04-08 11:00:08.225 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 16.8965 ms
+2026-04-08 11:00:08.229 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.0417 ms
+2026-04-08 11:00:10.041 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 25.8922 ms
+2026-04-08 11:00:10.045 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.8680 ms
+2026-04-08 11:00:10.059 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 10.1616 ms
+2026-04-08 11:00:10.095 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 5.0449 ms
+2026-04-08 11:00:10.101 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 4.0108 ms
+2026-04-08 11:00:10.105 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.2984 ms
+2026-04-08 11:00:10.195 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:10.197 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:10.288 -06:00 [INF] Received HTTP response headers after 89.0524ms - 200
+2026-04-08 11:00:10.290 -06:00 [INF] End processing HTTP request after 98.865ms - 200
+2026-04-08 11:00:10.307 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 208.1126 ms
+2026-04-08 11:00:10.313 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:10.313 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:10.314 -06:00 [INF] Received HTTP response headers after 1.2485ms - 200
+2026-04-08 11:00:10.314 -06:00 [INF] End processing HTTP request after 1.9175ms - 200
+2026-04-08 11:00:10.315 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 7.4795 ms
+2026-04-08 11:00:11.272 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 9.4094 ms
+2026-04-08 11:00:11.277 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.6200 ms
+2026-04-08 11:00:11.290 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.1228 ms
+2026-04-08 11:00:11.296 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.3628 ms
+2026-04-08 11:00:11.300 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.6669 ms
+2026-04-08 11:00:11.313 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.9807 ms
+2026-04-08 11:00:11.321 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:11.323 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:11.339 -06:00 [INF] Received HTTP response headers after 15.4451ms - 200
+2026-04-08 11:00:11.340 -06:00 [INF] End processing HTTP request after 19.985ms - 200
+2026-04-08 11:00:11.341 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 48.7543 ms
+2026-04-08 11:00:11.343 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:11.343 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:00:11.351 -06:00 [INF] Received HTTP response headers after 6.5651ms - 200
+2026-04-08 11:00:11.351 -06:00 [INF] End processing HTTP request after 8.0894ms - 200
+2026-04-08 11:00:11.352 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 9.6505 ms
+2026-04-08 11:03:11.066 -06:00 [INF] Application is shutting down...
+2026-04-08 11:03:18.103 -06:00 [INF] Now listening on: http://localhost:5182
+2026-04-08 11:03:18.132 -06:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-08 11:03:18.132 -06:00 [INF] Hosting environment: Development
+2026-04-08 11:03:18.132 -06:00 [INF] Content root path: /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web
+2026-04-08 11:03:21.692 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 114.7885 ms
+2026-04-08 11:03:21.692 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 114.0328 ms
+2026-04-08 11:03:21.700 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 8.4108 ms
+2026-04-08 11:03:21.703 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 10.9856 ms
+2026-04-08 11:03:21.710 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 6.9454 ms
+2026-04-08 11:03:21.711 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.8320 ms
+2026-04-08 11:03:21.717 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.2841 ms
+2026-04-08 11:03:21.719 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.6483 ms
+2026-04-08 11:03:21.721 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.1153 ms
+2026-04-08 11:03:21.724 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.3177 ms
+2026-04-08 11:03:21.854 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:21.855 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:21.934 -06:00 [INF] Received HTTP response headers after 77.9296ms - 200
+2026-04-08 11:03:21.939 -06:00 [INF] End processing HTTP request after 87.4315ms - 200
+2026-04-08 11:03:21.957 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 220.1553 ms
+2026-04-08 11:03:21.972 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:21.973 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:21.976 -06:00 [INF] Received HTTP response headers after 2.6968ms - 200
+2026-04-08 11:03:21.976 -06:00 [INF] End processing HTTP request after 4.1785ms - 200
+2026-04-08 11:03:21.979 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 19.2202 ms
+2026-04-08 11:03:27.457 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 4.9740 ms
+2026-04-08 11:03:27.462 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.6535 ms
+2026-04-08 11:03:27.495 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 31.2718 ms
+2026-04-08 11:03:27.508 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 8.6459 ms
+2026-04-08 11:03:27.514 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.4312 ms
+2026-04-08 11:03:27.525 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.4738 ms
+2026-04-08 11:03:27.528 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:27.528 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:27.558 -06:00 [INF] Received HTTP response headers after 29.7133ms - 200
+2026-04-08 11:03:27.558 -06:00 [INF] End processing HTTP request after 30.8175ms - 200
+2026-04-08 11:03:27.560 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 75.0860 ms
+2026-04-08 11:03:27.562 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:27.562 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:03:27.565 -06:00 [INF] Received HTTP response headers after 2.3068ms - 200
+2026-04-08 11:03:27.565 -06:00 [INF] End processing HTTP request after 3.1207ms - 200
+2026-04-08 11:03:27.567 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 5.8336 ms
+2026-04-08 11:04:52.941 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 10.6469 ms
+2026-04-08 11:04:52.946 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.7045 ms
+2026-04-08 11:04:52.978 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:04:52.981 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:04:53.031 -06:00 [INF] Received HTTP response headers after 48.5525ms - 200
+2026-04-08 11:04:53.031 -06:00 [INF] End processing HTTP request after 54.3667ms - 200
+2026-04-08 11:04:53.033 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 69.9310 ms
+2026-04-08 11:04:53.036 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:04:53.036 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:04:53.046 -06:00 [INF] Received HTTP response headers after 8.9639ms - 200
+2026-04-08 11:04:53.046 -06:00 [INF] End processing HTTP request after 10.5762ms - 200
+2026-04-08 11:04:53.047 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 13.4083 ms
+2026-04-08 11:20:35.492 -06:00 [INF] Application is shutting down...
+2026-04-08 11:24:18.609 -06:00 [INF] Now listening on: http://localhost:5182
+2026-04-08 11:24:18.676 -06:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-08 11:24:18.676 -06:00 [INF] Hosting environment: Development
+2026-04-08 11:24:18.676 -06:00 [INF] Content root path: /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web
+2026-04-08 11:24:23.661 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 47.4012 ms
+2026-04-08 11:24:23.668 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 7.2839 ms
+2026-04-08 11:24:32.361 -06:00 [INF] HTTP POST /api/auth/login responded 200 in 467.3755 ms
+2026-04-08 11:24:32.684 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 5.5145 ms
+2026-04-08 11:24:32.686 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.0852 ms
+2026-04-08 11:24:35.620 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 9.4435 ms
+2026-04-08 11:24:35.630 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 7.9244 ms
+2026-04-08 11:24:35.705 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 11:24:35.705 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 11:24:35.705 -06:00 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-04-08 11:24:35.905 -06:00 [INF] HTTP GET /api/admin/data/donations responded 200 in 265.2069 ms
+2026-04-08 11:24:35.955 -06:00 [INF] HTTP GET /api/admin/data/donations responded 200 in 52.1043 ms
+2026-04-08 11:24:36.156 -06:00 [INF] HTTP GET /api/admin/data/supporters responded 200 in 515.8680 ms
+2026-04-08 11:24:36.248 -06:00 [INF] HTTP GET /api/admin/data/donation_allocations responded 200 in 604.8531 ms
+2026-04-08 11:24:36.272 -06:00 [INF] HTTP GET /api/admin/data/supporters responded 200 in 115.5327 ms
+2026-04-08 11:24:36.327 -06:00 [INF] HTTP GET /api/admin/data/donation_allocations responded 200 in 75.2548 ms
+2026-04-08 11:24:46.682 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 25.4369 ms
+2026-04-08 11:24:46.687 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.1859 ms
+2026-04-08 11:26:43.262 -06:00 [INF] Application is shutting down...
+2026-04-08 11:26:54.243 -06:00 [INF] Now listening on: http://localhost:5182
+2026-04-08 11:26:54.653 -06:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-08 11:26:54.655 -06:00 [INF] Hosting environment: Development
+2026-04-08 11:26:54.656 -06:00 [INF] Content root path: /Users/lukemarchant/Desktop/IntextW2026/backend/Lighthouse.Web
+2026-04-08 11:26:55.202 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 64.9985 ms
+2026-04-08 11:26:55.208 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 6.5464 ms
+2026-04-08 11:27:00.115 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 66.7215 ms
+2026-04-08 11:27:00.122 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 4.4640 ms
+2026-04-08 11:27:02.469 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 20.3620 ms
+2026-04-08 11:27:02.475 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.2072 ms
+2026-04-08 11:27:05.551 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 7.6921 ms
+2026-04-08 11:27:05.553 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1.3032 ms
+2026-04-08 11:27:05.661 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:27:05.663 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:27:05.980 -06:00 [INF] Received HTTP response headers after 306.1943ms - 200
+2026-04-08 11:27:05.989 -06:00 [INF] End processing HTTP request after 329.8806ms - 200
+2026-04-08 11:27:06.055 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 486.6669 ms
+2026-04-08 11:27:06.083 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:27:06.083 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:27:06.090 -06:00 [INF] Received HTTP response headers after 6.4657ms - 200
+2026-04-08 11:27:06.090 -06:00 [INF] End processing HTTP request after 10.3842ms - 200
+2026-04-08 11:27:06.091 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 30.7649 ms
+2026-04-08 11:53:20.524 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 244.6701 ms
+2026-04-08 11:53:20.528 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 3.9030 ms
+2026-04-08 11:53:20.538 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 0.6969 ms
+2026-04-08 11:53:20.540 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 0.8008 ms
+2026-04-08 11:53:20.629 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:53:20.633 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:53:20.995 -06:00 [INF] Received HTTP response headers after 361.9717ms - 200
+2026-04-08 11:53:20.996 -06:00 [INF] End processing HTTP request after 371.8573ms - 200
+2026-04-08 11:53:21.008 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 454.0175 ms
+2026-04-08 11:53:21.014 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:53:21.014 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 11:53:21.015 -06:00 [INF] Received HTTP response headers after 1.0909ms - 200
+2026-04-08 11:53:21.016 -06:00 [INF] End processing HTTP request after 1.7778ms - 200
+2026-04-08 11:53:21.016 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 5.5241 ms
+2026-04-08 12:05:56.011 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 5.6802 ms
+2026-04-08 12:05:56.018 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 0.5805 ms
+2026-04-08 12:05:57.379 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1570.8170 ms
+2026-04-08 12:05:57.453 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:05:57.453 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:05:57.582 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 201.8941 ms
+2026-04-08 12:05:57.664 -06:00 [INF] HTTP request failed after 204.9951ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:05:57.734 -06:00 [INF] HTTP request failed after 281.2844ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:05:57.757 -06:00 [ERR] HTTP GET /api/admin/analytics/social-media responded 502 in 330.1610 ms
+2026-04-08 12:05:57.762 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:05:57.762 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:05:57.765 -06:00 [INF] HTTP request failed after 2.2299ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:05:57.766 -06:00 [INF] HTTP request failed after 3.9765ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:05:57.772 -06:00 [ERR] HTTP GET /api/admin/analytics/social-media responded 502 in 11.6343 ms
+2026-04-08 12:05:57.859 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 262.0678 ms
+2026-04-08 12:05:58.020 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 160.6690 ms
+2026-04-08 12:46:44.713 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 1509.3291 ms
+2026-04-08 12:46:44.796 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:46:44.800 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:46:44.882 -06:00 [INF] HTTP request failed after 79.4282ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:46:44.904 -06:00 [INF] HTTP request failed after 108.6551ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:46:44.915 -06:00 [ERR] HTTP GET /api/admin/analytics/social-media responded 502 in 154.3416 ms
+2026-04-08 12:46:44.929 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:46:44.929 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:46:44.934 -06:00 [INF] HTTP request failed after 4.8738ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:46:44.939 -06:00 [INF] HTTP request failed after 10.2048ms
+System.Net.Http.HttpRequestException: Connection refused (localhost:8001)
+ ---> System.Net.Sockets.SocketException (61): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+2026-04-08 12:46:44.947 -06:00 [ERR] HTTP GET /api/admin/analytics/social-media responded 502 in 26.2235 ms
+2026-04-08 12:46:44.994 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 274.8688 ms
+2026-04-08 12:46:45.169 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 174.0231 ms
+2026-04-08 12:46:45.723 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 547.1486 ms
+2026-04-08 12:47:20.928 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 36.5526 ms
+2026-04-08 12:47:20.952 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 21.0373 ms
+2026-04-08 12:47:20.960 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 6.5755 ms
+2026-04-08 12:47:20.963 -06:00 [INF] HTTP GET /api/auth/me responded 200 in 2.1385 ms
+2026-04-08 12:47:21.029 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:47:21.043 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:47:21.109 -06:00 [INF] Received HTTP response headers after 63.2405ms - 200
+2026-04-08 12:47:21.110 -06:00 [INF] End processing HTTP request after 81.8458ms - 200
+2026-04-08 12:47:21.146 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 145.5390 ms
+2026-04-08 12:47:21.193 -06:00 [INF] Start processing HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:47:21.193 -06:00 [INF] Sending HTTP request GET http://localhost:8001/social-media/analytics
+2026-04-08 12:47:21.203 -06:00 [INF] Received HTTP response headers after 9.1366ms - 200
+2026-04-08 12:47:21.203 -06:00 [INF] End processing HTTP request after 10.4382ms - 200
+2026-04-08 12:47:21.208 -06:00 [INF] HTTP GET /api/admin/analytics/social-media responded 200 in 26.7017 ms
+2026-04-08 13:09:36.489 -06:00 [WRN] As of ""2026-04-08T19:09:27.8268550+00:00"", the heartbeat has been running for ""00:00:02.4324675"" which is longer than ""00:00:01"". This could be caused by thread pool starvation.

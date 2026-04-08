@@ -1,0 +1,218 @@
+{
+  "generatedAtUtc": "2026-04-08T18:47:17.562859+00:00",
+  "currency": "PHP",
+  "dataSource": "database",
+  "loadWarning": "",
+  "summary": {
+    "totalPosts": 812,
+    "totalDonationReferrals": 10390,
+    "totalEstimatedDonationValuePhp": 32294940.06,
+    "avgEngagementRate": 0.099
+  },
+  "platformRanking": [
+    {
+      "platform": "WhatsApp",
+      "posts": 93,
+      "donationReferrals": 2148,
+      "estimatedDonationValuePhp": 7294743.0,
+      "avgEngagementRate": 0.0917,
+      "shareOfDonationValue": 0.2259
+    },
+    {
+      "platform": "Facebook",
+      "posts": 199,
+      "donationReferrals": 2176,
+      "estimatedDonationValuePhp": 6186151.62,
+      "avgEngagementRate": 0.0939,
+      "shareOfDonationValue": 0.1916
+    },
+    {
+      "platform": "TikTok",
+      "posts": 89,
+      "donationReferrals": 1740,
+      "estimatedDonationValuePhp": 5110786.91,
+      "avgEngagementRate": 0.0987,
+      "shareOfDonationValue": 0.1583
+    },
+    {
+      "platform": "Instagram",
+      "posts": 164,
+      "donationReferrals": 1899,
+      "estimatedDonationValuePhp": 5082250.54,
+      "avgEngagementRate": 0.1061,
+      "shareOfDonationValue": 0.1574
+    },
+    {
+      "platform": "YouTube",
+      "posts": 71,
+      "donationReferrals": 1417,
+      "estimatedDonationValuePhp": 4193313.72,
+      "avgEngagementRate": 0.0986,
+      "shareOfDonationValue": 0.1298
+    },
+    {
+      "platform": "LinkedIn",
+      "posts": 79,
+      "donationReferrals": 338,
+      "estimatedDonationValuePhp": 2758782.13,
+      "avgEngagementRate": 0.0983,
+      "shareOfDonationValue": 0.0854
+    },
+    {
+      "platform": "Twitter",
+      "posts": 117,
+      "donationReferrals": 672,
+      "estimatedDonationValuePhp": 1668912.14,
+      "avgEngagementRate": 0.1043,
+      "shareOfDonationValue": 0.0517
+    }
+  ],
+  "recommendations": [
+    {
+      "platform": "WhatsApp",
+      "priority": "High",
+      "reason": "Strong donation contribution relative to other platforms.",
+      "recommendedAction": "Post more CTA-led impact stories and appeals on this platform.",
+      "suggestedPostHours": [
+        "10",
+        "19",
+        "18"
+      ],
+      "estimatedMonthlyLiftPhp": 1458948.6
+    },
+    {
+      "platform": "Facebook",
+      "priority": "High",
+      "reason": "Strong donation contribution relative to other platforms.",
+      "recommendedAction": "Post more CTA-led impact stories and appeals on this platform.",
+      "suggestedPostHours": [
+        "15",
+        "10",
+        "9"
+      ],
+      "estimatedMonthlyLiftPhp": 1237230.32
+    },
+    {
+      "platform": "TikTok",
+      "priority": "High",
+      "reason": "Strong donation contribution relative to other platforms.",
+      "recommendedAction": "Post more CTA-led impact stories and appeals on this platform.",
+      "suggestedPostHours": [
+        "23",
+        "19",
+        "12"
+      ],
+      "estimatedMonthlyLiftPhp": 1022157.38
+    },
+    {
+      "platform": "Instagram",
+      "priority": "High",
+      "reason": "Strong donation contribution relative to other platforms.",
+      "recommendedAction": "Post more CTA-led impact stories and appeals on this platform.",
+      "suggestedPostHours": [
+        "13",
+        "12",
+        "17"
+      ],
+      "estimatedMonthlyLiftPhp": 1016450.11
+    },
+    {
+      "platform": "YouTube",
+      "priority": "Medium",
+      "reason": "Strong donation contribution relative to other platforms.",
+      "recommendedAction": "Post more CTA-led impact stories and appeals on this platform.",
+      "suggestedPostHours": [
+        "17",
+        "16",
+        "11"
+      ],
+      "estimatedMonthlyLiftPhp": 419331.37
+    }
+  ],
+  "bestPostingWindows": [
+    {
+      "platform": "WhatsApp",
+      "dayOfWeek": "Tuesday",
+      "postHour": 10,
+      "avgDonationValuePhp": 2402435.96,
+      "avgReferrals": 458.0
+    },
+    {
+      "platform": "YouTube",
+      "dayOfWeek": "Tuesday",
+      "postHour": 16,
+      "avgDonationValuePhp": 801434.24,
+      "avgReferrals": 197.0
+    },
+    {
+      "platform": "TikTok",
+      "dayOfWeek": "Friday",
+      "postHour": 19,
+      "avgDonationValuePhp": 582979.68,
+      "avgReferrals": 126.0
+    },
+    {
+      "platform": "WhatsApp",
+      "dayOfWeek": "Friday",
+      "postHour": 19,
+      "avgDonationValuePhp": 384405.63,
+      "avgReferrals": 95.0
+    },
+    {
+      "platform": "LinkedIn",
+      "dayOfWeek": "Saturday",
+      "postHour": 9,
+      "avgDonationValuePhp": 353761.16,
+      "avgReferrals": 37.5
+    },
+    {
+      "platform": "Facebook",
+      "dayOfWeek": "Monday",
+      "postHour": 15,
+      "avgDonationValuePhp": 331983.26,
+      "avgReferrals": 75.0
+    },
+    {
+      "platform": "WhatsApp",
+      "dayOfWeek": "Monday",
+      "postHour": 21,
+      "avgDonationValuePhp": 319382.55,
+      "avgReferrals": 86.0
+    },
+    {
+      "platform": "YouTube",
+      "dayOfWeek": "Wednesday",
+      "postHour": 12,
+      "avgDonationValuePhp": 309082.5,
+      "avgReferrals": 85.0
+    },
+    {
+      "platform": "LinkedIn",
+      "dayOfWeek": "Wednesday",
+      "postHour": 10,
+      "avgDonationValuePhp": 299723.16,
+      "avgReferrals": 46.5
+    },
+    {
+      "platform": "Instagram",
+      "dayOfWeek": "Friday",
+      "postHour": 13,
+      "avgDonationValuePhp": 250445.65,
+      "avgReferrals": 52.0
+    },
+    {
+      "platform": "Facebook",
+      "dayOfWeek": "Tuesday",
+      "postHour": 9,
+      "avgDonationValuePhp": 239505.82,
+      "avgReferrals": 71.0
+    },
+    {
+      "platform": "YouTube",
+      "dayOfWeek": "Thursday",
+      "postHour": 17,
+      "avgDonationValuePhp": 236730.39,
+      "avgReferrals": 206.0
+    }
+  ]
+}

@@ -1,25 +1,4 @@
-# Secrets
+.venv/
+__pycache__/
+*.pyc
 .env
-.env.*.local
-
-# .NET
-**/bin/
-**/obj/
-*.user
-*.suo
-*.userosscache
-.vs/
-
-# Node
-node_modules/
-**/node_modules/
-
-# Logs (runtime)
-**/Logs/*.txt
-!**/Logs/.gitkeep
-
-# OS
-.DS_Store
-Thumbs.db
-.vercel
-.env*.local

@@ -1,5 +1,0 @@
-/* App-level tweaks; theme tokens live in wwwroot/css/lighthouse-theme.css (imported via site.css) */
-
-#root {
-  min-height: 50vh;
-}
