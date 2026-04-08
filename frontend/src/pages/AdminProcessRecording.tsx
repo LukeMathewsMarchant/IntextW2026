@@ -89,6 +89,13 @@ export function AdminProcessRecording() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
+  const residentIdExists = useMemo(() => {
+    if (!selectedResidentId.trim()) return true
+    const sid = Number(selectedResidentId)
+    if (!sid) return false
+    return residents.some((r) => r.residentId === sid)
+  }, [residents, selectedResidentId])
+
   async function load() {
     try {
       setErr(null)
@@ -108,11 +115,12 @@ export function AdminProcessRecording() {
   }, [])
 
   const timeline = useMemo(() => {
+    if (!residentIdExists) return []
     const sid = Number(selectedResidentId)
     return recordings
       .filter((x) => (!sid ? true : x.residentId === sid))
       .sort((a, b) => String(b.sessionDate ?? '').localeCompare(String(a.sessionDate ?? '')))
-  }, [recordings, selectedResidentId])
+  }, [recordings, residentIdExists, selectedResidentId])
 
   async function createRecording() {
     const residentId = Number(form.residentId || selectedResidentId)
@@ -331,14 +339,20 @@ export function AdminProcessRecording() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <h2 className="h5 mb-0">Session history</h2>
-                <select className="form-select form-select-sm" style={{ maxWidth: 260 }} value={selectedResidentId} onChange={(e) => setSelectedResidentId(e.target.value)}>
-                  <option value="">All residents</option>
-                  {residents.map((r) => (
-                    <option key={r.residentId} value={r.residentId}>
-                      {r.residentId ?? '—'}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ maxWidth: 300, width: '100%' }}>
+                  <input
+                    className="form-control form-control-sm"
+                    type="number"
+                    min={1}
+                    step={1}
+                    placeholder="Filter by Resident ID"
+                    value={selectedResidentId}
+                    onChange={(e) => setSelectedResidentId(e.target.value)}
+                  />
+                  {!residentIdExists ? (
+                    <div className="small text-danger mt-1">That Resident ID does not exist. Enter a valid ID.</div>
+                  ) : null}
+                </div>
               </div>
               <div className="vstack gap-2">
                 {timeline.slice(0, 100).map((row) => (
