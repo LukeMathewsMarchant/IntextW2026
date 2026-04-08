@@ -103,7 +103,9 @@ export function AdminDashboard() {
 
     async function loadOverview() {
       const [m, residents] = await Promise.all([
-        fetchJson<{ activeSupporters: number; totalDonationValue: number; donationsLast90Days: number }>('/api/admin/metrics/okr'),
+        fetchJson<{ activeSupporters: number; totalDonationValue: number; donationsLast90Days: number }>(
+          '/api/admin/metrics/okr?donorRecencyPageSize=0',
+        ),
         fetchJson<unknown[]>('/api/admin/data/residents'),
       ])
       if (cancelled) return
