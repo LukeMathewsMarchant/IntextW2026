@@ -20,14 +20,12 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build venv inside ml-service
+      - name: Validate dependencies install correctly
         run: |
           cd ml-service
-          python -m venv antenv
-          source antenv/bin/activate
           pip install -r requirements.txt
 
-      - name: Upload ml-service with venv
+      - name: Upload ml-service artifact
         uses: actions/upload-artifact@v4
         with:
           name: python-app
