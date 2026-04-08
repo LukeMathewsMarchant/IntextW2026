@@ -319,33 +319,24 @@ export function AdminDashboard() {
                   Visitations
                 </Link>
               </div>
+              <div className="col-6">
+                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/Analytics">
+                  Reports & analytics
+                </Link>
+              </div>
+              <div className="col-6">
+                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/Okr">
+                  OKR metrics
+                </Link>
+              </div>
+              <div className="col-6">
+                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/Audit">
+                  Audit log
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="d-flex flex-wrap gap-2 mb-3">
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/DonorsContributions">
-          Donors & contributions
-        </Link>
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/CaseloadInventory">
-          Resident list
-        </Link>
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/ProcessRecording">
-          Process recording
-        </Link>
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/HomeVisitationConferences">
-          Home visitation & conferences
-        </Link>
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/Audit">
-          Audit log
-        </Link>
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/Okr">
-          OKR metrics
-        </Link>
-        <Link className="btn btn-outline-primary btn-sm lh-btn-pill" to="/Admin/Analytics">
-          Donor analytics
-        </Link>
       </div>
 
     </div>
