@@ -143,7 +143,7 @@ const subCategoryFields: Array<keyof ResidentForm> = [
 ]
 
 const caseCategoryOptions = ['Neglected', 'Abandoned', 'Surrendered', 'Foundling'] as const
-const caseStatusOptions = ['Active', 'On Hold'] as const
+const caseStatusOptions = ['Active', 'Transferred'] as const
 const referralSourceOptions = ['NGO', 'Government Agency', 'Court Order', 'Police', 'Community', 'Self-Referral'] as const
 const riskLevelOptions = ['Low', 'Medium', 'High', 'Critical'] as const
 const reintegrationTypeOptions = ['Family Reunification', 'Foster Care', 'Adoption (Domestic)', 'Adoption (Inter-Country)', 'Independent Living'] as const
@@ -379,10 +379,6 @@ export function AdminCaseloadInventory() {
   }
 
   async function saveResident() {
-    if (form.caseStatus === 'Closed') {
-      setErr('Use the Close button to set a case to Closed and capture a required reason.')
-      return
-    }
     const nextErrors: Record<string, string> = {}
     if (!form.caseControlNo.trim()) nextErrors.caseControlNo = 'Required'
     if (!form.internalCode.trim()) nextErrors.internalCode = 'Required'
@@ -594,7 +590,9 @@ export function AdminCaseloadInventory() {
                   <label className="form-label small mb-1">Case status</label>
                   <select className="form-select form-select-sm" value={form.caseStatus} onChange={(e) => setForm((p) => ({ ...p, caseStatus: e.target.value }))}>
                     {caseStatusOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                    {form.caseStatus === 'Closed' ? <option value="Closed">Closed (set via Close button)</option> : null}
+                    {form.caseStatus === 'Closed' ? (
+                      <option value="Closed">Closed (only via Close case)</option>
+                    ) : null}
                   </select>
                 </div>
                 <div className="col-6">

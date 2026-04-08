@@ -19,7 +19,7 @@ public class AdminApiController : ControllerBase
 {
     private static readonly HashSet<string> ValidCaseStatuses = new(StringComparer.Ordinal)
     {
-        "Active", "Closed", "On Hold"
+        "Active", "Closed", "Transferred"
     };
     private static readonly HashSet<string> ValidCaseCategories = new(StringComparer.Ordinal)
     {
