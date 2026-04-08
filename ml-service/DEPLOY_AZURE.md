@@ -18,6 +18,8 @@ Deploy `ml-service` as a separate Azure App Service (Python).
 
 - `SOCIAL_MEDIA_CACHE_PATH=artifacts/social_media_analytics_cache.json`
 - `SOCIAL_MEDIA_DATASET_PATH=../datasets/social_media_posts.csv` (optional fallback)
+- `DONATIONS_DATASET_PATH=../datasets/donations.csv` (optional; defaults under repo root `datasets/donations.csv` when deployed from this layout)
+- `DONATIONS_METRICS_PATH=../ml-pipelines/artifacts/donations_model_metrics.csv` (optional; enriches `/donations/analytics` with pipeline holdout metrics when present)
 
 ### Startup command
 
@@ -36,6 +38,7 @@ Set backend App Service settings:
 
 - `SocialMediaMlApi__BaseUrl=https://<ml-service>.azurewebsites.net`
 - `SocialMediaMlApi__AnalyticsPath=/social-media/analytics`
+- `SocialMediaMlApi__DonationsAnalyticsPath=/donations/analytics` (optional; this is the default)
 - `SocialMediaMlApi__ApiKey=` (optional if you add key auth)
 
 Redeploy backend.
@@ -43,6 +46,7 @@ Redeploy backend.
 Verify backend endpoint:
 
 - `GET https://<backend>.azurewebsites.net/api/admin/analytics/social-media`
+- `GET https://<backend>.azurewebsites.net/api/admin/analytics/donations-ml` (admin session required)
 
 ## 3) Frontend validation
 

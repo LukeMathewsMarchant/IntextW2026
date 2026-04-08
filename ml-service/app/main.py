@@ -252,8 +252,181 @@ def _load_cached_or_build() -> dict[str, Any]:
     return payload
 
 
-app = FastAPI(title='Lighthouse Social Media ML API', version='1.0.0')
+def _repo_root() -> Path:
+    """Repository root (parent of ml-service/)."""
+    return _artifact_root().resolve().parent
+
+
+def _donations_analytics_empty(load_warning: str = '', data_source: str = 'empty') -> dict[str, Any]:
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': data_source,
+        'loadWarning': load_warning,
+        'summary': {
+            'totalGifts': 0,
+            'totalEstimatedValue': 0.0,
+            'avgEstimatedValue': 0.0,
+            'recurringShare': 0.0,
+            'withSocialReferralCount': 0,
+        },
+        'channelMix': [],
+        'giftTypeMix': [],
+        'monthlyTotals': [],
+        'pipelineModel': None,
+    }
+
+
+def _build_donations_analytics() -> dict[str, Any]:
+    """
+    Donation trends for the admin dashboard (datasets/donations.csv + optional ML metrics).
+    Isolated from social-media logic; failures never affect /social-media/*.
+    """
+    root = _repo_root()
+    csv_path = Path(os.getenv('DONATIONS_DATASET_PATH', str(root / 'datasets' / 'donations.csv')))
+    metrics_path = Path(
+        os.getenv(
+            'DONATIONS_METRICS_PATH',
+            str(root / 'ml-pipelines' / 'artifacts' / 'donations_model_metrics.csv'),
+        )
+    )
+
+    if not csv_path.is_file():
+        return _donations_analytics_empty(f'Donations CSV not found: {csv_path}', 'missing-file')
+
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as ex:
+        return _donations_analytics_empty(f'Failed to read donations CSV: {ex}', 'error')
+
+    if df.empty:
+        return _donations_analytics_empty('', 'empty')
+
+    value_col = 'estimated_value'
+    if value_col not in df.columns:
+        return _donations_analytics_empty('Column estimated_value missing in donations file.', 'error')
+
+    df = df.copy()
+    df[value_col] = pd.to_numeric(df[value_col], errors='coerce')
+    df = df.dropna(subset=[value_col])
+
+    if df.empty:
+        return _donations_analytics_empty('No rows with numeric estimated_value.', 'empty')
+
+    if 'donation_date' in df.columns:
+        df['donation_date'] = pd.to_datetime(df['donation_date'], errors='coerce')
+        df['_month'] = df['donation_date'].dt.strftime('%Y-%m')
+    else:
+        df['_month'] = 'Unknown'
+
+    n = int(len(df))
+    total_val = float(df[value_col].sum())
+    avg_val = float(df[value_col].mean()) if n else 0.0
+
+    recurring_share = 0.0
+    if 'is_recurring' in df.columns:
+        rec = df['is_recurring'].astype(str).str.lower().isin(('true', '1', 'yes'))
+        recurring_share = round(float(rec.mean()), 4)
+
+    ref_count = 0
+    if 'referral_post_id' in df.columns:
+        ref_count = int(df['referral_post_id'].notna().sum())
+
+    monthly = (
+        df.groupby('_month', dropna=False)[value_col]
+        .sum()
+        .reset_index()
+        .rename(columns={'_month': 'month', value_col: 'totalEstimatedValue'})
+    )
+    monthly_totals: list[dict[str, Any]] = []
+    for _, row in monthly.sort_values('month').iterrows():
+        monthly_totals.append(
+            {
+                'month': str(row['month']) if pd.notna(row['month']) else 'Unknown',
+                'totalEstimatedValue': round(_safe_float(row['totalEstimatedValue']), 2),
+            }
+        )
+
+    ch_col = 'channel_source' if 'channel_source' in df.columns else None
+    channel_mix: list[dict[str, Any]] = []
+    if ch_col:
+        g = df.groupby(ch_col, dropna=False).agg(giftCount=(value_col, 'count'), totalEstimatedValue=(value_col, 'sum'))
+        g = g.reset_index().sort_values('totalEstimatedValue', ascending=False)
+        for _, row in g.iterrows():
+            gc = _safe_int(row['giftCount'])
+            tv = _safe_float(row['totalEstimatedValue'])
+            avg_ev = round(tv / gc, 2) if gc else 0.0
+            channel_mix.append(
+                {
+                    'channelSource': str(row[ch_col]) if pd.notna(row[ch_col]) else 'Unknown',
+                    'giftCount': gc,
+                    'totalEstimatedValue': round(tv, 2),
+                    'avgEstimatedValue': avg_ev,
+                }
+            )
+
+    type_col = 'donation_type' if 'donation_type' in df.columns else None
+    gift_type_mix: list[dict[str, Any]] = []
+    if type_col:
+        g2 = df.groupby(type_col, dropna=False).agg(giftCount=(value_col, 'count'), totalEstimatedValue=(value_col, 'sum'))
+        g2 = g2.reset_index().sort_values('totalEstimatedValue', ascending=False)
+        for _, row in g2.iterrows():
+            gift_type_mix.append(
+                {
+                    'donationType': str(row[type_col]) if pd.notna(row[type_col]) else 'Unknown',
+                    'giftCount': _safe_int(row['giftCount']),
+                    'totalEstimatedValue': round(_safe_float(row['totalEstimatedValue']), 2),
+                }
+            )
+
+    pipeline_model: dict[str, Any] | None = None
+    if metrics_path.is_file():
+        try:
+            mdf = pd.read_csv(metrics_path)
+            if len(mdf):
+                row = mdf.iloc[0].to_dict()
+                pipeline_model = {
+                    'name': 'donations',
+                    'targetDescription': 'estimated_value (regression from ml-pipelines/pipeline_kit)',
+                    'holdoutMaePredictive': _safe_float(row.get('predictive_mae')),
+                    'holdoutR2Predictive': _safe_float(row.get('predictive_r2')),
+                    'holdoutMaeExplanatory': _safe_float(row.get('explanatory_mae')),
+                    'holdoutR2Explanatory': _safe_float(row.get('explanatory_r2')),
+                }
+        except Exception:
+            pipeline_model = None
+
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': 'csv',
+        'loadWarning': '',
+        'summary': {
+            'totalGifts': n,
+            'totalEstimatedValue': round(total_val, 2),
+            'avgEstimatedValue': round(avg_val, 2),
+            'recurringShare': recurring_share,
+            'withSocialReferralCount': ref_count,
+        },
+        'channelMix': channel_mix,
+        'giftTypeMix': gift_type_mix,
+        'monthlyTotals': monthly_totals,
+        'pipelineModel': pipeline_model,
+    }
+
+
+def _safe_load_donations_analytics() -> dict[str, Any]:
+    try:
+        return _build_donations_analytics()
+    except Exception as ex:
+        return _donations_analytics_empty(f'Donations analytics build failed: {ex}', 'error')
+
+
+app = FastAPI(
+    title='Lighthouse ML API',
+    description='Social media analytics (existing) + donations pipeline trends for admin dashboard.',
+    version='1.1.0',
+)
 _cache = _load_cached_or_build()
+_donations_cache = _safe_load_donations_analytics()
 
 
 @app.get('/health')
@@ -279,3 +452,9 @@ def social_media_recommendations() -> list[dict[str, Any]]:
 @app.get('/social-media/analytics')
 def social_media_analytics() -> dict[str, Any]:
     return _cache
+
+
+@app.get('/donations/analytics')
+def donations_analytics() -> dict[str, Any]:
+    """Trends + channel/type mix from donations.csv; optional metrics from donations notebook artifacts."""
+    return _donations_cache
