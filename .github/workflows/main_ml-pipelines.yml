@@ -25,6 +25,9 @@ jobs:
           cd ml-service
           pip install -r requirements.txt
 
+      - name: Make startup script executable
+        run: chmod +x ml-service/startup.sh
+
       - name: Upload ml-service artifact
         uses: actions/upload-artifact@v4
         with:
