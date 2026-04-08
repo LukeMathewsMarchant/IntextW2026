@@ -1,5 +1,3 @@
-using Lighthouse.Web.Models.Entities;
-
 namespace Lighthouse.Web.Services;
 
 public interface IAuditLogService
@@ -14,6 +12,4 @@ public interface IAuditLogService
         string? ipAddress,
         string? correlationId,
         CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<AdminAuditLog>> GetRecentAsync(int take, CancellationToken cancellationToken = default);
 }

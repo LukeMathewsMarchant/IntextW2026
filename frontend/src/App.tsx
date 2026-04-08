@@ -5,7 +5,6 @@ import { RequireRole } from './components/RequireRole'
 import { RequireAuth } from './components/RequireAuth'
 import { About } from './pages/About'
 import { AdminAnalytics } from './pages/AdminAnalytics'
-import { AdminAudit } from './pages/AdminAudit'
 import { AdminCrud } from './pages/AdminCrud'
 import { AdminDashboard } from './pages/AdminDashboard'
 import { AdminDonorsContributions } from './pages/AdminDonorsContributions'
@@ -51,8 +50,6 @@ export default function App() {
           <Route path="/admin" element={<RequireRole role="Admin"><Navigate to="/Admin" replace /></RequireRole>} />
           <Route path="/Admin/Crud/:entity" element={<RequireRole role="Admin"><AdminCrud /></RequireRole>} />
           <Route path="/admin/crud/:entity" element={<RequireRole role="Admin"><AdminCrud /></RequireRole>} />
-          <Route path="/Admin/Audit" element={<RequireRole role="Admin"><AdminAudit /></RequireRole>} />
-          <Route path="/admin/audit" element={<RequireRole role="Admin"><Navigate to="/Admin/Audit" replace /></RequireRole>} />
           <Route path="/Admin/Okr" element={<RequireRole role="Admin"><AdminOkr /></RequireRole>} />
           <Route path="/admin/okr" element={<RequireRole role="Admin"><Navigate to="/Admin/Okr" replace /></RequireRole>} />
           <Route path="/Admin/Analytics" element={<RequireRole role="Admin"><AdminAnalytics /></RequireRole>} />

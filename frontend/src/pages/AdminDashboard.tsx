@@ -329,11 +329,6 @@ export function AdminDashboard() {
                   OKR metrics
                 </Link>
               </div>
-              <div className="col-6">
-                <Link className="btn lh-btn-ghost w-100 lh-btn-pill btn-sm" to="/Admin/Audit">
-                  Audit log
-                </Link>
-              </div>
             </div>
           </div>
         </div>

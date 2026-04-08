@@ -68,13 +68,6 @@ public class AdminApiController : ControllerBase
         return Ok(snap);
     }
 
-    [HttpGet("audit")]
-    public async Task<IActionResult> AuditLog([FromQuery] int take = 200, CancellationToken cancellationToken = default)
-    {
-        var rows = await _audit.GetRecentAsync(Math.Clamp(take, 1, 2000), cancellationToken);
-        return Ok(rows);
-    }
-
     [HttpGet("analytics/donor-propensity")]
     public async Task<IActionResult> DonorPropensity(
         [FromServices] OkrMetricsService okr,

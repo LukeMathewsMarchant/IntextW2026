@@ -20,12 +20,6 @@ public class AdminController : Controller
         return View("ReactApp");
     }
 
-    public IActionResult Audit()
-    {
-        ViewBag.Page = "admin-audit";
-        return View("ReactApp");
-    }
-
     public IActionResult Okr()
     {
         ViewBag.Page = "admin-okr";

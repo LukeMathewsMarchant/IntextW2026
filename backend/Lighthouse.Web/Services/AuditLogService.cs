@@ -40,13 +40,4 @@ public class AuditLogService : IAuditLogService
         _db.AdminAuditLogs.Add(row);
         await _db.SaveChangesAsync(cancellationToken);
     }
-
-    public async Task<IReadOnlyList<AdminAuditLog>> GetRecentAsync(int take, CancellationToken cancellationToken = default)
-    {
-        return await _db.AdminAuditLogs
-            .AsNoTracking()
-            .OrderByDescending(a => a.Timestamp)
-            .Take(take)
-            .ToListAsync(cancellationToken);
-    }
 }
