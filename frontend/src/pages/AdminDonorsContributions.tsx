@@ -196,14 +196,17 @@ export function AdminDonorsContributions() {
   }, [supporters])
 
   const donationStatsBySupporter = useMemo(() => {
-    const stats = new Map<number, { total: number; lastDate: string | null }>()
+    const stats = new Map<number, { moneyTotal: number; hoursTotal: number; lastDate: string | null }>()
     donations.forEach((d) => {
       if (!d.supporterId) return
-      const prev = stats.get(d.supporterId) ?? { total: 0, lastDate: null }
+      const prev = stats.get(d.supporterId) ?? { moneyTotal: 0, hoursTotal: 0, lastDate: null }
       const value = Number(d.estimatedValue ?? d.amount ?? 0)
       const date = d.donationDate ?? (d.createdAt ? String(d.createdAt).slice(0, 10) : null)
+      const type = donationTypeLabel(d.donationType)
+      const safeValue = Number.isFinite(value) ? value : 0
       stats.set(d.supporterId, {
-        total: prev.total + (Number.isFinite(value) ? value : 0),
+        moneyTotal: prev.moneyTotal + (type === 'Monetary' ? safeValue : 0),
+        hoursTotal: prev.hoursTotal + (type === 'Time' ? safeValue : 0),
         lastDate: prev.lastDate && date ? (prev.lastDate > date ? prev.lastDate : date) : (prev.lastDate ?? date),
       })
     })
@@ -495,7 +498,7 @@ export function AdminDonorsContributions() {
               </div>
               <div className="table-responsive">
                 <table className="table table-sm">
-                  <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Total donated</th><th>Last donation</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Total money</th><th>Total hours</th><th>Last donation</th><th>Actions</th></tr></thead>
                   <tbody>
                     {filteredSupporters.slice(0, 100).map((s) => (
                       <tr key={s.supporterId ?? `${s.email}-${s.displayName}`}>
@@ -514,7 +517,8 @@ export function AdminDonorsContributions() {
                             s.email ?? '—'
                           )}
                         </td>
-                        <td>{s.supporterId ? (donationStatsBySupporter.get(s.supporterId)?.total ?? 0).toLocaleString() : '0'}</td>
+                        <td>{s.supporterId ? `$${(donationStatsBySupporter.get(s.supporterId)?.moneyTotal ?? 0).toLocaleString()}` : '$0'}</td>
+                        <td>{s.supporterId ? `${(donationStatsBySupporter.get(s.supporterId)?.hoursTotal ?? 0).toLocaleString()} hours` : '0 hours'}</td>
                         <td>{s.supporterId ? (donationStatsBySupporter.get(s.supporterId)?.lastDate ?? '—') : '—'}</td>
                         <td>
                           <div className="d-flex gap-1">

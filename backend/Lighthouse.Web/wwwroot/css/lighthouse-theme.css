@@ -27,8 +27,12 @@
   --lh-border: #334155;
   --lh-surface: #0f172a;
   --lh-card: #1e293b;
-  --lh-primary-soft: #1a274f;
+  --lh-primary: #8fb4ff;
+  --lh-primary-hover: #b5ccff;
+  --lh-primary-soft: #23335f;
   --lh-ribbon-bg: #15203d;
+  --bs-primary: #8fb4ff;
+  --bs-primary-rgb: 143, 180, 255;
 }
 
 html {
@@ -1115,4 +1119,15 @@ body.lh-body {
 
 .text-muted {
   color: var(--lh-muted) !important;
+}
+
+[data-bs-theme="dark"] .text-primary,
+[data-bs-theme="dark"] a:not(.btn):not(.nav-link):not(.dropdown-item),
+[data-bs-theme="dark"] .btn-link {
+  color: var(--lh-primary) !important;
+}
+
+[data-bs-theme="dark"] a:not(.btn):not(.nav-link):not(.dropdown-item):hover,
+[data-bs-theme="dark"] .btn-link:hover {
+  color: var(--lh-primary-hover) !important;
 }
