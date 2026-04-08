@@ -20,6 +20,7 @@ type Donation = {
   estimatedValue?: number
   createdAt?: string
   donationDate?: string
+  notes?: string | null
 }
 
 type Allocation = {
@@ -710,7 +711,7 @@ export function AdminDonorsContributions() {
               </div>
               <div className="table-responsive mb-2">
                 <table className="table table-sm">
-                  <thead><tr><th>Donation</th><th>Donor</th><th>Type</th><th>Amount</th><th>Created</th><th>Allocations</th><th>Manage</th></tr></thead>
+                  <thead><tr><th>Donation</th><th>Donor</th><th>Type</th><th>Amount</th><th>Notes</th><th>Created</th><th>Allocations</th><th>Manage</th></tr></thead>
                   <tbody>
                     {filteredDonations.slice(0, 100).map((d) => (
                       <Fragment key={`donation-${d.donationId ?? `${d.supporterId}-${d.createdAt}`}`}>
@@ -732,6 +733,7 @@ export function AdminDonorsContributions() {
                               formatContributionAmount(d)
                             )}
                           </td>
+                          <td>{d.notes ?? '—'}</td>
                           <td>{d.createdAt ? String(d.createdAt).slice(0, 10) : '—'}</td>
                           <td>
                             {(() => {
@@ -790,7 +792,7 @@ export function AdminDonorsContributions() {
                         </tr>
                         {typeof d.donationId === 'number' && expandedDonations.has(d.donationId) ? (
                           <tr>
-                            <td colSpan={7} className="bg-light-subtle">
+                            <td colSpan={8} className="bg-light-subtle">
                               <div className="small fw-semibold mb-1">Allocation details</div>
                               <div className="table-responsive">
                                 <table className="table table-sm mb-0">
