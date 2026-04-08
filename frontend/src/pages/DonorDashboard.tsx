@@ -93,8 +93,17 @@ export function DonorDashboard() {
         <div className="lh-kpi-card lh-kpi-deep">
           <div className="d-flex justify-content-between align-items-start">
             <div>
-              <div className="small opacity-90">Total estimated (PHP)</div>
-              <div className="lh-kpi-value mt-1">{summary ? summary.totalEstimated.toFixed(0) : '—'}</div>
+              <div className="small opacity-90">Total (USD)</div>
+              <div className="lh-kpi-value mt-1">
+                {summary
+                  ? summary.totalEstimated.toLocaleString(undefined, {
+                      style: 'currency',
+                      currency: 'USD',
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  : '—'}
+              </div>
               <div className="lh-kpi-meta mt-1">From linked supporter record</div>
             </div>
             <span className="fs-4">&#36;</span>
@@ -130,7 +139,7 @@ export function DonorDashboard() {
             <div className="row g-3 align-items-end">
               <div className="col-sm-6">
                 <label className="form-label small text-secondary mb-1" htmlFor="monthlyAmount">
-                  Donation amount (PHP)
+                  Donation amount (USD)
                 </label>
                 <input
                   id="monthlyAmount"
@@ -168,19 +177,19 @@ export function DonorDashboard() {
             {history.length === 0 ? (
               <p className="small text-secondary mb-0">No donations recorded yet.</p>
             ) : (
-              <div className="table-responsive">
+              <div className="table-responsive overflow-auto" style={{ maxHeight: 320 }}>
                 <table className="table table-sm mb-0">
                   <thead>
                     <tr>
                       <th>Date</th>
-                      <th className="text-end">Amount (PHP)</th>
+                      <th className="text-end">Amount (USD)</th>
                       <th>Notes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {history.map((row, idx) => (
                       <tr key={`${row.donationDate}-${idx}`}>
-                        <td>{row.donationDate}</td>
+                        <td className="text-nowrap">{row.donationDate}</td>
                         <td className="text-end">{row.amount.toFixed(2)}</td>
                         <td>{row.notes ?? '—'}</td>
                       </tr>
