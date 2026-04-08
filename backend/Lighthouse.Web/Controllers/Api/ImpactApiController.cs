@@ -1,4 +1,5 @@
 using Lighthouse.Web.Data;
+using Lighthouse.Web.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +16,9 @@ public class ImpactApiController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
+        // Must compare enum to constant — EF cannot translate Status.ToString() to SQL on PostgreSQL enums.
         var activeSupporters = await _db.Supporters.AsNoTracking()
-            .CountAsync(s => s.Status.ToString() == "Active", cancellationToken);
+            .CountAsync(s => s.Status == SupporterStatus.Active, cancellationToken);
 
         var safehouseCount = await _db.Safehouses.AsNoTracking()
             .CountAsync(s => s.Status == "Active", cancellationToken);
