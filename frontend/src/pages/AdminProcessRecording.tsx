@@ -240,16 +240,26 @@ export function AdminProcessRecording() {
     <div>
       <h1 className="h3 mb-2">Process Recording</h1>
       <p className="text-secondary mb-3">Record counseling sessions and review resident healing history in chronological order.</p>
-      {err ? <div className="alert alert-warning">{err}</div> : null}
+      {err ? (
+        <div className="alert alert-warning" role="alert">
+          {err}
+        </div>
+      ) : null}
 
       <div className="row g-3">
         <div className="col-lg-5">
-          <div className="card border-0 shadow-sm">
+          <section className="card border-0 shadow-sm" aria-labelledby="pr-new-heading">
             <div className="card-body">
-              <h2 className="h5 mb-2">New session note</h2>
+              <h2 id="pr-new-heading" className="h5 mb-2">
+                New session note
+              </h2>
               <div className="row g-2">
                 <div className="col-12">
+                  <label htmlFor="pr-new-resident" className="form-label small mb-1">
+                    Resident
+                  </label>
                   <select
+                    id="pr-new-resident"
                     className="form-select form-select-sm"
                     value={form.residentId}
                     onChange={(e) => {
@@ -266,20 +276,54 @@ export function AdminProcessRecording() {
                   </select>
                 </div>
                 <div className="col-6">
-                  <input className="form-control form-control-sm" type="date" value={form.sessionDate} onChange={(e) => setForm((p) => ({ ...p, sessionDate: e.target.value }))} />
+                  <label htmlFor="pr-new-session-date" className="form-label small mb-1">
+                    Session date
+                  </label>
+                  <input
+                    id="pr-new-session-date"
+                    className="form-control form-control-sm"
+                    type="date"
+                    value={form.sessionDate}
+                    onChange={(e) => setForm((p) => ({ ...p, sessionDate: e.target.value }))}
+                  />
                 </div>
                 <div className="col-6">
-                  <select className="form-select form-select-sm" value={form.sessionType} onChange={(e) => setForm((p) => ({ ...p, sessionType: e.target.value }))}>
+                  <label htmlFor="pr-new-session-type" className="form-label small mb-1">
+                    Session type
+                  </label>
+                  <select
+                    id="pr-new-session-type"
+                    className="form-select form-select-sm"
+                    value={form.sessionType}
+                    onChange={(e) => setForm((p) => ({ ...p, sessionType: e.target.value }))}
+                  >
                     <option value="Individual">Individual</option>
                     <option value="Group">Group</option>
                   </select>
                 </div>
                 <div className="col-6">
-                  <input className="form-control form-control-sm" placeholder="Social worker" value={form.socialWorker} onChange={(e) => setForm((p) => ({ ...p, socialWorker: e.target.value }))} />
+                  <label htmlFor="pr-new-social-worker" className="form-label small mb-1">
+                    Social worker
+                  </label>
+                  <input
+                    id="pr-new-social-worker"
+                    className="form-control form-control-sm"
+                    autoComplete="name"
+                    value={form.socialWorker}
+                    onChange={(e) => setForm((p) => ({ ...p, socialWorker: e.target.value }))}
+                  />
                 </div>
                 <div className="col-6">
-                  <select className="form-select form-select-sm" value={form.emotionalStateObserved} onChange={(e) => setForm((p) => ({ ...p, emotionalStateObserved: e.target.value }))}>
-                    <option value="">Observed emotional state</option>
+                  <label htmlFor="pr-new-emotional-observed" className="form-label small mb-1">
+                    Observed emotional state
+                  </label>
+                  <select
+                    id="pr-new-emotional-observed"
+                    className="form-select form-select-sm"
+                    value={form.emotionalStateObserved}
+                    onChange={(e) => setForm((p) => ({ ...p, emotionalStateObserved: e.target.value }))}
+                  >
+                    <option value="">Select state</option>
                     {Object.values(emotionalStateLabelMap).map((label) => (
                       <option key={label} value={label}>
                         {label}
@@ -288,8 +332,16 @@ export function AdminProcessRecording() {
                   </select>
                 </div>
                 <div className="col-6">
-                  <select className="form-select form-select-sm" value={form.emotionalStateEnd} onChange={(e) => setForm((p) => ({ ...p, emotionalStateEnd: e.target.value }))}>
-                    <option value="">Emotional state at end</option>
+                  <label htmlFor="pr-new-emotional-end" className="form-label small mb-1">
+                    Emotional state at end
+                  </label>
+                  <select
+                    id="pr-new-emotional-end"
+                    className="form-select form-select-sm"
+                    value={form.emotionalStateEnd}
+                    onChange={(e) => setForm((p) => ({ ...p, emotionalStateEnd: e.target.value }))}
+                  >
+                    <option value="">Select state</option>
                     {Object.values(emotionalStateLabelMap).map((label) => (
                       <option key={label} value={label}>
                         {label}
@@ -298,32 +350,90 @@ export function AdminProcessRecording() {
                   </select>
                 </div>
                 <div className="col-6">
-                  <input className="form-control form-control-sm" type="number" min={0} placeholder="Session minutes" value={form.sessionDurationMinutes} onChange={(e) => setForm((p) => ({ ...p, sessionDurationMinutes: e.target.value }))} />
+                  <label htmlFor="pr-new-duration" className="form-label small mb-1">
+                    Session minutes
+                  </label>
+                  <input
+                    id="pr-new-duration"
+                    className="form-control form-control-sm"
+                    type="number"
+                    min={0}
+                    value={form.sessionDurationMinutes}
+                    onChange={(e) => setForm((p) => ({ ...p, sessionDurationMinutes: e.target.value }))}
+                  />
                 </div>
                 <div className="col-12">
-                  <textarea className="form-control form-control-sm" rows={3} placeholder="Narrative summary" value={form.sessionNarrative} onChange={(e) => setForm((p) => ({ ...p, sessionNarrative: e.target.value }))} />
+                  <label htmlFor="pr-new-narrative" className="form-label small mb-1">
+                    Narrative summary
+                  </label>
+                  <textarea
+                    id="pr-new-narrative"
+                    className="form-control form-control-sm"
+                    rows={3}
+                    value={form.sessionNarrative}
+                    onChange={(e) => setForm((p) => ({ ...p, sessionNarrative: e.target.value }))}
+                  />
                 </div>
                 <div className="col-12">
-                  <textarea className="form-control form-control-sm" rows={2} placeholder="Interventions applied" value={form.interventionsApplied} onChange={(e) => setForm((p) => ({ ...p, interventionsApplied: e.target.value }))} />
+                  <label htmlFor="pr-new-interventions" className="form-label small mb-1">
+                    Interventions applied
+                  </label>
+                  <textarea
+                    id="pr-new-interventions"
+                    className="form-control form-control-sm"
+                    rows={2}
+                    value={form.interventionsApplied}
+                    onChange={(e) => setForm((p) => ({ ...p, interventionsApplied: e.target.value }))}
+                  />
                 </div>
                 <div className="col-12">
-                  <textarea className="form-control form-control-sm" rows={2} placeholder="Follow-up actions" value={form.followUpActions} onChange={(e) => setForm((p) => ({ ...p, followUpActions: e.target.value }))} />
+                  <label htmlFor="pr-new-followup" className="form-label small mb-1">
+                    Follow-up actions
+                  </label>
+                  <textarea
+                    id="pr-new-followup"
+                    className="form-control form-control-sm"
+                    rows={2}
+                    value={form.followUpActions}
+                    onChange={(e) => setForm((p) => ({ ...p, followUpActions: e.target.value }))}
+                  />
                 </div>
                 <div className="col-12">
-                  <div className="d-flex flex-wrap gap-3 small">
-                    <label className="form-check-label d-flex align-items-center gap-2">
-                      <input className="form-check-input mt-0" type="checkbox" checked={Boolean(form.progressNoted)} onChange={(e) => setForm((p) => ({ ...p, progressNoted: e.target.checked }))} />
-                      Progress noted
-                    </label>
-                    <label className="form-check-label d-flex align-items-center gap-2">
-                      <input className="form-check-input mt-0" type="checkbox" checked={Boolean(form.concernsFlagged)} onChange={(e) => setForm((p) => ({ ...p, concernsFlagged: e.target.checked }))} />
-                      Concerns flagged
-                    </label>
-                    <label className="form-check-label d-flex align-items-center gap-2">
-                      <input className="form-check-input mt-0" type="checkbox" checked={Boolean(form.referralMade)} onChange={(e) => setForm((p) => ({ ...p, referralMade: e.target.checked }))} />
-                      Referral made
-                    </label>
-                  </div>
+                  <fieldset className="border-0 p-0 m-0">
+                    <legend className="form-label small mb-1">Session flags</legend>
+                    <div className="d-flex flex-wrap gap-3 small">
+                      <label className="form-check-label d-flex align-items-center gap-2">
+                        <input
+                          id="pr-new-progress"
+                          className="form-check-input mt-0"
+                          type="checkbox"
+                          checked={Boolean(form.progressNoted)}
+                          onChange={(e) => setForm((p) => ({ ...p, progressNoted: e.target.checked }))}
+                        />
+                        Progress noted
+                      </label>
+                      <label className="form-check-label d-flex align-items-center gap-2">
+                        <input
+                          id="pr-new-concerns"
+                          className="form-check-input mt-0"
+                          type="checkbox"
+                          checked={Boolean(form.concernsFlagged)}
+                          onChange={(e) => setForm((p) => ({ ...p, concernsFlagged: e.target.checked }))}
+                        />
+                        Concerns flagged
+                      </label>
+                      <label className="form-check-label d-flex align-items-center gap-2">
+                        <input
+                          id="pr-new-referral"
+                          className="form-check-input mt-0"
+                          type="checkbox"
+                          checked={Boolean(form.referralMade)}
+                          onChange={(e) => setForm((p) => ({ ...p, referralMade: e.target.checked }))}
+                        />
+                        Referral made
+                      </label>
+                    </div>
+                  </fieldset>
                 </div>
                 <div className="col-12">
                   <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={createRecording}>
@@ -332,31 +442,47 @@ export function AdminProcessRecording() {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
         <div className="col-lg-7">
-          <div className="card border-0 shadow-sm">
+          <section className="card border-0 shadow-sm" aria-labelledby="pr-history-heading">
             <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h2 className="h5 mb-0">Session history</h2>
+              <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <h2 id="pr-history-heading" className="h5 mb-0">
+                  Session history
+                </h2>
                 <div style={{ maxWidth: 300, width: '100%' }}>
+                  <label htmlFor="pr-filter-resident-id" className="form-label small mb-1">
+                    Filter by resident ID
+                  </label>
                   <input
+                    id="pr-filter-resident-id"
                     className="form-control form-control-sm"
                     type="number"
                     min={1}
                     step={1}
-                    placeholder="Filter by Resident ID"
+                    aria-describedby={!residentIdExists && selectedResidentId.trim() ? 'pr-filter-error' : undefined}
                     value={selectedResidentId}
                     onChange={(e) => setSelectedResidentId(e.target.value)}
                   />
-                  {!residentIdExists ? (
-                    <div className="small text-danger mt-1">That Resident ID does not exist. Enter a valid ID.</div>
+                  {!residentIdExists && selectedResidentId.trim() ? (
+                    <div id="pr-filter-error" className="small text-danger mt-1" role="status">
+                      That Resident ID does not exist. Enter a valid ID.
+                    </div>
                   ) : null}
                 </div>
               </div>
               <div className="vstack gap-2">
-                {timeline.slice(0, 100).map((row) => (
-                  <div key={row.recordingId ?? `${row.residentId}-${row.sessionDate}-${row.socialWorker}`} className="border rounded p-2">
+                {timeline.slice(0, 100).map((row) => {
+                  const sessionKey = row.recordingId ?? `${row.residentId}-${row.sessionDate}-${row.socialWorker}`
+                  const eid = String(row.recordingId != null ? row.recordingId : sessionKey).replace(/[^a-zA-Z0-9_-]/g, '_')
+                  const sessionSummary = `${row.sessionDate ?? 'No date'}, resident ${row.residentId ?? '—'}`
+                  return (
+                  <article
+                    key={sessionKey}
+                    className="border rounded p-2"
+                    aria-label={`Process recording ${sessionSummary}`}
+                  >
                     <div className="d-flex justify-content-between flex-wrap gap-2">
                       <strong>{row.sessionDate ?? 'No date'} · {sessionTypeLabel(row.sessionType) || 'Session'}</strong>
                       <span className="small text-secondary">Resident #{row.residentId ?? '—'} · {row.socialWorker ?? 'Unassigned'}</span>
@@ -364,58 +490,160 @@ export function AdminProcessRecording() {
                     {editingId === row.recordingId ? (
                       <div className="row g-2 mt-1">
                         <div className="col-md-4">
-                          <input className="form-control form-control-sm" type="date" value={editForm.sessionDate} onChange={(e) => setEditForm((p) => ({ ...p, sessionDate: e.target.value }))} />
+                          <label htmlFor={`pr-edit-${eid}-date`} className="form-label small mb-1">
+                            Session date
+                          </label>
+                          <input
+                            id={`pr-edit-${eid}-date`}
+                            className="form-control form-control-sm"
+                            type="date"
+                            value={editForm.sessionDate}
+                            onChange={(e) => setEditForm((p) => ({ ...p, sessionDate: e.target.value }))}
+                          />
                         </div>
                         <div className="col-md-4">
-                          <input className="form-control form-control-sm" placeholder="Social worker" value={editForm.socialWorker} onChange={(e) => setEditForm((p) => ({ ...p, socialWorker: e.target.value }))} />
+                          <label htmlFor={`pr-edit-${eid}-worker`} className="form-label small mb-1">
+                            Social worker
+                          </label>
+                          <input
+                            id={`pr-edit-${eid}-worker`}
+                            className="form-control form-control-sm"
+                            autoComplete="name"
+                            value={editForm.socialWorker}
+                            onChange={(e) => setEditForm((p) => ({ ...p, socialWorker: e.target.value }))}
+                          />
                         </div>
                         <div className="col-md-4">
-                          <select className="form-select form-select-sm" value={editForm.sessionType} onChange={(e) => setEditForm((p) => ({ ...p, sessionType: e.target.value }))}>
+                          <label htmlFor={`pr-edit-${eid}-type`} className="form-label small mb-1">
+                            Session type
+                          </label>
+                          <select
+                            id={`pr-edit-${eid}-type`}
+                            className="form-select form-select-sm"
+                            value={editForm.sessionType}
+                            onChange={(e) => setEditForm((p) => ({ ...p, sessionType: e.target.value }))}
+                          >
                             <option value="Individual">Individual</option>
                             <option value="Group">Group</option>
                           </select>
                         </div>
                         <div className="col-md-4">
-                          <input className="form-control form-control-sm" type="number" min={0} placeholder="Session minutes" value={editForm.sessionDurationMinutes} onChange={(e) => setEditForm((p) => ({ ...p, sessionDurationMinutes: e.target.value }))} />
+                          <label htmlFor={`pr-edit-${eid}-duration`} className="form-label small mb-1">
+                            Session minutes
+                          </label>
+                          <input
+                            id={`pr-edit-${eid}-duration`}
+                            className="form-control form-control-sm"
+                            type="number"
+                            min={0}
+                            value={editForm.sessionDurationMinutes}
+                            onChange={(e) => setEditForm((p) => ({ ...p, sessionDurationMinutes: e.target.value }))}
+                          />
                         </div>
                         <div className="col-md-4">
-                          <select className="form-select form-select-sm" value={editForm.emotionalStateObserved} onChange={(e) => setEditForm((p) => ({ ...p, emotionalStateObserved: e.target.value }))}>
-                            <option value="">Observed state</option>
+                          <label htmlFor={`pr-edit-${eid}-emo1`} className="form-label small mb-1">
+                            Observed state
+                          </label>
+                          <select
+                            id={`pr-edit-${eid}-emo1`}
+                            className="form-select form-select-sm"
+                            value={editForm.emotionalStateObserved}
+                            onChange={(e) => setEditForm((p) => ({ ...p, emotionalStateObserved: e.target.value }))}
+                          >
+                            <option value="">Select state</option>
                             {Object.values(emotionalStateLabelMap).map((label) => (
                               <option key={label} value={label}>{label}</option>
                             ))}
                           </select>
                         </div>
                         <div className="col-md-4">
-                          <select className="form-select form-select-sm" value={editForm.emotionalStateEnd} onChange={(e) => setEditForm((p) => ({ ...p, emotionalStateEnd: e.target.value }))}>
-                            <option value="">End state</option>
+                          <label htmlFor={`pr-edit-${eid}-emo2`} className="form-label small mb-1">
+                            End state
+                          </label>
+                          <select
+                            id={`pr-edit-${eid}-emo2`}
+                            className="form-select form-select-sm"
+                            value={editForm.emotionalStateEnd}
+                            onChange={(e) => setEditForm((p) => ({ ...p, emotionalStateEnd: e.target.value }))}
+                          >
+                            <option value="">Select state</option>
                             {Object.values(emotionalStateLabelMap).map((label) => (
                               <option key={label} value={label}>{label}</option>
                             ))}
                           </select>
                         </div>
                         <div className="col-12">
-                          <textarea className="form-control form-control-sm" rows={3} placeholder="Narrative summary" value={editForm.sessionNarrative} onChange={(e) => setEditForm((p) => ({ ...p, sessionNarrative: e.target.value }))} />
+                          <label htmlFor={`pr-edit-${eid}-narrative`} className="form-label small mb-1">
+                            Narrative summary
+                          </label>
+                          <textarea
+                            id={`pr-edit-${eid}-narrative`}
+                            className="form-control form-control-sm"
+                            rows={3}
+                            value={editForm.sessionNarrative}
+                            onChange={(e) => setEditForm((p) => ({ ...p, sessionNarrative: e.target.value }))}
+                          />
                         </div>
                         <div className="col-12">
-                          <textarea className="form-control form-control-sm" rows={2} placeholder="Interventions applied" value={editForm.interventionsApplied} onChange={(e) => setEditForm((p) => ({ ...p, interventionsApplied: e.target.value }))} />
+                          <label htmlFor={`pr-edit-${eid}-interventions`} className="form-label small mb-1">
+                            Interventions applied
+                          </label>
+                          <textarea
+                            id={`pr-edit-${eid}-interventions`}
+                            className="form-control form-control-sm"
+                            rows={2}
+                            value={editForm.interventionsApplied}
+                            onChange={(e) => setEditForm((p) => ({ ...p, interventionsApplied: e.target.value }))}
+                          />
                         </div>
                         <div className="col-12">
-                          <textarea className="form-control form-control-sm" rows={2} placeholder="Follow-up actions" value={editForm.followUpActions} onChange={(e) => setEditForm((p) => ({ ...p, followUpActions: e.target.value }))} />
+                          <label htmlFor={`pr-edit-${eid}-followup`} className="form-label small mb-1">
+                            Follow-up actions
+                          </label>
+                          <textarea
+                            id={`pr-edit-${eid}-followup`}
+                            className="form-control form-control-sm"
+                            rows={2}
+                            value={editForm.followUpActions}
+                            onChange={(e) => setEditForm((p) => ({ ...p, followUpActions: e.target.value }))}
+                          />
                         </div>
-                        <div className="col-12 d-flex flex-wrap gap-3 small">
-                          <label className="form-check-label d-flex align-items-center gap-2">
-                            <input className="form-check-input mt-0" type="checkbox" checked={Boolean(editForm.progressNoted)} onChange={(e) => setEditForm((p) => ({ ...p, progressNoted: e.target.checked }))} />
-                            Progress noted
-                          </label>
-                          <label className="form-check-label d-flex align-items-center gap-2">
-                            <input className="form-check-input mt-0" type="checkbox" checked={Boolean(editForm.concernsFlagged)} onChange={(e) => setEditForm((p) => ({ ...p, concernsFlagged: e.target.checked }))} />
-                            Concerns flagged
-                          </label>
-                          <label className="form-check-label d-flex align-items-center gap-2">
-                            <input className="form-check-input mt-0" type="checkbox" checked={Boolean(editForm.referralMade)} onChange={(e) => setEditForm((p) => ({ ...p, referralMade: e.target.checked }))} />
-                            Referral made
-                          </label>
+                        <div className="col-12">
+                          <fieldset className="border-0 p-0 m-0">
+                            <legend className="form-label small mb-1">Session flags</legend>
+                            <div className="d-flex flex-wrap gap-3 small">
+                              <label className="form-check-label d-flex align-items-center gap-2">
+                                <input
+                                  id={`pr-edit-${eid}-progress`}
+                                  className="form-check-input mt-0"
+                                  type="checkbox"
+                                  checked={Boolean(editForm.progressNoted)}
+                                  onChange={(e) => setEditForm((p) => ({ ...p, progressNoted: e.target.checked }))}
+                                />
+                                Progress noted
+                              </label>
+                              <label className="form-check-label d-flex align-items-center gap-2">
+                                <input
+                                  id={`pr-edit-${eid}-concerns`}
+                                  className="form-check-input mt-0"
+                                  type="checkbox"
+                                  checked={Boolean(editForm.concernsFlagged)}
+                                  onChange={(e) => setEditForm((p) => ({ ...p, concernsFlagged: e.target.checked }))}
+                                />
+                                Concerns flagged
+                              </label>
+                              <label className="form-check-label d-flex align-items-center gap-2">
+                                <input
+                                  id={`pr-edit-${eid}-referral`}
+                                  className="form-check-input mt-0"
+                                  type="checkbox"
+                                  checked={Boolean(editForm.referralMade)}
+                                  onChange={(e) => setEditForm((p) => ({ ...p, referralMade: e.target.checked }))}
+                                />
+                                Referral made
+                              </label>
+                            </div>
+                          </fieldset>
                         </div>
                       </div>
                     ) : (
@@ -435,28 +663,55 @@ export function AdminProcessRecording() {
                     <div className="d-flex gap-1 mt-2">
                       {editingId === row.recordingId ? (
                         <>
-                          <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => saveEdit(row)}>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            disabled={busy}
+                            aria-label={`Save edits to process recording ${sessionSummary}`}
+                            onClick={() => saveEdit(row)}
+                          >
                             Save
                           </button>
-                          <button type="button" className="btn btn-outline-secondary btn-sm" disabled={busy} onClick={cancelEdit}>
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm"
+                            disabled={busy}
+                            aria-label="Cancel editing process recording"
+                            onClick={cancelEdit}
+                          >
                             Cancel
                           </button>
                         </>
                       ) : (
-                        <button type="button" className="btn btn-outline-secondary btn-sm" disabled={busy || !row.recordingId} onClick={() => beginEdit(row)}>
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm"
+                          disabled={busy || !row.recordingId}
+                          aria-label={`Edit process recording ${sessionSummary}`}
+                          onClick={() => beginEdit(row)}
+                        >
                           Edit
                         </button>
                       )}
-                      <button type="button" className="btn btn-outline-danger btn-sm" disabled={busy || !row.recordingId} onClick={() => { if (row.recordingId) setPendingDelete(row.recordingId) }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm"
+                        disabled={busy || !row.recordingId}
+                        aria-label={`Delete process recording ${sessionSummary}`}
+                        onClick={() => {
+                          if (row.recordingId) setPendingDelete(row.recordingId)
+                        }}
+                      >
                         Delete
                       </button>
                     </div>
-                  </div>
-                ))}
+                  </article>
+                )
+              })}
                 {timeline.length === 0 ? <p className="small text-secondary mb-0">No process recordings found for the selected resident filter.</p> : null}
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
       {pendingDelete ? (

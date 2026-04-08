@@ -8,11 +8,20 @@ type Props = {
 
 export function ConfirmModal({ title, message, confirmLabel = 'Delete', onConfirm, onCancel }: Props) {
   return (
-    <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(15,23,42,0.45)' }}>
+    <div
+      className="modal show d-block"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-modal-title"
+      tabIndex={-1}
+      style={{ background: 'rgba(15,23,42,0.45)' }}
+    >
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
-            <h2 className="modal-title h5">{title}</h2>
+            <h2 id="confirm-modal-title" className="modal-title h5">
+              {title}
+            </h2>
             <button type="button" className="btn-close" aria-label="Close" onClick={onCancel} />
           </div>
           <div className="modal-body">
