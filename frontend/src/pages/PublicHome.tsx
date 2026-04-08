@@ -61,10 +61,18 @@ export function PublicHome() {
         <div className="row g-3 g-lg-4">
           <div className="col-sm-6 col-lg-3">
             <article className="lh-impact-item text-center h-100">
-              <div className="lh-impact-icon-wrap lh-impact-icon-peach mx-auto mb-3">
+              <div
+                className="lh-impact-icon-wrap lh-impact-icon-peach mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
+                style={{ minHeight: '140px' }}
+              >
                 <img src="/img/Safety.webp" alt="Safety support icon" className="lh-impact-icon" />
+                <span
+                  className="position-absolute fw-bold text-white text-center px-2"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
+                >
+                  Safety Support
+                </span>
               </div>
-              <h3 className="lh-impact-item-title">Safety</h3>
               <p className="lh-impact-item-copy mb-2">
                 Safety is the first focus at Light on a Hill Foundation because protection is the first step to healing.
               </p>
@@ -73,10 +81,20 @@ export function PublicHome() {
           </div>
           <div className="col-sm-6 col-lg-3">
             <article className="lh-impact-item text-center h-100">
-              <div className="lh-impact-icon-wrap lh-impact-icon-green mx-auto mb-3">
+              <div
+                className="lh-impact-icon-wrap lh-impact-icon-green mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
+                style={{ minHeight: '140px' }}
+              >
                 <img src="/img/Healing.jpg" alt="Healing and education icon" className="lh-impact-icon" />
+                <span
+                  className="position-absolute fw-bold text-white text-center px-2"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
+                >
+                  Healing and
+                  <br />
+                  Education
+                </span>
               </div>
-              <h3 className="lh-impact-item-title">Healing</h3>
               <p className="lh-impact-item-copy mb-2">
                 Once a child trusts that they are safe, we guide them through emotional recovery and long-term healing.
               </p>
@@ -85,10 +103,20 @@ export function PublicHome() {
           </div>
           <div className="col-sm-6 col-lg-3">
             <article className="lh-impact-item text-center h-100">
-              <div className="lh-impact-icon-wrap lh-impact-icon-lilac mx-auto mb-3">
+              <div
+                className="lh-impact-icon-wrap lh-impact-icon-lilac mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
+                style={{ minHeight: '140px' }}
+              >
                 <img src="/img/Justice.webp" alt="Justice and advocacy icon" className="lh-impact-icon" />
+                <span
+                  className="position-absolute fw-bold text-white text-center px-2"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
+                >
+                  Justice and
+                  <br />
+                  Advocacy
+                </span>
               </div>
-              <h3 className="lh-impact-item-title">Justice</h3>
               <p className="lh-impact-item-copy mb-2">
                 We stand with children in legal and social support processes so justice is pursued with dignity and care.
               </p>
@@ -97,10 +125,20 @@ export function PublicHome() {
           </div>
           <div className="col-sm-6 col-lg-3">
             <article className="lh-impact-item text-center h-100">
-              <div className="lh-impact-icon-wrap lh-impact-icon-gold mx-auto mb-3">
+              <div
+                className="lh-impact-icon-wrap lh-impact-icon-gold mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
+                style={{ minHeight: '140px' }}
+              >
                 <img src="/img/Empower.webp" alt="Empowerment and growth icon" className="lh-impact-icon" />
+                <span
+                  className="position-absolute fw-bold text-white text-center px-2"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
+                >
+                  Empowerment and
+                  <br />
+                  Growth
+                </span>
               </div>
-              <h3 className="lh-impact-item-title">Empowerment</h3>
               <p className="lh-impact-item-copy mb-2">
                 Our goal is to help children move from victimhood to leadership through confidence, skills, and opportunity.
               </p>

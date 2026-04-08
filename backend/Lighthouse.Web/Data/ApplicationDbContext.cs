@@ -400,6 +400,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(m => m.ProcessRecordingCount).HasColumnName("process_recording_count");
             entity.Property(m => m.HomeVisitationCount).HasColumnName("home_visitation_count");
             entity.Property(m => m.IncidentCount).HasColumnName("incident_count");
+            entity.Property(m => m.Notes).HasColumnName("notes");
 
             entity.HasOne(m => m.Safehouse)
                 .WithMany()
@@ -410,6 +411,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.Property(s => s.SnapshotId).HasColumnName("snapshot_id");
             entity.Property(s => s.SnapshotDate).HasColumnName("snapshot_date");
+            entity.Property(s => s.Headline).HasColumnName("headline");
             entity.Property(s => s.SummaryText).HasColumnName("summary_text");
             entity.Property(s => s.MetricPayloadJson).HasColumnName("metric_payload_json");
             entity.Property(s => s.IsPublished).HasColumnName("is_published");
