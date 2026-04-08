@@ -19,7 +19,7 @@ public class AdminApiController : ControllerBase
 {
     private static readonly HashSet<string> ValidCaseStatuses = new(StringComparer.Ordinal)
     {
-        "Active", "Closed", "On Hold"
+        "Active", "Closed", "Transferred"
     };
     private static readonly HashSet<string> ValidCaseCategories = new(StringComparer.Ordinal)
     {
@@ -58,9 +58,13 @@ public class AdminApiController : ControllerBase
     }
 
     [HttpGet("metrics/okr")]
-    public async Task<IActionResult> Okr([FromServices] OkrMetricsService okr, CancellationToken cancellationToken)
+    public async Task<IActionResult> Okr(
+        [FromServices] OkrMetricsService okr,
+        [FromQuery] int donorRecencyPage = 1,
+        [FromQuery] int donorRecencyPageSize = OkrMetricsService.DefaultDonorRecencyPageSize,
+        CancellationToken cancellationToken = default)
     {
-        var snap = await okr.GetSnapshotAsync(cancellationToken);
+        var snap = await okr.GetSnapshotAsync(donorRecencyPage, donorRecencyPageSize, cancellationToken);
         return Ok(snap);
     }
 
@@ -72,9 +76,13 @@ public class AdminApiController : ControllerBase
     }
 
     [HttpGet("analytics/donor-propensity")]
-    public async Task<IActionResult> DonorPropensity([FromServices] OkrMetricsService okr, CancellationToken cancellationToken)
+    public async Task<IActionResult> DonorPropensity(
+        [FromServices] OkrMetricsService okr,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = OkrMetricsService.DefaultDonorRecencyPageSize,
+        CancellationToken cancellationToken = default)
     {
-        return Ok(await okr.GetChurnRiskDonorsAsync(120, cancellationToken));
+        return Ok(await okr.GetDonorPropensityAsync(page, pageSize, cancellationToken));
     }
 
     [HttpGet("data/{entity}")]
