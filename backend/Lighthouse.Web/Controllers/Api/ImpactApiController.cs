@@ -203,19 +203,45 @@ public class ImpactApiController : ControllerBase
             .Select(i => new { i.SafehouseId, i.IncidentDate })
             .ToListAsync(cancellationToken);
 
-        var eduRows = await (
-            from e in _db.EducationRecords.AsNoTracking()
-            join r in _db.Residents.AsNoTracking() on e.ResidentId equals r.ResidentId
-            where e.RecordDate >= priorStart && e.RecordDate <= currentEnd && e.ProgressPercent != null
-            select new { r.SafehouseId, e.RecordDate, Progress = e.ProgressPercent!.Value }
-        ).ToListAsync(cancellationToken);
+        // Avoid EF in-database joins on education/health → residents (can fail to translate or behave differently on some PG hosts).
+        // Load rows + resident→safehouse map, then join in memory.
+        var eduScoped = await _db.EducationRecords.AsNoTracking()
+            .Where(e => e.RecordDate >= priorStart && e.RecordDate <= currentEnd && e.ProgressPercent != null)
+            .Select(e => new { e.ResidentId, e.RecordDate, Progress = e.ProgressPercent!.Value })
+            .ToListAsync(cancellationToken);
+        var eduRows = new List<(int SafehouseId, DateOnly RecordDate, decimal Progress)>();
+        if (eduScoped.Count > 0)
+        {
+            var eduResIds = eduScoped.Select(e => e.ResidentId).Distinct().ToArray();
+            var eduShMap = await _db.Residents.AsNoTracking()
+                .Where(r => eduResIds.Contains(r.ResidentId))
+                .Select(r => new { r.ResidentId, r.SafehouseId })
+                .ToDictionaryAsync(x => x.ResidentId, x => x.SafehouseId, cancellationToken);
+            foreach (var e in eduScoped)
+            {
+                if (eduShMap.TryGetValue(e.ResidentId, out var shId))
+                    eduRows.Add((shId, e.RecordDate, e.Progress));
+            }
+        }
 
-        var healthRows = await (
-            from h in _db.HealthWellbeingRecords.AsNoTracking()
-            join r in _db.Residents.AsNoTracking() on h.ResidentId equals r.ResidentId
-            where h.RecordDate >= priorStart && h.RecordDate <= currentEnd && h.GeneralHealthScore != null
-            select new { r.SafehouseId, h.RecordDate, Score = h.GeneralHealthScore!.Value }
-        ).ToListAsync(cancellationToken);
+        var healthScoped = await _db.HealthWellbeingRecords.AsNoTracking()
+            .Where(h => h.RecordDate >= priorStart && h.RecordDate <= currentEnd && h.GeneralHealthScore != null)
+            .Select(h => new { h.ResidentId, h.RecordDate, Score = h.GeneralHealthScore!.Value })
+            .ToListAsync(cancellationToken);
+        var healthRows = new List<(int SafehouseId, DateOnly RecordDate, decimal Score)>();
+        if (healthScoped.Count > 0)
+        {
+            var healthResIds = healthScoped.Select(h => h.ResidentId).Distinct().ToArray();
+            var healthShMap = await _db.Residents.AsNoTracking()
+                .Where(r => healthResIds.Contains(r.ResidentId))
+                .Select(r => new { r.ResidentId, r.SafehouseId })
+                .ToDictionaryAsync(x => x.ResidentId, x => x.SafehouseId, cancellationToken);
+            foreach (var h in healthScoped)
+            {
+                if (healthShMap.TryGetValue(h.ResidentId, out var shId))
+                    healthRows.Add((shId, h.RecordDate, h.Score));
+            }
+        }
 
         var activeResidentsBySh = await _db.Residents.AsNoTracking()
             .Where(r => r.CaseStatus == "Active")
