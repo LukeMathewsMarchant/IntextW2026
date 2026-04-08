@@ -282,6 +282,11 @@ body.lh-body {
   text-decoration: none !important;
   padding: 0.35rem 0.5rem !important;
   border-radius: 8px;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lh-theme-toggle:hover {
@@ -419,20 +424,22 @@ body.lh-body {
   margin-right: auto;
 }
 
+/* Use primary ink-friendly link color for WCAG contrast on light cards */
 .lh-impact-item-link {
-  color: #ffb200 !important;
-  text-decoration: none;
+  color: var(--lh-primary) !important;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
   font-weight: 700;
   font-size: 1rem;
 }
 
 .lh-impact-item-link:visited {
-  color: #ffb200 !important;
+  color: var(--lh-primary) !important;
 }
 
 .lh-impact-item-link:hover {
-  color: #cc8f00 !important;
-  text-decoration: underline;
+  color: var(--lh-primary-hover) !important;
+  text-decoration-thickness: 2px;
 }
 
 .lh-impact-page-hero {
@@ -1110,6 +1117,35 @@ body.lh-body {
   background: rgba(15, 23, 42, 0.96);
   color: #f8fafc;
   backdrop-filter: blur(6px);
+}
+
+.lh-cookie-banner-link {
+  color: #e2e8f0;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  font-weight: 600;
+}
+
+.lh-cookie-banner-link:hover {
+  color: #ffffff;
+}
+
+.lh-cookie-banner-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.lh-footer-social-note {
+  max-width: 22rem;
+}
+
+[data-bs-theme="dark"] .lh-impact-item-link {
+  color: var(--lh-primary) !important;
+}
+
+[data-bs-theme="dark"] .lh-impact-item-link:hover {
+  color: var(--lh-primary-hover) !important;
 }
 
 .btn-primary {
