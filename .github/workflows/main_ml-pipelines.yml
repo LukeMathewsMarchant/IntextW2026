@@ -41,10 +41,13 @@ jobs:
       contents: read
 
     steps:
+      # Artifact is extracted to a subfolder by default; deploy THAT folder only so
+      # Azure wwwroot gets app/, requirements.txt at the root (not wwwroot/python-app/app).
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: python-app
+          path: ml_deploy
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -58,3 +61,4 @@ jobs:
         with:
           app-name: 'ml-pipelines'
           slot-name: 'Production'
+          package: ml_deploy
