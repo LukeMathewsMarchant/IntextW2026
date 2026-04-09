@@ -538,6 +538,23 @@ body.lh-body {
   background: linear-gradient(180deg, #3b5998 0%, var(--lh-primary) 100%);
 }
 
+/* Dark mode: stop mixing toward white so bars stay on-card contrast */
+[data-bs-theme="dark"] .lh-impact-trend-bar {
+  background: color-mix(in srgb, var(--lh-primary-soft) 72%, var(--lh-card));
+}
+[data-bs-theme="dark"] .lh-impact-mini-bar-wrap {
+  background: color-mix(in srgb, var(--lh-primary-soft) 68%, var(--lh-card));
+}
+
+/* Impact: resident journey pipeline — lift card and stage tiles in dark mode */
+[data-bs-theme="dark"] .lh-impact-pipeline-card {
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.42) !important;
+}
+[data-bs-theme="dark"] .lh-impact-pipeline-stage {
+  background: color-mix(in srgb, var(--lh-card) 94%, var(--lh-primary-soft)) !important;
+  border-color: color-mix(in srgb, var(--lh-border) 80%, var(--lh-primary-soft)) !important;
+}
+
 .lh-impact-timeline {
   margin: 0 0 0.9rem;
   padding-left: 1.05rem;
