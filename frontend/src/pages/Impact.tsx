@@ -62,10 +62,27 @@ type ImpactResponse = {
   }
   outcomeSignals?: {
     donationsLast12Months: number
+    donorsLast12Months: number
+    avgDonationAmountLast12Months: number | null
     activeResidentsLatest: number
     incidentsLatest: number
     avgEducationLatest: number | null
     avgHealthLatest: number | null
+  }
+  impactNarrative?: {
+    inCareNow: number
+    recentReintegrations: number
+    recentIncidents: number
+    closureShareOfActivePct: number
+    storyWindowLabel: string
+  }
+  outcomePerDollar?: {
+    donationsLast12Months: number
+    reintegrationsLast12Months: number
+    activeResidentsNow: number
+    dollarsPerReintegration: number | null
+    dollarsPerActiveResident: number | null
+    windowLabel: string
   }
   safehousePerformance?: SafehouseDeltaPoint[]
   donorOkrs?: DonorOkrs
@@ -139,6 +156,8 @@ export function Impact() {
   const freshness = data.dataFreshness ?? { generatedAtUtc: new Date().toISOString(), latestSafehouseMetricMonth: null }
   const outcomeSignals = data.outcomeSignals ?? {
     donationsLast12Months: 0,
+    donorsLast12Months: 0,
+    avgDonationAmountLast12Months: null,
     activeResidentsLatest: 0,
     incidentsLatest: 0,
     avgEducationLatest: null,
@@ -152,6 +171,21 @@ export function Impact() {
     distinctDonorsAllTime: 0,
     windowLabel: '',
     summary: '',
+  }
+  const impactNarrative = data.impactNarrative ?? {
+    inCareNow: outcomeSignals.activeResidentsLatest,
+    recentReintegrations: 0,
+    recentIncidents: outcomeSignals.incidentsLatest,
+    closureShareOfActivePct: 0,
+    storyWindowLabel: 'Last 90 days (UTC)'
+  }
+  const outcomePerDollar = data.outcomePerDollar ?? {
+    donationsLast12Months: outcomeSignals.donationsLast12Months,
+    reintegrationsLast12Months: 0,
+    activeResidentsNow: outcomeSignals.activeResidentsLatest,
+    dollarsPerReintegration: null,
+    dollarsPerActiveResident: null,
+    windowLabel: 'Last 12 months (UTC)'
   }
   const donationChannels = data.donationChannelPerformance ?? []
   const socialPostTraction = data.socialPostTraction ?? []
@@ -259,6 +293,70 @@ export function Impact() {
         </p>
       </section>
 
+      <section className="card border-0 shadow-sm" aria-label="Impact narrative and outcome efficiency">
+        <div className="card-body p-4">
+          <div className="row g-4">
+            <div className="col-lg-7">
+              <h2 className="h5 mb-3">Journey Snapshot</h2>
+              <div className="row g-2 row-cols-1 row-cols-md-3">
+                <div className="col">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-secondary text-uppercase">In care now</div>
+                    <div className="h4 mb-1 text-dark">{impactNarrative.inCareNow.toLocaleString()}</div>
+                    <div className="small text-secondary">Active resident census</div>
+                  </div>
+                </div>
+                <div className="col">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-secondary text-uppercase">Recent incidents</div>
+                    <div className="h4 mb-1 text-dark">{impactNarrative.recentIncidents.toLocaleString()}</div>
+                    <div className="small text-secondary">Current 30-day window</div>
+                  </div>
+                </div>
+                <div className="col">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-secondary text-uppercase">Reintegrations (90d)</div>
+                    <div className="h4 mb-1 text-dark">{impactNarrative.recentReintegrations.toLocaleString()}</div>
+                    <div className="small text-secondary">
+                      {impactNarrative.closureShareOfActivePct}% of active census
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="small text-secondary mb-0 mt-3">{impactNarrative.storyWindowLabel}</p>
+            </div>
+            <div className="col-lg-5">
+              <h2 className="h5 mb-3">Outcome per dollar lens</h2>
+              <div className="d-flex flex-column gap-2">
+                <div className="bg-body-tertiary rounded p-3">
+                  <div className="small text-secondary text-uppercase">Dollars per reintegrated case</div>
+                  <div className="h4 mb-1 text-dark">
+                    {outcomePerDollar.dollarsPerReintegration == null
+                      ? 'N/A'
+                      : `$${outcomePerDollar.dollarsPerReintegration.toLocaleString()}`}
+                  </div>
+                  <div className="small text-secondary">
+                    ${outcomePerDollar.donationsLast12Months.toLocaleString()} / {outcomePerDollar.reintegrationsLast12Months.toLocaleString()} reintegrations
+                  </div>
+                </div>
+                <div className="bg-body-tertiary rounded p-3">
+                  <div className="small text-secondary text-uppercase">Dollars per active resident</div>
+                  <div className="h4 mb-1 text-dark">
+                    {outcomePerDollar.dollarsPerActiveResident == null
+                      ? 'N/A'
+                      : `$${outcomePerDollar.dollarsPerActiveResident.toLocaleString()}`}
+                  </div>
+                  <div className="small text-secondary">
+                    {outcomePerDollar.activeResidentsNow.toLocaleString()} active residents in latest census
+                  </div>
+                </div>
+              </div>
+              <p className="small text-secondary mb-0 mt-3">{outcomePerDollar.windowLabel}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="card border-0 shadow-sm" aria-label="Live trends from API">
         <div className="card-body p-4">
           <h2 className="h5 mb-2">Live trends &amp; snapshot</h2>
@@ -268,7 +366,7 @@ export function Impact() {
               <div className="lh-impact-mini-chart">
                 {retention.map((d, idx) => (
                   <div key={`${d.month}-${idx}`} className="lh-impact-mini-col text-center">
-                    <div className="small fw-semibold text-dark mb-1" title={`Retention ${d.month}: ${d.rate}%`}>
+                    <div className="small fw-semibold text-body-emphasis mb-1" title={`Retention ${d.month}: ${d.rate}%`}>
                       {d.rate}%
                     </div>
                     <div className="lh-impact-mini-bar-wrap">
@@ -326,7 +424,7 @@ export function Impact() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body py-3 px-3">
               <div className="small text-secondary text-uppercase">Active supporters</div>
-              <div className="h4 mb-0 text-dark">{kpis.livesImpacted.toLocaleString()}</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.livesImpacted.toLocaleString()}</div>
               <div className="small text-secondary mt-1">Supporters with status Active</div>
             </div>
           </div>
@@ -335,7 +433,7 @@ export function Impact() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body py-3 px-3">
               <div className="small text-secondary text-uppercase">Active safehouses</div>
-              <div className="h4 mb-0 text-dark">{kpis.safehouses.toLocaleString()}</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.safehouses.toLocaleString()}</div>
               <div className="small text-secondary mt-1">In network (status Active)</div>
             </div>
           </div>
@@ -344,7 +442,7 @@ export function Impact() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body py-3 px-3">
               <div className="small text-secondary text-uppercase">Partner programs</div>
-              <div className="h4 mb-0 text-dark">{kpis.activePrograms.toLocaleString()}</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.activePrograms.toLocaleString()}</div>
               <div className="small text-secondary mt-1">Partner records in case data</div>
             </div>
           </div>
@@ -354,7 +452,7 @@ export function Impact() {
             
             <div className="card-body py-3 px-3">
               <div className="small text-secondary text-uppercase">Closure / reintegration rate</div>
-              <div className="h4 mb-0 text-dark">{kpis.successRate}%</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.successRate}%</div>
               <div className="small text-secondary mt-1">Residents closed or reintegrated</div>
             </div>
           </div>
@@ -363,7 +461,7 @@ export function Impact() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body py-3 px-3">
               <div className="small text-secondary text-uppercase">Donations (12 mo)</div>
-              <div className="h4 mb-0 text-dark">${outcomeSignals.donationsLast12Months.toLocaleString()}</div>
+              <div className="h4 mb-0 text-body-emphasis">${outcomeSignals.donationsLast12Months.toLocaleString()}</div>
               <div className="small text-secondary mt-1">Sum of recorded amounts</div>
             </div>
           </div>
@@ -455,13 +553,13 @@ export function Impact() {
         <div className="col-12">
           <div className="card border-0 shadow-sm">
             <div className="card-body p-4">
-              <h2 className="h4 mb-1">Social Media Donations: App Performance and Allocation</h2>
-              <p className="small text-secondary mb-3">Shows which social apps convert and where those social-source funds are allocated.</p>
+              <h2 className="h4 mb-1 text-body-emphasis">Social Media Donations: App Performance and Allocation</h2>
+              <p className="small text-body-secondary mb-3">Shows which social apps convert and where those social-source funds are allocated.</p>
               <div className="row g-3">
                 <div className="col-lg-6">
-                  <h3 className="h6 mb-2">Apps Driving Social Donations <span className="text-secondary">(${socialPlatformAmountRaw.toLocaleString()} total)</span></h3>
+                  <h3 className="h6 mb-2 text-body-emphasis">Apps Driving Social Donations <span className="text-body-secondary">(${socialPlatformAmountRaw.toLocaleString()} total)</span></h3>
                   {normalizedSocialPlatformPerformance.length === 0 ? (
-                    <p className="small text-secondary mb-0">No social-media-labeled donation data yet.</p>
+                      <p className="small text-body-secondary mb-0">No social-media-labeled donation data yet.</p>
                   ) : (
                     <div className="bg-body-tertiary rounded p-3">
                       <div
@@ -472,7 +570,7 @@ export function Impact() {
                       >
                         {normalizedSocialPlatformPerformance.map((row) => (
                           <div key={row.channel} className="d-flex flex-column align-items-center flex-fill h-100">
-                            <div className="small fw-semibold text-dark mb-1">{row.share}%</div>
+                            <div className="small fw-semibold text-body-emphasis mb-1">{row.share}%</div>
                             <div className="d-flex align-items-end justify-content-center w-100 flex-grow-1">
                               <div
                                 className="rounded-top"
@@ -486,8 +584,8 @@ export function Impact() {
                                 title={`${row.channel}: ${row.donations} donations, $${row.totalAmount.toLocaleString()}`}
                               />
                             </div>
-                            <div className="small text-center mt-2 text-dark fw-semibold text-break">{row.channel}</div>
-                            <div className="small text-secondary text-center">
+                            <div className="small text-center mt-2 text-body-emphasis fw-semibold text-break">{row.channel}</div>
+                            <div className="small text-body-secondary text-center">
                               {row.donations} | ${row.totalAmount.toLocaleString()}
                             </div>
                           </div>
@@ -497,14 +595,14 @@ export function Impact() {
                   )}
                 </div>
                 <div className="col-lg-6">
-                  <h3 className="h6 mb-2">Where Social Donations Go <span className="text-secondary">(${socialAllocationAmountRaw.toLocaleString()} total)</span></h3>
+                  <h3 className="h6 mb-2 text-body-emphasis">Where Social Donations Go <span className="text-body-secondary">(${socialAllocationAmountRaw.toLocaleString()} total)</span></h3>
                   <div className="d-flex flex-column gap-2">
                     {socialAllocationBreakdown.length === 0 ? (
-                      <p className="small text-secondary mb-0">No allocations linked to social-source donations yet.</p>
+                      <p className="small text-body-secondary mb-0">No allocations linked to social-source donations yet.</p>
                     ) : socialAllocationBreakdown.map((row) => (
                       <div key={row.programArea} className="bg-body-tertiary rounded p-2">
-                        <div className="d-flex justify-content-between"><strong>{row.programArea}</strong><span>${row.amountAllocated.toLocaleString()}</span></div>
-                        <div className="small text-secondary">{row.allocationCount} allocations</div>
+                        <div className="d-flex justify-content-between text-body-emphasis"><strong>{row.programArea}</strong><span>${row.amountAllocated.toLocaleString()}</span></div>
+                        <div className="small text-body-secondary">{row.allocationCount} allocations</div>
                         <div className="progress mt-2" role="img" aria-label={`${row.programArea} social allocation amount`}>
                           <div
                             className="progress-bar"
@@ -529,7 +627,7 @@ export function Impact() {
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                 <h2 className="h4 mb-0">Donation Allocation vs Outcome Signals</h2>
                 <small className="text-secondary">
-                  Donations: last 12 months. Residents / incidents / education / health: from case records in the current operational window (see header).
+                  Donation value, donor count, and average gift: last 12 months. Residents and incidents: current operational window.
                 </small>
               </div>
               <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-3">
@@ -553,14 +651,18 @@ export function Impact() {
                 </div>
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Avg education % (last 30 days)</div>
-                    <div className="h5 mb-0">{outcomeSignals.avgEducationLatest ?? 'N/A'}</div>
+                    <div className="small text-secondary">Distinct donors (12 months)</div>
+                    <div className="h5 mb-0">{outcomeSignals.donorsLast12Months.toLocaleString()}</div>
                   </div>
                 </div>
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Avg health score (last 30 days)</div>
-                    <div className="h5 mb-0">{outcomeSignals.avgHealthLatest ?? 'N/A'}</div>
+                    <div className="small text-secondary">Avg donation amount (12 months)</div>
+                    <div className="h5 mb-0">
+                      {outcomeSignals.avgDonationAmountLast12Months == null
+                        ? 'N/A'
+                        : `$${outcomeSignals.avgDonationAmountLast12Months.toLocaleString()}`}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -630,7 +732,7 @@ export function Impact() {
                     <div className="col-sm-6 col-md-4">
                       <div className="bg-body-tertiary rounded p-2 h-100">
                         <div className="text-secondary">Returning (both months)</div>
-                        <div className="fw-semibold text-dark">{retentionDetail.returningSupporters.toLocaleString()}</div>
+                        <div className="fw-semibold text-body-emphasis">{retentionDetail.returningSupporters.toLocaleString()}</div>
                       </div>
                     </div>
                     <div className="col-sm-6 col-md-4">
@@ -674,16 +776,16 @@ export function Impact() {
           >
             <div className="card-body p-4">
               <div className="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
-                <h2 className="h4 mb-0">Donor churn (OKR view)</h2>
-                <small className="text-secondary">{donorOkrs.windowLabel}</small>
+                <h2 className="h4 mb-0 text-body-emphasis">Donor churn (OKR view)</h2>
+                <small className="text-body-secondary">{donorOkrs.windowLabel}</small>
               </div>
-              <p className="text-secondary small mb-3">{donorOkrs.summary}</p>
+              <p className="text-body-secondary small mb-3">{donorOkrs.summary}</p>
               <div className="row g-3 align-items-stretch">
                 <div className="col-sm-6 col-xl-4">
                   <div className="rounded p-3 h-100" style={{ background: 'rgba(243, 177, 29, 0.15)' }}>
-                    <div className="small text-secondary text-uppercase fw-semibold mb-1">Churn risk (12→90 day)</div>
-                    <div className="display-6 fw-semibold text-dark">{donorOkrs.churnRatePct}%</div>
-                    <div className="small text-secondary mt-2">
+                    <div className="small text-body-secondary text-uppercase fw-semibold mb-1">Churn risk (12→90 day)</div>
+                    <div className="display-6 fw-semibold text-body-emphasis">{donorOkrs.churnRatePct}%</div>
+                    <div className="small text-body-secondary mt-2">
                       {donorOkrs.donorsStaleYearNot90.toLocaleString()} of {donorOkrs.donorsLast365Days.toLocaleString()} year donors
                       with no gift in the last 90 days.
                     </div>
@@ -691,23 +793,23 @@ export function Impact() {
                 </div>
                 <div className="col-sm-6 col-xl-4">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Donors active (last 90 days)</div>
-                    <div className="h3 mb-0 text-dark">{donorOkrs.donorsLast90Days.toLocaleString()}</div>
-                    <div className="small text-secondary mt-2">Distinct supporters with ≥1 donation in the rolling 90-day window.</div>
+                    <div className="small text-body-secondary">Donors active (last 90 days)</div>
+                    <div className="h3 mb-0 text-body-emphasis">{donorOkrs.donorsLast90Days.toLocaleString()}</div>
+                    <div className="small text-body-secondary mt-2">Distinct supporters with ≥1 donation in the rolling 90-day window.</div>
                   </div>
                 </div>
                 <div className="col-sm-12 col-xl-4">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">12-month donor cohort</div>
-                    <div className="h3 mb-0 text-dark">{donorOkrs.donorsLast365Days.toLocaleString()}</div>
-                    <div className="small text-secondary mt-2">
+                    <div className="small text-body-secondary">12-month donor cohort</div>
+                    <div className="h3 mb-0 text-body-emphasis">{donorOkrs.donorsLast365Days.toLocaleString()}</div>
+                    <div className="small text-body-secondary mt-2">
                       All-time distinct donors with a gift on record: {donorOkrs.distinctDonorsAllTime.toLocaleString()}. Pair with the
                       retention chart for month-over-month repeat behavior.
                     </div>
                   </div>
                 </div>
               </div>
-              <p className="small text-secondary mb-0 mt-3">
+              <p className="small text-body-secondary mb-0 mt-3">
                 <strong>Other questions to explore:</strong> channel quality past 90 days, gift-size upgrades, reactivation after lapses.
               </p>
             </div>

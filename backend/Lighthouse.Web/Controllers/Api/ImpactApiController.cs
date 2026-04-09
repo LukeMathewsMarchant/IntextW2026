@@ -3,6 +3,7 @@ using Lighthouse.Web.Models.Entities;
 using Lighthouse.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -34,16 +35,23 @@ public class ImpactApiController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
+        var requestTimer = Stopwatch.StartNew();
         try
         {
             var timeoutSec = _configuration.GetValue("Impact:CommandTimeoutSeconds", 120);
             if (timeoutSec > 0)
                 _db.Database.SetCommandTimeout(TimeSpan.FromSeconds(timeoutSec));
 
-            return await GetCore(cancellationToken);
+            var result = await GetCore(cancellationToken);
+            requestTimer.Stop();
+            _logger.LogInformation(
+                "GET /api/impact completed in {ElapsedMs} ms",
+                requestTimer.ElapsedMilliseconds);
+            return result;
         }
         catch (Exception ex)
         {
+            requestTimer.Stop();
             _logger.LogError(ex, "GET /api/impact failed");
             if (_configuration.GetValue("Impact:ExposeErrors", false))
             {
@@ -59,7 +67,13 @@ public class ImpactApiController : ControllerBase
 
     private async Task<IActionResult> GetCore(CancellationToken cancellationToken)
     {
+        var buildTimer = Stopwatch.StartNew();
         var payload = await BuildImpactDashboardAsync(cancellationToken);
+        buildTimer.Stop();
+        _logger.LogInformation(
+            "GET /api/impact DB aggregate build completed in {ElapsedMs} ms",
+            buildTimer.ElapsedMilliseconds);
+
         JsonNode? node = JsonSerializer.SerializeToNode(payload, ImpactJsonOptions);
         if (node is not JsonObject jsonObject)
             return new JsonResult(node, ImpactJsonOptions);
@@ -68,17 +82,39 @@ public class ImpactApiController : ControllerBase
         var mlOverlayPresent = false;
         if (mlEnabled)
         {
+            var mlTimeoutSec = _configuration.GetValue("ImpactMlApi:RequestTimeoutSeconds", 2);
+            using var mlTimeoutCts = mlTimeoutSec > 0
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+                : null;
+            if (mlTimeoutSec > 0)
+                mlTimeoutCts!.CancelAfter(TimeSpan.FromSeconds(mlTimeoutSec));
+
+            var mlTimer = Stopwatch.StartNew();
             try
             {
-                var insights = await _impactPipelineClient.GetPipelineInsightsAsync(cancellationToken);
+                var effectiveToken = mlTimeoutCts?.Token ?? cancellationToken;
+                var insights = await _impactPipelineClient.GetPipelineInsightsAsync(effectiveToken);
                 if (insights != null)
                 {
                     jsonObject["pipelineInsights"] = JsonSerializer.SerializeToNode(insights, ImpactJsonOptions);
                     mlOverlayPresent = true;
                 }
+                mlTimer.Stop();
+                _logger.LogInformation(
+                    "GET /api/impact ML overlay call completed in {ElapsedMs} ms (overlayPresent={OverlayPresent})",
+                    mlTimer.ElapsedMilliseconds,
+                    mlOverlayPresent);
+            }
+            catch (OperationCanceledException) when (mlTimeoutSec > 0 && mlTimeoutCts?.IsCancellationRequested == true)
+            {
+                mlTimer.Stop();
+                _logger.LogWarning(
+                    "Impact ML overlay timed out after {TimeoutSec}s; returning EF aggregates only.",
+                    mlTimeoutSec);
             }
             catch (Exception ex)
             {
+                mlTimer.Stop();
                 _logger.LogWarning(ex, "Impact ML pipeline overlay unavailable; returning EF aggregates only.");
             }
         }
@@ -117,6 +153,17 @@ public class ImpactApiController : ControllerBase
         var donationsLast12Months = donations
             .Where(d => d.DonationDate >= DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12)))
             .Sum(d => d.Amount ?? 0m);
+        var donations12MonthRows = donations
+            .Where(d => d.DonationDate >= DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12)))
+            .ToList();
+        var donorsLast12Months = donations12MonthRows
+            .Where(d => d.SupporterId > 0)
+            .Select(d => d.SupporterId)
+            .Distinct()
+            .Count();
+        var avgDonationAmountLast12Months = donations12MonthRows.Count == 0
+            ? (decimal?)null
+            : Math.Round(donations12MonthRows.Average(d => d.Amount ?? 0m), 2);
         var channelTotals = donations
             .GroupBy(d => d.ChannelSource?.ToString() ?? "Unknown")
             .Select(g => new ChannelPerformancePoint(
@@ -200,8 +247,35 @@ public class ImpactApiController : ControllerBase
 
         var (safehousePerformance, outcomeFromCase, operationalCaseWindow) =
             await BuildOperationalSafehouseComparisonAsync(cancellationToken);
+        var avgEducationAllTime = await _db.EducationRecords.AsNoTracking()
+            .Where(e => e.ProgressPercent != null)
+            .Select(e => e.ProgressPercent!.Value)
+            .DefaultIfEmpty()
+            .AverageAsync(cancellationToken);
+        var avgEducationAllTimeRounded = avgEducationAllTime <= 0m ? (decimal?)null : Math.Round(avgEducationAllTime, 2);
 
         var donorOkrs = BuildDonorOkrs(donations);
+        var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        var last90Start = todayUtc.AddDays(-89);
+        var last365Start = todayUtc.AddDays(-364);
+        var reintegratedLast90Days = residents.Count(r =>
+            r.DateClosed.HasValue
+            && r.DateClosed.Value >= last90Start
+            && (r.CaseStatus == "Closed" || r.ReintegrationStatus == "Completed"));
+        var reintegratedLast365Days = residents.Count(r =>
+            r.DateClosed.HasValue
+            && r.DateClosed.Value >= last365Start
+            && (r.CaseStatus == "Closed" || r.ReintegrationStatus == "Completed"));
+        var inCareNow = outcomeFromCase.ActiveResidentsLatest;
+        var closureShareOfActivePct = inCareNow <= 0
+            ? 0m
+            : Math.Round((reintegratedLast90Days * 100m) / inCareNow, 2);
+        var dollarsPerReintegration = reintegratedLast365Days <= 0
+            ? (decimal?)null
+            : Math.Round(donationsLast12Months / reintegratedLast365Days, 2);
+        var dollarsPerActiveResident = inCareNow <= 0
+            ? (decimal?)null
+            : Math.Round(donationsLast12Months / inCareNow, 2);
 
         return new
         {
@@ -225,10 +299,29 @@ public class ImpactApiController : ControllerBase
             outcomeSignals = new
             {
                 donationsLast12Months = Math.Round(donationsLast12Months, 2),
+                donorsLast12Months,
+                avgDonationAmountLast12Months,
                 activeResidentsLatest = outcomeFromCase.ActiveResidentsLatest,
                 incidentsLatest = outcomeFromCase.IncidentsLatest,
-                avgEducationLatest = outcomeFromCase.AvgEducationLatest,
+                avgEducationLatest = avgEducationAllTimeRounded,
                 avgHealthLatest = outcomeFromCase.AvgHealthLatest
+            },
+            impactNarrative = new
+            {
+                inCareNow,
+                recentReintegrations = reintegratedLast90Days,
+                recentIncidents = outcomeFromCase.IncidentsLatest,
+                closureShareOfActivePct,
+                storyWindowLabel = $"Last 90 days ({last90Start:yyyy-MM-dd}–{todayUtc:yyyy-MM-dd} UTC)"
+            },
+            outcomePerDollar = new
+            {
+                donationsLast12Months = Math.Round(donationsLast12Months, 2),
+                reintegrationsLast12Months = reintegratedLast365Days,
+                activeResidentsNow = inCareNow,
+                dollarsPerReintegration,
+                dollarsPerActiveResident,
+                windowLabel = $"Last 12 months ({last365Start:yyyy-MM-dd}–{todayUtc:yyyy-MM-dd} UTC)"
             },
             safehousePerformance,
             donorOkrs,
@@ -241,7 +334,7 @@ public class ImpactApiController : ControllerBase
             {
                 new { key = "successRate", label = "Success Rate", definition = "Share of residents with case_status = Closed or reintegration status marked Completed." },
                 new { key = "retention", label = "Retention Trend", definition = "Share of supporters giving again month-over-month based on unique supporter IDs." },
-                new { key = "avgEducationLatest", label = "Avg Education Progress", definition = "Average education progress_percent on education_records in the last 30 days (UTC), across all active safehouses." },
+                new { key = "avgEducationLatest", label = "Avg Education Progress", definition = "All-time average education progress_percent across non-null education_records." },
                 new { key = "avgHealthLatest", label = "Avg Health Score", definition = "Average general_health_score on health_wellbeing_records in the last 30 days (UTC), across all active safehouses." },
                 new { key = "safehouseCaseComparison", label = "Safehouse Case Activity", definition = "Per safehouse: active resident census (case_status Active); incident_reports in last vs prior 30 days; average education progress and health scores from records in those windows. Deltas compare the two 30-day periods." },
                 new { key = "donorChurnOkr", label = "Donor churn (OKR)", definition = "Among distinct supporters with at least one donation in the trailing 12 months, churn risk counts those with no donation in the last 90 days. Churn rate = that count divided by the 12-month donor cohort." },
