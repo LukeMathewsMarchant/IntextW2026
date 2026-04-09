@@ -53,35 +53,31 @@ type DonationsMlPayload = {
   } | null
 }
 
-/** ml-service GET /donations/explore-summary (aligned with ml-pipelines/donations.ipynb §2). */
-type DonationsExplorePayload = {
+/** ml-service GET /donations/next-month-forecast (prediction card). */
+type DonationsForecastPayload = {
   generatedAtUtc: string
   dataSource: string
   loadWarning: string
   endpointVersion: string
-  notebookRef: string
-  estimatedValue: {
-    count: number
-    mean: number
-    std: number
-    min: number
-    q25: number
-    median: number
-    q75: number
-    max: number
+  modelName: string
+  modelMetrics: {
+    model: string
+    testMae: number
+    testRmse: number
+    testWapePct: number
+    testSmapePct: number
+    testR2: number
   } | null
-  iqrOutliers: { lowerBound: number; upperBound: number; count: number } | null
-  meanByDonationType: Array<{ donationType: string; giftCount: number; meanEstimatedValue: number }>
-  meanByChannelSource: Array<{ channelSource: string; giftCount: number; meanEstimatedValue: number }>
-  dataQuality: {
-    duplicateDonationIds: number
-    missingDonationDates: number
-    dateRangeStart: string | null
-    dateRangeEnd: string | null
-    negativeEstimatedValues: number
-    missingCampaignNameShare: number
-    distinctDonationTypes: number
-    distinctChannelSources: number
+  latestObservedMonth: string | null
+  predictedMonth: string | null
+  predictedTotalEstimatedValue: number | null
+  predictionRange: { lower: number; upper: number } | null
+  featureSnapshot: {
+    lagTotal1?: number | null
+    rolling6TotalMean?: number | null
+    monthNum?: number | null
+    avgGiftValue?: number | null
+    uniqueSupporters?: number | null
   } | null
 }
 
@@ -342,8 +338,8 @@ export function AdminAnalytics() {
   const [err, setErr] = useState<string | null>(null)
   const [donationsMl, setDonationsMl] = useState<DonationsMlPayload | null>(null)
   const [donationsMlErr, setDonationsMlErr] = useState<string | null>(null)
-  const [donationsExplore, setDonationsExplore] = useState<DonationsExplorePayload | null>(null)
-  const [donationsExploreErr, setDonationsExploreErr] = useState<string | null>(null)
+  const [donationsForecast, setDonationsForecast] = useState<DonationsForecastPayload | null>(null)
+  const [donationsForecastErr, setDonationsForecastErr] = useState<string | null>(null)
   const [programsTier1, setProgramsTier1] = useState<ProgramsTier1Payload | null>(null)
   const [programsTier1Err, setProgramsTier1Err] = useState<string | null>(null)
 
@@ -363,12 +359,12 @@ export function AdminAnalytics() {
 
   useEffect(() => {
     let cancelled = false
-    fetchJson<DonationsExplorePayload>('/api/admin/analytics/donations-explore')
+    fetchJson<DonationsForecastPayload>('/api/admin/analytics/donations-forecast')
       .then((data) => {
-        if (!cancelled) setDonationsExplore(data)
+        if (!cancelled) setDonationsForecast(data)
       })
       .catch((e: Error) => {
-        if (!cancelled) setDonationsExploreErr(e.message)
+        if (!cancelled) setDonationsForecastErr(e.message)
       })
     return () => {
       cancelled = true
@@ -524,15 +520,19 @@ export function AdminAnalytics() {
       <div className="row g-3 mb-4">
         <div className="col-lg-6 align-self-start">
           <div className="card border-0 shadow-sm">
-            <div className="card-body">
-              <h2 className="h5 mb-2">Most important insights right now</h2>
-              <ol className="small mb-0 ps-3">
-                {topInsights.map((t, i) => (
-                  <li key={i} className="mb-2">
-                    {t}
-                  </li>
-                ))}
-              </ol>
+            <div className="card-body d-flex flex-column justify-content-center" style={{ minHeight: 260 }}>
+              <div className="text-uppercase small text-secondary fw-semibold mb-2">Next month estimated donations</div>
+              <div className="display-5 fw-bold mb-1">
+                {donationsForecast?.predictedTotalEstimatedValue != null
+                  ? donationsForecast.predictedTotalEstimatedValue.toLocaleString()
+                  : '—'}
+              </div>
+              <div className="small text-secondary">
+                {donationsForecast?.predictedMonth ? `For ${donationsForecast.predictedMonth}` : 'Forecast unavailable'}
+              </div>
+              {donationsForecastErr ? (
+                <div className="alert alert-warning py-2 small mt-3 mb-0">Could not load forecast.</div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -567,75 +567,15 @@ export function AdminAnalytics() {
       <div className="row g-3 mb-4">
         <div className="col-12">
           <div className="card border-0 shadow-sm">
-            <div className="card-body py-3">
-              <h2 className="h6 mb-1">Donations notebook EDA (ml-service)</h2>
-              <p className="small text-secondary mb-2">
-                Live call to <code className="small">/donations/explore-summary</code> via the backend—after a container
-                deploy, check <strong>endpoint version</strong> and <strong>generated time</strong> to confirm the new
-                build is live.
-              </p>
-              {donationsExploreErr ? (
-                <div className="alert alert-warning py-2 small mb-0">Could not load: {donationsExploreErr}</div>
-              ) : null}
-              {donationsExplore?.loadWarning ? (
-                <div className="alert alert-info py-2 small mb-2">{donationsExplore.loadWarning}</div>
-              ) : null}
-              {donationsExplore ? (
-                <div className="row g-2 small">
-                  <div className="col-md-4">
-                    <div className="text-secondary">API endpoint version</div>
-                    <div className="fw-semibold">{donationsExplore.endpointVersion}</div>
-                    <div className="text-secondary mt-2">Data source</div>
-                    <div>{donationsExplore.dataSource}</div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="text-secondary">Generated (UTC)</div>
-                    <div className="font-monospace">{donationsExplore.generatedAtUtc}</div>
-                  </div>
-                  <div className="col-md-4">
-                    {donationsExplore.iqrOutliers ? (
-                      <>
-                        <div className="text-secondary">IQR outliers (estimated value)</div>
-                        <div>
-                          <strong>{donationsExplore.iqrOutliers.count}</strong> outside [
-                          {donationsExplore.iqrOutliers.lowerBound.toLocaleString()},{' '}
-                          {donationsExplore.iqrOutliers.upperBound.toLocaleString()}]
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-secondary">No distribution stats (empty dataset).</div>
-                    )}
-                  </div>
-                  {donationsExplore.estimatedValue ? (
-                    <div className="col-12 mt-2">
-                      <div className="text-secondary">Summary — mean est. value {donationsExplore.estimatedValue.mean.toLocaleString()} PHP (n ={' '}
-                      {donationsExplore.estimatedValue.count})</div>
-                    </div>
-                  ) : null}
-                  {donationsExplore.meanByDonationType.length > 0 ? (
-                    <div className="col-md-6 mt-1">
-                      <div className="text-secondary mb-1">Highest mean by gift type</div>
-                      <div>
-                        <strong>{donationsExplore.meanByDonationType[0].donationType}</strong> —{' '}
-                        {donationsExplore.meanByDonationType[0].meanEstimatedValue.toLocaleString()} PHP avg (
-                        {donationsExplore.meanByDonationType[0].giftCount} gifts)
-                      </div>
-                    </div>
-                  ) : null}
-                  {donationsExplore.meanByChannelSource.length > 0 ? (
-                    <div className="col-md-6 mt-1">
-                      <div className="text-secondary mb-1">Highest mean by channel</div>
-                      <div>
-                        <strong>{donationsExplore.meanByChannelSource[0].channelSource}</strong> —{' '}
-                        {donationsExplore.meanByChannelSource[0].meanEstimatedValue.toLocaleString()} PHP avg (
-                        {donationsExplore.meanByChannelSource[0].giftCount} gifts)
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : !donationsExploreErr ? (
-                <p className="small text-secondary mb-0">Loading…</p>
-              ) : null}
+            <div className="card-body">
+              <h2 className="h5 mb-2">Most important insights right now</h2>
+              <ol className="small mb-0 ps-3">
+                {topInsights.map((t, i) => (
+                  <li key={i} className="mb-2">
+                    {t}
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         </div>

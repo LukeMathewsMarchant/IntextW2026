@@ -1,0 +1,32 @@
+{
+  "_signature": "n=461|maxId=470|maxDate=2026-04-09|sum=543185.19",
+  "data": {
+    "generatedAtUtc": "2026-04-09T16:47:00.655581+00:00",
+    "dataSource": "database",
+    "loadWarning": "",
+    "endpointVersion": "2.0.0",
+    "modelName": "random_forest",
+    "modelMetrics": {
+      "model": "random_forest",
+      "test_mae": 3614.2512240094993,
+      "test_rmse": 4222.551196655244,
+      "test_wape_pct": 50.284404884483905,
+      "test_smape_pct": 61.4502704860903,
+      "test_r2": 0.18837923891227581
+    },
+    "latestObservedMonth": "2026-04",
+    "predictedMonth": "2026-05",
+    "predictedTotalEstimatedValue": 8274.21,
+    "predictionRange": {
+      "lower": 6619.37,
+      "upper": 9929.06
+    },
+    "featureSnapshot": {
+      "lagTotal1": 2353.58,
+      "rolling6TotalMean": 7955.88,
+      "monthNum": 4,
+      "avgGiftValue": 5749.09,
+      "uniqueSupporters": 13
+    }
+  }
+}
