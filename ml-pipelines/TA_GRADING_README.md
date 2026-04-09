@@ -1,27 +1,46 @@
 # TA grading: ML pipelines vs website deployment
 
-This file is for **instructors and TAs**. It distinguishes notebooks whose outputs and contracts are **wired into the Lighthouse website** (via `ml-service` APIs and the admin app) from other notebooks the team **used to explore data and relationships** without treating them as production-facing analytics.
+This file is for **instructors and TAs**. It distinguishes notebooks whose outputs and contracts are **wired into the Lighthouse website** (via `ml-service` APIs and the app) from other notebooks the team **used to explore data and relationships** without treating them as production-facing analytics.
 
-Authoritative integration detail also lives in **`ml-service/IntegratedPipelines.txt`** 
+**Production site:** [https://intext-w2026.vercel.app/](https://intext-w2026.vercel.app/) (“Light on a Hill Foundation”). Pipeline-backed **admin** pages use the same host with `/Admin/...` paths (see the table).
 
 ---
 
 ## Notebooks deployed to the website (with paths)
 
-These paths are relative to the repo root unless noted.
+These paths are relative to the repo root unless noted. **Production URL(s)** use the base host `https://intext-w2026.vercel.app`; when two pages use the same pipeline, both are listed.
 
-| Notebook | Path | How it shows up for users |
-|----------|------|---------------------------|
-| Social media analytics | `ml-pipelines/social_media_posts_pipeline.ipynb` | Admin **Social Media** and **Reports & analytics** (social-related cards; backend proxies to ML service). |
-| Donations analytics | `ml-pipelines/donations.ipynb` | **Reports & analytics** — donation trends, channels, gift types, outreach-oriented views aligned with donations aggregations. |
-| Next-month donation forecast | `ml-pipelines/donation_prediction.ipynb` | **Reports & analytics** — next-month estimated donations card; model artifact consumed by `/donations/next-month-forecast`. |
-| Residents (tier-1 “Caring”) | `ml-pipelines/residents.ipynb` | **Reports & analytics** — residents in care / risk-oriented summaries from tier-1 payload (`GET /reports/tier1-analytics`). |
-| Education records | `ml-pipelines/education_records.ipynb` | **Reports & analytics** — Teaching / education card (same tier-1 endpoint; artifacts + schema). |
-| Health & wellbeing | `ml-pipelines/health_wellbeing_records.ipynb` | **Reports & analytics** — Healing / health & wellbeing card (tier-1). |
-| Safehouse monthly metrics | `ml-pipelines/safehouse_monthly_metrics_pipeline.ipynb` | **Reports & analytics** — safehouse performance comparison (safehouse block under tier-1 analytics; pipeline-first data with DB fallback). |
-| Public impact snapshots | `ml-pipelines/public_impact_snapshots_pipeline.ipynb` | **Impact** experience and `GET /impact/analytics` (cache / payload aligned with this notebook). |
+| Notebook | Path | How it shows up for users | Production URL(s) |
+|----------|------|---------------------------|-------------------|
+| Social media analytics | `ml-pipelines/social_media_posts_pipeline.ipynb` | Admin **Social Media** and **Reports & analytics** (social-related cards; backend proxies to ML service). | https://intext-w2026.vercel.app/Admin/SocialMedia<br>https://intext-w2026.vercel.app/Admin/Analytics |
+| Donations analytics | `ml-pipelines/donations.ipynb` | **Admin dashboard** donation trends chart and **Reports & analytics** (channels, gift types, outreach-oriented views aligned with donations aggregations). | https://intext-w2026.vercel.app/Admin<br>https://intext-w2026.vercel.app/Admin/Analytics |
+| Next-month donation forecast | `ml-pipelines/donation_prediction.ipynb` | **Reports & analytics** — next-month estimated donations card; model artifact consumed by `/donations/next-month-forecast`. | https://intext-w2026.vercel.app/Admin/Analytics |
+| Residents (tier-1 “Caring”) | `ml-pipelines/residents.ipynb` | **Reports & analytics** — residents in care / risk-oriented summaries from tier-1 payload (`GET /reports/tier1-analytics`). | https://intext-w2026.vercel.app/Admin/Analytics |
+| Education records | `ml-pipelines/education_records.ipynb` | **Reports & analytics** — Teaching / education card (same tier-1 endpoint; artifacts + schema). | https://intext-w2026.vercel.app/Admin/Analytics |
+| Health & wellbeing | `ml-pipelines/health_wellbeing_records.ipynb` | **Reports & analytics** — Healing / health & wellbeing card (tier-1). | https://intext-w2026.vercel.app/Admin/Analytics |
+| Safehouse monthly metrics | `ml-pipelines/safehouse_monthly_metrics_pipeline.ipynb` | **Reports & analytics** — safehouse performance comparison (safehouse block under tier-1 analytics; pipeline-first data with DB fallback). | https://intext-w2026.vercel.app/Admin/Analytics |
+| Public impact snapshots | `ml-pipelines/public_impact_snapshots_pipeline.ipynb` | **Impact** experience and `GET /impact/analytics` (cache / payload aligned with this notebook). | https://intext-w2026.vercel.app/impact |
 
-**Reintegration KPIs** on **Reports & analytics** are built in code from resident fields (e.g. case status / reintegration dates), not from a separate grading notebook—see `ml-service/IntegratedPipelines.txt` §6 and `ml-service/app/tier1_analytics.py`.
+**Reintegration KPIs** on **Reports & analytics** are built in code from resident fields (e.g. case status / reintegration dates), not from a separate grading notebook—see `ml-service/IntegratedPipelines.txt` §6 and `ml-service/app/tier1_analytics.py`. Verify on https://intext-w2026.vercel.app/Admin/Analytics (admin login below).
+
+---
+
+## Admin access for grading
+
+Most rows in the table use **admin-only** routes. Sign in at [https://intext-w2026.vercel.app/login](https://intext-w2026.vercel.app/login) with:
+
+- **Email:** `ShanNon@Profit.com`  
+- **Password:** `ilikemypassword`
+
+Then open the URLs in the **Production URL(s)** column (or use **Reports & analytics**, **Social Media**, etc. in the nav). The **Impact** row is **public**—no admin login.
+
+Authoritative integration detail also lives in **`ml-service/IntegratedPipelines.txt`**.
+
+---
+
+## How `ml-service` connects to the website
+
+The **`ml-service/`** folder contains the code that **defines and runs the ML analytics HTTP API**: a **FastAPI** app rooted at `ml-service/app/main.py`, with supporting modules such as `app/tier1_analytics.py` and `app/db_access.py`. Notebooks under **`ml-pipelines/`** produce **artifacts** (for example `.joblib` models, JSON caches, and CSVs, often under `ml-pipelines/artifacts/`). **ml-service** reads those artifacts—and, when configured, **PostgreSQL** or **CSV** sources—to assemble JSON responses. The **Lighthouse .NET backend** does not reimplement that logic for grading-critical views; it **proxies** admin requests to ml-service and forwards JSON to the **React** admin UI. The canonical mapping from notebook → endpoint → UI is **`ml-service/IntegratedPipelines.txt`**.
 
 ---
 
