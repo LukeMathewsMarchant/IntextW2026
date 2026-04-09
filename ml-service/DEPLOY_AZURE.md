@@ -134,7 +134,7 @@ Use this checklist every time anyone adds or changes ML API routes.
 
 1. Ensure route is added in `ml-service/app/main.py`.
 2. Ensure workflow validation still passes:
-   - `/.github/workflows/main_ml-pipelines.yml` route grep checks
+   - `/.github/workflows/main_ml-pipelines-container.yml` (Python compile + deploy smoke test)
    - smoke test checks `/openapi.json` and `/health`
 3. Run local sanity checks:
 
@@ -147,11 +147,8 @@ bash -n startup.sh
 ### B. Deploy
 
 1. Merge to `main`.
-2. Run GitHub Actions workflow:
-   - **Build and deploy ml-service to Azure Web App - ml-pipelines**
-3. Wait for **all jobs to pass**, especially:
-   - `Verify startup script does not build venv at runtime`
-   - `Smoke test deployed API shape`
+2. The workflow **Build and deploy ml-service container** runs on push (paths under `ml-service/`).
+3. Wait for **all jobs to pass**, especially **Smoke test deployed container**.
 
 ### C. Post-deploy verification (must pass)
 
@@ -183,28 +180,13 @@ Expected:
 
 ### E. If deploy is green but app is stale or failing
 
-1. Check runtime file on Kudu:
+**Container deploy (current):** the running code is the **image tag** on the Web App, not `wwwroot`. Use **Log stream**, **Container settings** (image digest/tag), and `/health.buildId` vs the GitHub Actions commit SHA.
 
-```bash
-cd /home/site/wwwroot
-wc -l app/main.py
-grep -n "title='Lighthouse ML API'" app/main.py
-grep -n "/reports/tier1-analytics\|/donations/analytics" app/main.py
-head -n 60 startup.sh
-```
+**Legacy zip / Oryx troubleshooting** (only if you ever revert to zip deploy):
 
-2. Confirm App Service startup command:
-
-```text
-bash /home/site/wwwroot/startup.sh
-```
-
-3. Confirm App Setting:
-
-```text
-SCM_DO_BUILD_DURING_DEPLOYMENT=true
-```
-
+1. Check runtime files on Kudu under `/home/site/wwwroot`.
+2. Startup command: `bash /home/site/wwwroot/startup.sh`
+3. `SCM_DO_BUILD_DURING_DEPLOYMENT=true`
 4. Restart app, rerun post-deploy verification commands.
 
 ### F. Rules of engagement
@@ -277,3 +259,12 @@ az webapp restart --name ml-pipelines --resource-group ml-pipelines_group
 
 - During container mode, the old Python code zip/Oryx path is no longer authoritative.
 - This is the strongest fix for "workflow passed but stale code served" issues.
+
+### Smoke test returns 503
+
+Usually the site is still returning **503** because the Linux process never reaches a healthy listen state:
+
+1. **Startup command** — If the app was ever zip-deployed, it may still be `bash /home/site/wwwroot/startup.sh`. Inside a custom image that path does not exist. Clear it: Azure Portal → App Service → **Configuration** → **General settings** → **Startup Command** → empty → Save; or rely on the container workflow step that runs `az webapp config set --startup-file ""`.
+2. **Port** — `WEBSITES_PORT` must be `8000` (matches `Dockerfile` / `gunicorn --bind`).
+3. **Logs** — **Log stream** or **Diagnose and solve problems** → look for image pull errors, `ModuleNotFoundError`, or crashes before `Listening at: http://0.0.0.0:8000`.
+4. **Cold start** — First request after deploy can exceed a minute while the app imports and warms caches; the workflow retries health for several minutes.

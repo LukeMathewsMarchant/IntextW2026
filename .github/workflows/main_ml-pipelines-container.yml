@@ -30,6 +30,10 @@ jobs:
           cd ml-service
           pip install -r requirements.txt
           python -m py_compile app/main.py
+          grep -q "/reports/tier1-analytics" app/main.py
+          grep -q "/donations/analytics" app/main.py
+          ! grep -q "python3 -m venv" startup.sh
+          grep -q "Using gunicorn from antenv" startup.sh
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -95,7 +99,15 @@ jobs:
             --resource-group "${RESOURCE_GROUP}" \
             --settings \
               WEBSITES_PORT=8000 \
-              ML_API_BUILD_ID="${GITHUB_SHA}" >/dev/null
+              ML_API_BUILD_ID="${GITHUB_SHA}" \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=false >/dev/null
+
+          # Old zip-based deploy often set a startup script here; inside a Docker image
+          # that path does not exist → 503 until this is cleared and container CMD runs.
+          az webapp config set \
+            --name "${APP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --startup-file ""
 
           az webapp restart --name "${APP_NAME}" --resource-group "${RESOURCE_GROUP}"
 
@@ -107,7 +119,8 @@ jobs:
           BASE_URL="https://${HOSTNAME}"
           export BASE_URL
           export EXPECTED_BUILD_ID="${GITHUB_SHA}"
-          sleep 20
+          # First request can be slow: module import builds social cache / warms DB.
+          sleep 45
           python - <<'PY'
           import json
           import os
@@ -122,7 +135,7 @@ jobs:
             with urllib.request.urlopen(base + path, timeout=30) as r:
               return json.loads(r.read().decode("utf-8"))
 
-          for i in range(10):
+          for i in range(24):
             try:
               health = fetch_json("/health")
               openapi = fetch_json("/openapi.json")
@@ -135,7 +148,7 @@ jobs:
               raise SystemExit(0)
             except Exception as ex:  # noqa: BLE001
               last_error = ex
-              if i < 9:
-                time.sleep(10)
+              if i < 23:
+                time.sleep(15)
           raise SystemExit(f"Smoke test failed: {last_error}")
           PY
