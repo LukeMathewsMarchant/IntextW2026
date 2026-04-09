@@ -62,10 +62,27 @@ type ImpactResponse = {
   }
   outcomeSignals?: {
     donationsLast12Months: number
+    donorsLast12Months: number
+    avgDonationAmountLast12Months: number | null
     activeResidentsLatest: number
     incidentsLatest: number
     avgEducationLatest: number | null
     avgHealthLatest: number | null
+  }
+  impactNarrative?: {
+    inCareNow: number
+    recentReintegrations: number
+    recentIncidents: number
+    closureShareOfActivePct: number
+    storyWindowLabel: string
+  }
+  outcomePerDollar?: {
+    donationsLast12Months: number
+    reintegrationsLast12Months: number
+    activeResidentsNow: number
+    dollarsPerReintegration: number | null
+    dollarsPerActiveResident: number | null
+    windowLabel: string
   }
   safehousePerformance?: SafehouseDeltaPoint[]
   donorOkrs?: DonorOkrs
@@ -139,6 +156,8 @@ export function Impact() {
   const freshness = data.dataFreshness ?? { generatedAtUtc: new Date().toISOString(), latestSafehouseMetricMonth: null }
   const outcomeSignals = data.outcomeSignals ?? {
     donationsLast12Months: 0,
+    donorsLast12Months: 0,
+    avgDonationAmountLast12Months: null,
     activeResidentsLatest: 0,
     incidentsLatest: 0,
     avgEducationLatest: null,
@@ -152,6 +171,21 @@ export function Impact() {
     distinctDonorsAllTime: 0,
     windowLabel: '',
     summary: '',
+  }
+  const impactNarrative = data.impactNarrative ?? {
+    inCareNow: outcomeSignals.activeResidentsLatest,
+    recentReintegrations: 0,
+    recentIncidents: outcomeSignals.incidentsLatest,
+    closureShareOfActivePct: 0,
+    storyWindowLabel: 'Last 90 days (UTC)'
+  }
+  const outcomePerDollar = data.outcomePerDollar ?? {
+    donationsLast12Months: outcomeSignals.donationsLast12Months,
+    reintegrationsLast12Months: 0,
+    activeResidentsNow: outcomeSignals.activeResidentsLatest,
+    dollarsPerReintegration: null,
+    dollarsPerActiveResident: null,
+    windowLabel: 'Last 12 months (UTC)'
   }
   const donationChannels = data.donationChannelPerformance ?? []
   const socialPostTraction = data.socialPostTraction ?? []
@@ -257,6 +291,70 @@ export function Impact() {
           Data freshness: generated {new Date(freshness.generatedAtUtc).toLocaleString()} UTC
           {freshness.operationalCaseWindow ? ` | case activity window: ${freshness.operationalCaseWindow}` : ''}
         </p>
+      </section>
+
+      <section className="card border-0 shadow-sm" aria-label="Impact narrative and outcome efficiency">
+        <div className="card-body p-4">
+          <div className="row g-4">
+            <div className="col-lg-7">
+              <h2 className="h5 mb-3">Journey Snapshot</h2>
+              <div className="row g-2 row-cols-1 row-cols-md-3">
+                <div className="col">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-secondary text-uppercase">In care now</div>
+                    <div className="h4 mb-1 text-dark">{impactNarrative.inCareNow.toLocaleString()}</div>
+                    <div className="small text-secondary">Active resident census</div>
+                  </div>
+                </div>
+                <div className="col">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-secondary text-uppercase">Recent incidents</div>
+                    <div className="h4 mb-1 text-dark">{impactNarrative.recentIncidents.toLocaleString()}</div>
+                    <div className="small text-secondary">Current 30-day window</div>
+                  </div>
+                </div>
+                <div className="col">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-secondary text-uppercase">Reintegrations (90d)</div>
+                    <div className="h4 mb-1 text-dark">{impactNarrative.recentReintegrations.toLocaleString()}</div>
+                    <div className="small text-secondary">
+                      {impactNarrative.closureShareOfActivePct}% of active census
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="small text-secondary mb-0 mt-3">{impactNarrative.storyWindowLabel}</p>
+            </div>
+            <div className="col-lg-5">
+              <h2 className="h5 mb-3">Outcome per dollar lens</h2>
+              <div className="d-flex flex-column gap-2">
+                <div className="bg-body-tertiary rounded p-3">
+                  <div className="small text-secondary text-uppercase">Dollars per reintegrated case</div>
+                  <div className="h4 mb-1 text-dark">
+                    {outcomePerDollar.dollarsPerReintegration == null
+                      ? 'N/A'
+                      : `$${outcomePerDollar.dollarsPerReintegration.toLocaleString()}`}
+                  </div>
+                  <div className="small text-secondary">
+                    ${outcomePerDollar.donationsLast12Months.toLocaleString()} / {outcomePerDollar.reintegrationsLast12Months.toLocaleString()} reintegrations
+                  </div>
+                </div>
+                <div className="bg-body-tertiary rounded p-3">
+                  <div className="small text-secondary text-uppercase">Dollars per active resident</div>
+                  <div className="h4 mb-1 text-dark">
+                    {outcomePerDollar.dollarsPerActiveResident == null
+                      ? 'N/A'
+                      : `$${outcomePerDollar.dollarsPerActiveResident.toLocaleString()}`}
+                  </div>
+                  <div className="small text-secondary">
+                    {outcomePerDollar.activeResidentsNow.toLocaleString()} active residents in latest census
+                  </div>
+                </div>
+              </div>
+              <p className="small text-secondary mb-0 mt-3">{outcomePerDollar.windowLabel}</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="card border-0 shadow-sm" aria-label="Live trends from API">
@@ -529,7 +627,7 @@ export function Impact() {
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                 <h2 className="h4 mb-0">Donation Allocation vs Outcome Signals</h2>
                 <small className="text-secondary">
-                  Donations: last 12 months. Residents / incidents / education / health: from case records in the current operational window (see header).
+                  Donation value, donor count, and average gift: last 12 months. Residents and incidents: current operational window.
                 </small>
               </div>
               <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-3">
@@ -553,14 +651,18 @@ export function Impact() {
                 </div>
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Avg education % (last 30 days)</div>
-                    <div className="h5 mb-0">{outcomeSignals.avgEducationLatest ?? 'N/A'}</div>
+                    <div className="small text-secondary">Distinct donors (12 months)</div>
+                    <div className="h5 mb-0">{outcomeSignals.donorsLast12Months.toLocaleString()}</div>
                   </div>
                 </div>
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Avg health score (last 30 days)</div>
-                    <div className="h5 mb-0">{outcomeSignals.avgHealthLatest ?? 'N/A'}</div>
+                    <div className="small text-secondary">Avg donation amount (12 months)</div>
+                    <div className="h5 mb-0">
+                      {outcomeSignals.avgDonationAmountLast12Months == null
+                        ? 'N/A'
+                        : `$${outcomeSignals.avgDonationAmountLast12Months.toLocaleString()}`}
+                    </div>
                   </div>
                 </div>
               </div>
