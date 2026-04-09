@@ -194,7 +194,6 @@ export function Impact() {
   const kpis = data.kpis ?? { livesImpacted: 0, safehouses: 0, activePrograms: 0, successRate: 0 }
   const retention = data.retention ?? []
   const supportMix = data.supportMix ?? []
-  const freshness = data.dataFreshness ?? { generatedAtUtc: new Date().toISOString(), latestSafehouseMetricMonth: null }
   const outcomeSignals = {
     donationsLast12Months: data.outcomeSignals?.donationsLast12Months ?? 0,
     donorsLast12Months: data.outcomeSignals?.donorsLast12Months ?? 0,
@@ -281,9 +280,6 @@ export function Impact() {
         <h1 className="lh-impact-title text-center mb-2">From Crisis to Reintegration</h1>
         <p className="lh-section-sub text-center mb-3">
           See how your support powers safe care, healing services, and long-term reintegration for girls in our network.
-        </p>
-        <p className="text-body-secondary small text-center mt-3 mb-0">
-          Data freshness: generated {new Date(freshness.generatedAtUtc).toLocaleString()} UTC
         </p>
       </section>
 
