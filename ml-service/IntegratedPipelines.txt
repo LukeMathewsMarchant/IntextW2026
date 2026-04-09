@@ -3,7 +3,7 @@ Last updated: 2026-04-09
 
 1) social_media analytics pipeline outputs
 - Source:
-  - Notebook path: ml-pipelines/social_media_posts.ipynb (or project social media pipeline notebook)
+  - Notebook path: ml-pipelines/social_media_posts_pipeline.ipynb
   - ml-service social media analytics builder
   - artifacts/social_media_analytics_cache.json (fallback cache)
 - Website integration:
