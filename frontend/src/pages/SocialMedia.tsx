@@ -67,6 +67,19 @@ function formatUsdAxisTick(v: number) {
   return `$${compact}`
 }
 
+function formatHour12(hour24: number) {
+  const normalizedHour = ((hour24 % 24) + 24) % 24
+  const period = normalizedHour >= 12 ? 'PM' : 'AM'
+  const hour12 = normalizedHour % 12 || 12
+  return `${hour12}:00 ${period}`
+}
+
+function formatSuggestedPostHour(raw: string) {
+  const match = raw.match(/^(\d{1,2})(?::\d{2})?$/)
+  if (!match) return raw
+  return formatHour12(Number(match[1]))
+}
+
 export function SocialMedia() {
   const [data, setData] = useState<SocialMediaAnalyticsResponse | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -236,7 +249,7 @@ export function SocialMedia() {
                       <strong>Action:</strong> {r.recommendedAction}
                     </div>
                     <div className="small mt-1">
-                      <strong>Best hours:</strong> {r.suggestedPostHours.join(', ') || '—'}
+                      <strong>Best hours:</strong> {r.suggestedPostHours.map(formatSuggestedPostHour).join(', ') || '—'}
                     </div>
                     <div className="small mt-1">
                       <strong>Estimated monthly lift (USD):</strong> {formatUsd(Math.round(r.estimatedMonthlyLiftPhp))}
@@ -274,7 +287,7 @@ export function SocialMedia() {
                   <tr key={`${w.platform}-${w.dayOfWeek}-${w.postHour}-${idx}`}>
                     <td>{w.platform}</td>
                     <td>{w.dayOfWeek}</td>
-                    <td>{w.postHour}:00</td>
+                    <td>{formatHour12(w.postHour)}</td>
                     <td className="text-end text-nowrap">{formatUsd(Math.round(w.avgDonationValuePhp))}</td>
                     <td className="text-end">{w.avgReferrals.toFixed(2)}</td>
                   </tr>
