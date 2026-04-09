@@ -1,0 +1,137 @@
+name: Build and deploy ml-service container
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ml-service/**'
+      - '.github/workflows/main_ml-pipelines-container.yml'
+  workflow_dispatch:
+
+env:
+  APP_NAME: ml-pipelines
+  RESOURCE_GROUP: ml-pipelines_group
+  IMAGE_NAME: ml-service
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Python app
+        run: |
+          cd ml-service
+          pip install -r requirements.txt
+          python -m py_compile app/main.py
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: validate
+    permissions:
+      contents: read
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute image tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ml-service
+          file: ./ml-service/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1A081AB05F7D42DC9E899C57AF0342F8 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_62C4D7E7BFD44A458744D56F1280193A }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1C33F54D43F04846A58ABC1D9395F5FC }}
+
+      - name: Configure App Service to use container image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}"
+          az webapp config container set \
+            --name "${APP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --container-image-name "${IMAGE}" \
+            --container-registry-url "https://${{ secrets.ACR_LOGIN_SERVER }}" \
+            --container-registry-user "${{ secrets.ACR_USERNAME }}" \
+            --container-registry-password "${{ secrets.ACR_PASSWORD }}"
+
+          az webapp config appsettings set \
+            --name "${APP_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --settings \
+              WEBSITES_PORT=8000 \
+              ML_API_BUILD_ID="${GITHUB_SHA}" >/dev/null
+
+          az webapp restart --name "${APP_NAME}" --resource-group "${RESOURCE_GROUP}"
+
+      - name: Smoke test deployed container
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOSTNAME="$(az webapp show --name "${APP_NAME}" --resource-group "${RESOURCE_GROUP}" --query defaultHostName -o tsv)"
+          BASE_URL="https://${HOSTNAME}"
+          export BASE_URL
+          export EXPECTED_BUILD_ID="${GITHUB_SHA}"
+          sleep 20
+          python - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.request
+
+          base = os.environ["BASE_URL"]
+          expected = (os.environ.get("EXPECTED_BUILD_ID") or "").lower()
+          last_error = None
+
+          def fetch_json(path: str):
+            with urllib.request.urlopen(base + path, timeout=30) as r:
+              return json.loads(r.read().decode("utf-8"))
+
+          for i in range(10):
+            try:
+              health = fetch_json("/health")
+              openapi = fetch_json("/openapi.json")
+              paths = openapi.get("paths", {})
+              assert "/donations/analytics" in paths
+              assert "/reports/tier1-analytics" in paths
+              build_id = (health.get("buildId") or "").lower()
+              assert build_id == expected, f"buildId mismatch: {build_id} != {expected}"
+              print("Smoke test passed")
+              raise SystemExit(0)
+            except Exception as ex:  # noqa: BLE001
+              last_error = ex
+              if i < 9:
+                time.sleep(10)
+          raise SystemExit(f"Smoke test failed: {last_error}")
+          PY
