@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  APP_NAME: ml-pipelines
-  RESOURCE_GROUP: ml-pipelines_group
+  APP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+  RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
   IMAGE_NAME: ml-service
 
 jobs:
@@ -77,6 +77,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -z "${APP_NAME}" ] || [ -z "${RESOURCE_GROUP}" ]; then
+            echo "AZURE_WEBAPP_NAME and AZURE_RESOURCE_GROUP repository variables are required."
+            exit 1
+          fi
           IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}"
           az webapp config container set \
             --name "${APP_NAME}" \
