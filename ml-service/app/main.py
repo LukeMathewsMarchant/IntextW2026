@@ -49,8 +49,8 @@ def _artifact_root() -> Path:
 
 load_dotenv(_artifact_root() / '.env', override=False)
 
-# Bumped when you need to confirm Azure is running this file (see GET /health).
-_ML_API_BUILD_ID = '2026-04-09-admin-analytics-routes'
+# Build marker is injected by CI as ML_API_BUILD_ID (fallback keeps local dev readable).
+_ML_API_BUILD_ID = os.getenv('ML_API_BUILD_ID', 'dev-local')
 
 
 def _load_from_database(db_url: str) -> pd.DataFrame:

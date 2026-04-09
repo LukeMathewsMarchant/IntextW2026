@@ -58,6 +58,15 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_62C4D7E7BFD44A458744D56F1280193A }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1C33F54D43F04846A58ABC1D9395F5FC }}
 
+      - name: Stamp build id in App Settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          az webapp config appsettings set \
+            --name ml-pipelines \
+            --resource-group ml-pipelines_group \
+            --settings ML_API_BUILD_ID="${GITHUB_SHA}" >/dev/null
+
       # Omit slot-name so this updates the app your default hostname serves. A wrong slot
       # (e.g. "Production" vs default) can make the workflow "succeed" while the public URL
       # still runs an old build — OpenAPI title/version will stay stuck on the old API.
@@ -74,6 +83,7 @@ jobs:
           HOSTNAME="$(az webapp show --name ml-pipelines --resource-group ml-pipelines_group --query defaultHostName -o tsv)"
           BASE_URL="https://${HOSTNAME}"
           export BASE_URL
+          export EXPECTED_BUILD_ID="${GITHUB_SHA}"
           echo "Testing ${BASE_URL}"
           # App Service + Oryx warm-up can take a few minutes.
           sleep 30
@@ -98,6 +108,9 @@ jobs:
                   assert "/donations/analytics" in paths, "Missing /donations/analytics in OpenAPI"
                   assert "/reports/tier1-analytics" in paths, "Missing /reports/tier1-analytics in OpenAPI"
                   assert health.get("status") == "ok", "Health status is not ok"
+                  build_id = (health.get("buildId") or "").lower()
+                  expected = (os.environ.get("EXPECTED_BUILD_ID") or "").lower()
+                  assert expected and build_id == expected, "Build id does not match deployed commit SHA"
                   print("Smoke test passed.")
                   raise SystemExit(0)
               except Exception as ex:  # noqa: BLE001
