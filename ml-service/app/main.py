@@ -750,7 +750,8 @@ def _resident_transfer_risk_empty(load_warning: str = '', data_source: str = 'em
     }
 
 
-def _build_resident_transfer_risk_summary() -> dict[str, Any]:
+def _build_resident_transfer_risk_from_artifacts_csv() -> dict[str, Any]:
+    """Offline / dev: read precomputed scores from CSV when no database URL is configured."""
     root = _repo_root()
     scored_path = Path(
         os.getenv(
@@ -799,7 +800,6 @@ def _build_resident_transfer_risk_summary() -> dict[str, Any]:
         tier_counts.append({'tier': str(label), 'count': int(count)})
 
     top_residents: list[dict[str, Any]] = []
-    resident_cols = ['resident_id', 'case_control_no', 'internal_code', 'assigned_social_worker', 'safehouse_id']
     has_resident_identifiers = all(col in scored.columns for col in ['resident_id', 'case_control_no'])
     if has_resident_identifiers:
         tier_rank = {'High': 3, 'Medium': 2, 'Monitor': 1}
@@ -861,6 +861,24 @@ def _build_resident_transfer_risk_summary() -> dict[str, Any]:
         'riskTierCounts': tier_counts,
         'topResidents': top_residents,
     }
+
+
+def _build_resident_transfer_risk_summary() -> dict[str, Any]:
+    """Production: score active residents from PostgreSQL (same env as social/tier-1). Dev without DB: CSV artifact."""
+    conn = resolve_db_connection_value()
+    if conn:
+        try:
+            from app.resident_transfer_risk import build_resident_transfer_risk_summary_from_database
+
+            return build_resident_transfer_risk_summary_from_database(conn)
+        except Exception as ex:
+            return _resident_transfer_risk_empty(
+                'Live database scoring failed. '
+                'Check DB connectivity, residents/incident_reports/education_records, and that '
+                f'resident_transfer_risk_model.joblib is bundled in the container. Details: {ex}',
+                'database-error',
+            )
+    return _build_resident_transfer_risk_from_artifacts_csv()
 
 
 def _safe_load_resident_transfer_risk_summary() -> dict[str, Any]:
@@ -1402,5 +1420,5 @@ def reports_tier1_analytics() -> dict[str, Any]:
 
 @app.get('/residents/transfer-risk-summary')
 def residents_transfer_risk_summary() -> dict[str, Any]:
-    """Resident transfer-risk summary from notebook artifacts for dashboard cards."""
+    """Resident transfer-risk: live PostgreSQL + bundled model when DB is configured; else CSV artifact (local dev)."""
     return _safe_load_resident_transfer_risk_summary()

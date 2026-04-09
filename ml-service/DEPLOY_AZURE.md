@@ -45,6 +45,10 @@ You do **not** manually zip-deploy the `ml-service` folder in normal operation. 
 - Forecast artifact path (optional override):
   - `DONATIONS_FORECAST_MODEL_PATH=/app/artifacts/donation_prediction_next_month_model.joblib`
   - default runtime expects the model inside the container image under `/app/artifacts/`.
+- **Resident transfer risk** (`GET /residents/transfer-risk-summary`, admin dashboard):
+  - In **production**, use the same PostgreSQL settings as social/tier-1 (`SOCIAL_MEDIA_DB_URL` or `ConnectionStrings__DefaultConnection`). The service reads **`residents`**, **`incident_reports`**, and **`education_records`**, engineers the same early-window features as `resident_transfer_risk_pipeline.ipynb`, runs the bundled **`resident_transfer_risk_model.joblib`**, and returns **`dataSource: "database"`**.
+  - GitHub Actions copies `resident_transfer_risk_model.joblib` and `resident_transfer_risk_metrics.csv` from `ml-pipelines/artifacts/` into `ml-service/artifacts/` before the Docker build (same pattern as the donations forecast model).
+  - If **no** DB URL is set (typical local dev), the endpoint falls back to the precomputed scored CSV under `ml-pipelines/artifacts/` (`dataSource: "artifact_csv"`).
 
 Local-only / artifact refresh (optional):
 
@@ -61,7 +65,7 @@ cd ml-service
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m py_compile app/main.py
+python -m py_compile app/main.py app/resident_transfer_risk.py
 ```
 
 Optional: build a social cache file for offline work:
@@ -149,7 +153,7 @@ Expected:
 
 1. Add or change routes in `ml-service/app/main.py` (and dependencies if needed).
 2. CI validates: `py_compile`, route greps, `startup.sh` safety checks (see `main_ml-pipelines-container.yml`).
-3. Local: `python -m py_compile app/main.py` (and `bash -n startup.sh` if you touch it).
+3. Local: `python -m py_compile app/main.py app/resident_transfer_risk.py` (and `bash -n startup.sh` if you touch it).
 4. If `main.py` imports a new package (for example `joblib`, `scikit-learn`), add it to `ml-service/requirements.txt` in the same PR.
 
 ### After merge
