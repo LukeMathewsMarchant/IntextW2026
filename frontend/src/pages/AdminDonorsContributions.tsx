@@ -1198,7 +1198,28 @@ export function AdminDonorsContributions() {
       {pendingDelete ? (
         <ConfirmModal
           title="Confirm delete"
-          message="Are you sure you want to delete this record?"
+          message={
+            pendingDelete.kind === 'donation' ? (
+              <div>
+                <p className="mb-2">Are you sure you want to delete this contribution?</p>
+                <p className="mb-1">This will also delete related records:</p>
+                <ul className="mb-0">
+                  <li>Donation allocations linked to this contribution</li>
+                  <li>In-kind donation items linked to this contribution</li>
+                </ul>
+              </div>
+            ) : (
+              <div>
+                <p className="mb-2">Are you sure you want to delete this supporter?</p>
+                <p className="mb-1">This will also delete related records:</p>
+                <ul className="mb-0">
+                  <li>All contributions by this supporter</li>
+                  <li>Donation allocations linked to those contributions</li>
+                  <li>In-kind donation items linked to those contributions</li>
+                </ul>
+              </div>
+            )
+          }
           confirmLabel="Yes, delete"
           onCancel={() => setPendingDelete(null)}
           onConfirm={() => {

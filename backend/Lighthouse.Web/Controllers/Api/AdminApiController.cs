@@ -497,6 +497,23 @@ public class AdminApiController : ControllerBase
                     _db.Donations.RemoveRange(donations);
                 }
             }
+            else if (normalizedEntity == "donations" && existing is Donation donation)
+            {
+                // Delete dependent rows first so direct donation delete succeeds under FK constraints.
+                var donationId = donation.DonationId;
+
+                var allocations = await _db.DonationAllocations
+                    .Where(a => a.DonationId == donationId)
+                    .ToListAsync(cancellationToken);
+                if (allocations.Count > 0)
+                    _db.DonationAllocations.RemoveRange(allocations);
+
+                var inKindItems = await _db.InKindDonationItems
+                    .Where(i => i.DonationId == donationId)
+                    .ToListAsync(cancellationToken);
+                if (inKindItems.Count > 0)
+                    _db.InKindDonationItems.RemoveRange(inKindItems);
+            }
 
             _db.Remove(existing);
             await _db.SaveChangesAsync(cancellationToken);
@@ -507,7 +524,9 @@ public class AdminApiController : ControllerBase
         {
             return Conflict(new
             {
-                error = "Cannot delete this record because it is referenced by other records. Remove dependent records first."
+                error = "Cannot delete this record because it is referenced by other records. Remove dependent records first.",
+                dependentTable = pg.TableName,
+                dependentConstraint = pg.ConstraintName
             });
         }
     }
