@@ -52,9 +52,11 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_62C4D7E7BFD44A458744D56F1280193A }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1C33F54D43F04846A58ABC1D9395F5FC }}
 
+      # Omit slot-name so this updates the app your default hostname serves. A wrong slot
+      # (e.g. "Production" vs default) can make the workflow "succeed" while the public URL
+      # still runs an old build — OpenAPI title/version will stay stuck on the old API.
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'ml-pipelines'
-          slot-name: 'Production'
           package: ./ml-service
