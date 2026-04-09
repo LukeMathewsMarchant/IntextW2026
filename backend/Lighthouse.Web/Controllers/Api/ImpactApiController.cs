@@ -365,7 +365,6 @@ public class ImpactApiController : ControllerBase
 
         return new
         {
-            chips = new[] { "Source: INTEX case data", $"Coverage: {safehouseCount} safehouses", $"Updated: {DateTime.UtcNow:yyyy-MM-dd}" },
             kpis = new
             {
                 livesImpacted = activeSupporters,

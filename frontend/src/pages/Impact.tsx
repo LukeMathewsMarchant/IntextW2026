@@ -49,7 +49,6 @@ type PipelineInsights = {
 }
 
 type ImpactResponse = {
-  chips?: string[]
   kpis?: { livesImpacted: number; safehouses: number; activePrograms: number; successRate: number }
   retention?: RetentionPoint[]
   retentionDetail?: RetentionDetail | null
@@ -284,11 +283,6 @@ export function Impact() {
         <p className="lh-section-sub text-center mb-3">
           See how your support powers safe care, healing services, and long-term reintegration for girls in our network.
         </p>
-        <div className="d-flex flex-wrap justify-content-center gap-2 text-center">
-          {chips.map((chip) => (
-            <span key={chip} className="lh-impact-chip">{chip}</span>
-          ))}
-        </div>
         <p className="text-body-secondary small text-center mt-3 mb-0">
           Data freshness: generated {new Date(freshness.generatedAtUtc).toLocaleString()} UTC
         </p>
