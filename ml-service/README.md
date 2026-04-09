@@ -9,6 +9,8 @@ This service deploys the social media pipeline outputs from `ml-pipelines/social
 - `GET /social-media/platform-ranking`
 - `GET /social-media/recommendations`
 - `GET /social-media/analytics` (combined payload used by backend)
+- `GET /donations/analytics` (donations CSV + optional notebook metrics; proxied as `api/admin/analytics/donations-ml`)
+- `GET /reports/tier1-analytics` (residents, education, health & wellbeing tier-1 summaries; proxied as `api/admin/analytics/programs-tier1`). When `SOCIAL_MEDIA_DB_URL` or `ConnectionStrings__DefaultConnection` is set (same as social media), charts use **live** `residents`, `education_records`, and `health_wellbeing_records` tables; otherwise CSV fallbacks. Top drivers still come from `ml-pipelines/artifacts`. Response is rebuilt on each request.
 
 ## Response Contract (`/social-media/analytics`)
 

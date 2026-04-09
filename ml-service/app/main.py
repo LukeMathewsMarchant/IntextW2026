@@ -8,9 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-import psycopg
 from dotenv import load_dotenv
 from fastapi import FastAPI
+
+from app.db_access import fetch_dataframe, resolve_db_connection_value
+from app.tier1_analytics import safe_build_tier1_analytics
 
 
 @dataclass
@@ -48,62 +50,6 @@ def _artifact_root() -> Path:
 load_dotenv(_artifact_root() / '.env', override=False)
 
 
-def _normalize_connection_value(raw: str) -> str:
-    value = raw.strip()
-    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
-        return value[1:-1]
-    return value
-
-
-def _parse_dotnet_style_conn_str(conn_str: str) -> dict[str, Any]:
-    mapping = {
-        'host': 'host',
-        'server': 'host',
-        'port': 'port',
-        'database': 'dbname',
-        'initial catalog': 'dbname',
-        'username': 'user',
-        'user id': 'user',
-        'userid': 'user',
-        'uid': 'user',
-        'password': 'password',
-    }
-    options: dict[str, Any] = {}
-    for segment in conn_str.split(';'):
-        if '=' not in segment:
-            continue
-        key, value = segment.split('=', 1)
-        key = key.strip().lower()
-        value = value.strip()
-        if not key:
-            continue
-        normalized = mapping.get(key)
-        if normalized:
-            options[normalized] = value
-            continue
-        if key == 'ssl mode' and value:
-            options['sslmode'] = value.lower()
-        elif key == 'trust server certificate' and value.lower() == 'true':
-            options['sslmode'] = options.get('sslmode', 'require')
-    return options
-
-
-def _resolve_db_connection_value() -> str:
-    direct = _normalize_connection_value(os.getenv('SOCIAL_MEDIA_DB_URL', ''))
-    if direct:
-        return direct
-    return _normalize_connection_value(os.getenv('ConnectionStrings__DefaultConnection', ''))
-
-
-def _connect_db(conn_value: str):
-    if conn_value.startswith('postgres://') or conn_value.startswith('postgresql://'):
-        return psycopg.connect(conn_value)
-    if ';' in conn_value:
-        kwargs = _parse_dotnet_style_conn_str(conn_value)
-        return psycopg.connect(**kwargs)
-    return psycopg.connect(conn_value)
-
-
 def _load_from_database(db_url: str) -> pd.DataFrame:
     query = """
         SELECT
@@ -115,12 +61,7 @@ def _load_from_database(db_url: str) -> pd.DataFrame:
             watch_time_seconds, avg_view_duration_seconds, subscriber_count_at_post, forwards
         FROM social_media_posts
     """
-    with _connect_db(db_url) as conn:
-        with conn.cursor() as cur:
-            cur.execute(query)
-            rows = cur.fetchall()
-            cols = [d.name for d in cur.description]
-    return pd.DataFrame(rows, columns=cols)
+    return fetch_dataframe(db_url, query)
 
 
 def _load_cached_or_build() -> dict[str, Any]:
@@ -128,7 +69,7 @@ def _load_cached_or_build() -> dict[str, Any]:
     cache_path = Path(os.getenv('SOCIAL_MEDIA_CACHE_PATH', _artifact_root() / 'artifacts' / 'social_media_analytics_cache.json'))
     dataset_path = Path(os.getenv('SOCIAL_MEDIA_DATASET_PATH', project_root / 'datasets' / 'social_media_posts.csv'))
 
-    db_url = _resolve_db_connection_value()
+    db_url = resolve_db_connection_value()
     data_source = 'empty'
     load_warning = ''
 
@@ -422,13 +363,11 @@ def _safe_load_donations_analytics() -> dict[str, Any]:
 
 app = FastAPI(
     title='Lighthouse ML API',
-    description='Social media analytics (existing) + donations pipeline trends for admin dashboard.',
-    version='1.1.0',
+    description='Social media analytics, donations pipeline trends, and tier-1 program analytics for admin dashboard.',
+    version='1.2.0',
 )
 _cache = _load_cached_or_build()
 _donations_cache = _safe_load_donations_analytics()
-
-
 @app.get('/health')
 def health() -> dict[str, str]:
     return {'status': 'ok'}
@@ -458,3 +397,9 @@ def social_media_analytics() -> dict[str, Any]:
 def donations_analytics() -> dict[str, Any]:
     """Trends + channel/type mix from donations.csv; optional metrics from donations notebook artifacts."""
     return _donations_cache
+
+
+@app.get('/reports/tier1-analytics')
+def reports_tier1_analytics() -> dict[str, Any]:
+    """Residents, education, and health & wellbeing from live DB (when configured) or CSV + notebook artifacts."""
+    return safe_build_tier1_analytics()

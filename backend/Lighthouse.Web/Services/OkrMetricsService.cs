@@ -29,7 +29,12 @@ public class OkrMetricsService
         var recent = donationRows.Where(d => d.DonationDate >= last90).ToList();
         var medianGap = ComputeMedianInterGiftGapDays(donationRows);
         var (donorRecency, donorRecencyTotalCount, pageOut, pageSizeOut) =
-            await BuildDonorRecencyPageAsync(donationRows, donorRecencyPage, donorRecencyPageSize, cancellationToken);
+            await BuildDonorRecencyPageAsync(
+                donationRows,
+                donorRecencyPage,
+                donorRecencyPageSize,
+                DonorRecencySort.ByDisplayName,
+                cancellationToken);
 
         return new OkrSnapshotDto(
             supporterCount,
@@ -53,7 +58,7 @@ public class OkrMetricsService
         var donations = await _db.Donations.AsNoTracking().ToListAsync(cancellationToken);
         var medianGap = ComputeMedianInterGiftGapDays(donations);
         var (items, total, pageOut, pageSizeOut) =
-            await BuildDonorRecencyPageAsync(donations, page, pageSize, cancellationToken);
+            await BuildDonorRecencyPageAsync(donations, page, pageSize, DonorRecencySort.LapsedGiftsFirst, cancellationToken);
         return new DonorPropensitySnapshotDto(medianGap, items, total, pageOut, pageSizeOut);
     }
 
@@ -70,10 +75,18 @@ public class OkrMetricsService
         return gaps.Count == 0 ? 90m : (decimal)gaps.OrderBy(x => x).Skip(gaps.Count / 2).First();
     }
 
+    private enum DonorRecencySort
+    {
+        ByDisplayName,
+        RecentGiftsFirst,
+        LapsedGiftsFirst,
+    }
+
     private async Task<(IReadOnlyList<ChurnRiskRow> Items, int TotalCount, int Page, int PageSize)> BuildDonorRecencyPageAsync(
         List<Donation> donations,
         int page,
         int pageSize,
+        DonorRecencySort sort,
         CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -93,7 +106,7 @@ public class OkrMetricsService
 
         var supporters = await _db.Supporters.AsNoTracking().ToDictionaryAsync(s => s.SupporterId, cancellationToken);
 
-        var ordered = bySupporter
+        var rows = bySupporter
             .Select(kv =>
             {
                 var dates = kv.Value;
@@ -111,9 +124,23 @@ public class OkrMetricsService
                 var displayName = supporters.TryGetValue(kv.Key, out var s) ? s.DisplayName : $"Supporter {kv.Key}";
                 return new ChurnRiskRow(kv.Key, displayName, daysSinceLastGift, averageDaysBetweenGifts);
             })
-            .OrderBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(r => r.SupporterId)
             .ToList();
+
+        var ordered = sort switch
+        {
+            DonorRecencySort.RecentGiftsFirst => rows
+                .OrderBy(r => r.DaysSinceLastGift)
+                .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            DonorRecencySort.LapsedGiftsFirst => rows
+                .OrderByDescending(r => r.DaysSinceLastGift)
+                .ThenBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            _ => rows
+                .OrderBy(r => r.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(r => r.SupporterId)
+                .ToList(),
+        };
 
         var maxPage = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
         if (page > maxPage)

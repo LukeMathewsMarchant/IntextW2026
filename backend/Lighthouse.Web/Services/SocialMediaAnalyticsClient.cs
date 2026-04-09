@@ -12,6 +12,8 @@ public class SocialMediaMlApiOptions
     public string AnalyticsPath { get; set; } = "/social-media/analytics";
     /// <summary>Optional; same Python service as social media. Defaults to /donations/analytics.</summary>
     public string DonationsAnalyticsPath { get; set; } = "/donations/analytics";
+    /// <summary>Tier-1 program analytics (residents, education, health). Defaults to /reports/tier1-analytics.</summary>
+    public string ProgramsTier1AnalyticsPath { get; set; } = "/reports/tier1-analytics";
     public string? ApiKey { get; set; }
 }
 
@@ -64,6 +66,15 @@ public class SocialMediaAnalyticsClient
             : _options.DonationsAnalyticsPath;
 
         return await _httpClient.GetFromJsonAsync<DonationsMlAnalyticsResponse>(path, JsonReadOptions, cancellationToken);
+    }
+
+    public async Task<ProgramsTier1AnalyticsResponse?> GetProgramsTier1AnalyticsAsync(CancellationToken cancellationToken = default)
+    {
+        var path = string.IsNullOrWhiteSpace(_options.ProgramsTier1AnalyticsPath)
+            ? "/reports/tier1-analytics"
+            : _options.ProgramsTier1AnalyticsPath;
+
+        return await _httpClient.GetFromJsonAsync<ProgramsTier1AnalyticsResponse>(path, JsonReadOptions, cancellationToken);
     }
 }
 
@@ -153,4 +164,88 @@ public record SocialMediaPostingWindowRow(
     int PostHour,
     decimal AvgDonationValuePhp,
     decimal AvgReferrals
+);
+
+public record ProgramsTier1AnalyticsResponse(
+    string GeneratedAtUtc,
+    ResidentsTier1Section Residents,
+    EducationTier1Section Education,
+    HealthWellbeingTier1Section HealthWellbeing
+);
+
+public record ResidentsTier1Section(
+    string DataSource,
+    string LoadWarning,
+    ResidentsTier1Summary Summary,
+    IReadOnlyList<ProgramsTier1ChartRow> ChartRows,
+    IReadOnlyList<ProgramsTier1ChartRow> SecondaryChartRows,
+    IReadOnlyList<ProgramsTier1SafehouseRow> SafehouseRows,
+    IReadOnlyList<ProgramsTier1DriverRow> TopDrivers,
+    string? PipelineTarget,
+    string? ModelNote,
+    string? BusinessQuestion,
+    ProgramsTier1ModelQuality? ModelQuality
+);
+
+public record EducationTier1Section(
+    string DataSource,
+    string LoadWarning,
+    EducationTier1Summary Summary,
+    IReadOnlyList<ProgramsTier1ChartRow> ChartRows,
+    IReadOnlyList<ProgramsTier1ChartRow> SecondaryChartRows,
+    IReadOnlyList<ProgramsTier1SafehouseRow> SafehouseRows,
+    IReadOnlyList<ProgramsTier1DriverRow> TopDrivers,
+    string? PipelineTarget,
+    string? ModelNote,
+    string? BusinessQuestion,
+    ProgramsTier1ModelQuality? ModelQuality
+);
+
+public record HealthWellbeingTier1Section(
+    string DataSource,
+    string LoadWarning,
+    HealthWellbeingTier1Summary Summary,
+    IReadOnlyList<ProgramsTier1ChartRow> ChartRows,
+    IReadOnlyList<ProgramsTier1ChartRow> SecondaryChartRows,
+    IReadOnlyList<ProgramsTier1SafehouseRow> SafehouseRows,
+    IReadOnlyList<ProgramsTier1DriverRow> TopDrivers,
+    string? PipelineTarget,
+    string? ModelNote,
+    string? BusinessQuestion,
+    ProgramsTier1ModelQuality? ModelQuality
+);
+
+public record ResidentsTier1Summary(int TotalResidents, int ActiveResidents, int DistinctSafehouses);
+
+public record EducationTier1Summary(
+    int TotalRecords,
+    int UniqueResidents,
+    decimal? AvgAttendancePercent,
+    decimal? AvgProgressPercent
+);
+
+public record HealthWellbeingTier1Summary(
+    int TotalRecords,
+    int UniqueResidents,
+    decimal? AvgGeneralHealthScore,
+    decimal? MedianGeneralHealthScore,
+    decimal? AvgNutritionScore,
+    decimal? AvgSleepQualityScore,
+    decimal? AvgEnergyLevelScore,
+    decimal? MedicalCheckupShare,
+    decimal? DentalCheckupShare,
+    decimal? PsychologicalCheckupShare
+);
+
+public record ProgramsTier1ChartRow(string Label, int Count, decimal Share);
+
+public record ProgramsTier1SafehouseRow(string SafehouseId, int Count);
+
+public record ProgramsTier1DriverRow(string Label, double Importance);
+
+public record ProgramsTier1ModelQuality(
+    string SelectedModel,
+    double? HoldoutMae,
+    double? HoldoutRmse,
+    double? HoldoutR2
 );
