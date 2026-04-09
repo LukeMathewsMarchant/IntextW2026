@@ -421,7 +421,7 @@ def _donations_explore_empty(load_warning: str, data_source: str) -> dict[str, A
         'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
         'dataSource': data_source,
         'loadWarning': load_warning,
-        'endpointVersion': '1.0.0',
+        'endpointVersion': '1.0.1',
         'notebookRef': 'ml-pipelines/donations.ipynb §2 (distributions & exploration)',
         'estimatedValue': None,
         'iqrOutliers': None,
@@ -502,7 +502,7 @@ def _build_donations_explore_summary() -> dict[str, Any]:
         'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
         'dataSource': data_source,
         'loadWarning': load_warning,
-        'endpointVersion': '1.0.0',
+        'endpointVersion': '1.0.1',
         'notebookRef': 'ml-pipelines/donations.ipynb §2 (distributions & exploration)',
         'estimatedValue': {
             'count': int(desc['count']),
