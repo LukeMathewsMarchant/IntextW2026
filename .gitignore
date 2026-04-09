@@ -19,6 +19,9 @@ node_modules/
 !**/Logs/.gitkeep
 
 # Python
+.venv/
+venv/
+ENV/
 __pycache__/
 *.py[cod]
 *$py.class

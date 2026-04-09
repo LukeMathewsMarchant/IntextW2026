@@ -1,0 +1,26 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "include": [
+    "ml-service/app",
+    "ml-service/scripts"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    ".venv"
+  ],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic"
+}
+{
+  "venvPath": "ml-service",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "executionEnvironments": [
+    {
+      "root": "ml-service",
+      "pythonVersion": "3.12",
+      "extraPaths": ["ml-service"]
+    }
+  ]
+}
