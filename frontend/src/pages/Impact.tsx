@@ -84,6 +84,17 @@ type ImpactResponse = {
     dollarsPerActiveResident: number | null
     windowLabel: string
   }
+  educationInsights?: {
+    avgProgressAllTime: number | null
+    totalRecords: number
+    nonNullProgressRecords: number
+    distinctResidentsWithEducation: number
+    monthlyTrend: Array<{
+      month: string
+      avgProgress: number | null
+      donations: number
+    }>
+  }
   safehousePerformance?: SafehouseDeltaPoint[]
   donorOkrs?: DonorOkrs
   donationChannelPerformance?: ChannelPerformancePoint[]
@@ -154,14 +165,14 @@ export function Impact() {
   const retentionDetail = data.retentionDetail ?? null
   const supportMix = data.supportMix ?? []
   const freshness = data.dataFreshness ?? { generatedAtUtc: new Date().toISOString(), latestSafehouseMetricMonth: null }
-  const outcomeSignals = data.outcomeSignals ?? {
-    donationsLast12Months: 0,
-    donorsLast12Months: 0,
-    avgDonationAmountLast12Months: null,
-    activeResidentsLatest: 0,
-    incidentsLatest: 0,
-    avgEducationLatest: null,
-    avgHealthLatest: null
+  const outcomeSignals = {
+    donationsLast12Months: data.outcomeSignals?.donationsLast12Months ?? 0,
+    donorsLast12Months: data.outcomeSignals?.donorsLast12Months ?? 0,
+    avgDonationAmountLast12Months: data.outcomeSignals?.avgDonationAmountLast12Months ?? null,
+    activeResidentsLatest: data.outcomeSignals?.activeResidentsLatest ?? 0,
+    incidentsLatest: data.outcomeSignals?.incidentsLatest ?? 0,
+    avgEducationLatest: data.outcomeSignals?.avgEducationLatest ?? null,
+    avgHealthLatest: data.outcomeSignals?.avgHealthLatest ?? null
   }
   const donorOkrs = data.donorOkrs ?? {
     donorsLast365Days: 0,
@@ -172,20 +183,27 @@ export function Impact() {
     windowLabel: '',
     summary: '',
   }
-  const impactNarrative = data.impactNarrative ?? {
-    inCareNow: outcomeSignals.activeResidentsLatest,
-    recentReintegrations: 0,
-    recentIncidents: outcomeSignals.incidentsLatest,
-    closureShareOfActivePct: 0,
-    storyWindowLabel: 'Last 90 days (UTC)'
+  const impactNarrative = {
+    inCareNow: data.impactNarrative?.inCareNow ?? outcomeSignals.activeResidentsLatest,
+    recentReintegrations: data.impactNarrative?.recentReintegrations ?? 0,
+    recentIncidents: data.impactNarrative?.recentIncidents ?? outcomeSignals.incidentsLatest,
+    closureShareOfActivePct: data.impactNarrative?.closureShareOfActivePct ?? 0,
+    storyWindowLabel: data.impactNarrative?.storyWindowLabel ?? 'Last 90 days (UTC)'
   }
-  const outcomePerDollar = data.outcomePerDollar ?? {
-    donationsLast12Months: outcomeSignals.donationsLast12Months,
-    reintegrationsLast12Months: 0,
-    activeResidentsNow: outcomeSignals.activeResidentsLatest,
-    dollarsPerReintegration: null,
-    dollarsPerActiveResident: null,
-    windowLabel: 'Last 12 months (UTC)'
+  const outcomePerDollar = {
+    donationsLast12Months: data.outcomePerDollar?.donationsLast12Months ?? outcomeSignals.donationsLast12Months,
+    reintegrationsLast12Months: data.outcomePerDollar?.reintegrationsLast12Months ?? 0,
+    activeResidentsNow: data.outcomePerDollar?.activeResidentsNow ?? outcomeSignals.activeResidentsLatest,
+    dollarsPerReintegration: data.outcomePerDollar?.dollarsPerReintegration ?? null,
+    dollarsPerActiveResident: data.outcomePerDollar?.dollarsPerActiveResident ?? null,
+    windowLabel: data.outcomePerDollar?.windowLabel ?? 'Last 12 months (UTC)'
+  }
+  const educationInsights = data.educationInsights ?? {
+    avgProgressAllTime: null,
+    totalRecords: 0,
+    nonNullProgressRecords: 0,
+    distinctResidentsWithEducation: 0,
+    monthlyTrend: [] as Array<{ month: string; avgProgress: number | null; donations: number }>,
   }
   const donationChannels = data.donationChannelPerformance ?? []
   const socialPostTraction = data.socialPostTraction ?? []
@@ -271,6 +289,9 @@ export function Impact() {
   const socialAllocationAmountRaw = socialAllocationBreakdown.reduce((sum, row) => sum + row.amountAllocated, 0)
   const totalSocialAllocationAmount = socialAllocationAmountRaw || 1
   const socialAppsChartHeightPx = 460
+  const educationTrendMax = educationInsights.monthlyTrend.length > 0
+    ? Math.max(...educationInsights.monthlyTrend.map((p) => p.avgProgress ?? 0), 1)
+    : 1
   const highlightColor = '#f3b11d'
   const mutedColor = '#c3c8d1'
 
@@ -413,9 +434,71 @@ export function Impact() {
               </div>
             </div>
           </div>
-          <p className="small text-secondary mb-0 mt-4 pt-3 border-top">
-            Method note: metrics on this page are live aggregates from <code>/api/impact</code>; optional pipeline insights are merged from <code>GET /impact/analytics</code> when ml-service is available.
-          </p>
+        </div>
+      </section>
+
+      <section className="card border-0 shadow-sm" aria-label="Education">
+        <div className="card-body p-4">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 className="h5 mb-0">Education</h2>
+            <small className="text-secondary">Case database education records</small>
+          </div>
+          <div className="row g-3 mb-3">
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-secondary">Avg progress (all-time)</div>
+                <div className="h5 mb-0 text-body-emphasis">
+                  {educationInsights.avgProgressAllTime == null ? 'N/A' : `${educationInsights.avgProgressAllTime}%`}
+                </div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-secondary">Residents with education records</div>
+                <div className="h5 mb-0 text-body-emphasis">{educationInsights.distinctResidentsWithEducation.toLocaleString()}</div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-secondary">Total education rows</div>
+                <div className="h5 mb-0 text-body-emphasis">{educationInsights.totalRecords.toLocaleString()}</div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-secondary">Rows with progress value</div>
+                <div className="h5 mb-0 text-body-emphasis">{educationInsights.nonNullProgressRecords.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          <h3 className="h6 mb-2">Monthly education progress (last 12 months)</h3>
+          {educationInsights.monthlyTrend.length === 0 ? (
+            <p className="small text-secondary mb-0">No monthly education trend data yet.</p>
+          ) : (
+            <div className="row g-2">
+              {educationInsights.monthlyTrend.map((point) => (
+                <div key={point.month} className="col-6 col-md-4 col-lg-2">
+                  <div className="bg-body-tertiary rounded p-2 h-100">
+                    <div className="small fw-semibold text-body-emphasis">{point.month}</div>
+                    <div className="small text-secondary mb-1">
+                      {point.avgProgress == null ? 'Progress: N/A' : `Progress: ${point.avgProgress}%`}
+                    </div>
+                    <div className="progress" style={{ height: 6 }} role="img" aria-label={`${point.month} education progress`}>
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${animateCharts ? Math.max(((point.avgProgress ?? 0) / educationTrendMax) * 100, point.avgProgress == null ? 0 : 4) : 0}%`,
+                          transition: 'width 900ms ease-out',
+                          backgroundColor: highlightColor,
+                        }}
+                      />
+                    </div>
+                    <div className="small text-secondary mt-1">Donations: ${point.donations.toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -673,10 +756,6 @@ export function Impact() {
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body p-4">
               <h2 className="h4 mb-1">Retention Trend</h2>
-              <p className="text-secondary small mb-3">
-                Share of supporters who gave in the previous month and gave again this month. The month-by-month chart lives in{' '}
-                <strong>Live trends &amp; snapshot</strong> at the top of this page (same <code>retention</code> array from the API).
-              </p>
               <p className="text-secondary mb-0 mt-3 small">
                 {retentionHeadline?.kind === 'undefined' && (
                   <>
@@ -747,28 +826,7 @@ export function Impact() {
             </div>
           </div>
         </div>
-        <div className="col-lg-5">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body p-4">
-              <h2 className="h4 mb-1">Where Support Goes</h2>
-              <p className="text-secondary small mb-3">Program effort mix by impact pillar.</p>
-              <div className="d-flex flex-column gap-2">
-                {supportMix.map((m) => (
-                  <div key={m.name} className="lh-impact-trend-block">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span>{m.name}</span>
-                      <strong>{m.value}%</strong>
-                    </div>
-                    <div className="lh-impact-trend-bar">
-                      <span style={{ width: `${m.value}%`, background: m.color }}></span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-lg-7">
+        <div className="col-12">
           <div
             className="card shadow-sm h-100 overflow-hidden"
             style={{ borderLeft: `4px solid ${highlightColor}` }}
@@ -817,36 +875,6 @@ export function Impact() {
         </div>
       </section>
 
-      <section className="lh-impact lh-impact-method">
-        <p className="text-center text-secondary mb-0 small max-width mx-auto" style={{ maxWidth: '42rem' }}>
-          Method note: KPIs and charts use live aggregates from the case database.
-          {data.pipelineInsights ? (
-            <>
-              {` The `}
-              <strong>Pipeline insights (ml-service)</strong>
-              {` card under the hero is from the same FastAPI deployment as Social Media (`}
-              <code>GET /impact/analytics</code>
-              {`), merged by the Lighthouse API.`}
-            </>
-          ) : (
-            <>
-              {` To show the `}
-              <strong>Pipeline insights</strong>
-              {` card (directly under the hero, above the five KPI tiles), run the FastAPI ml-service and point Lighthouse’s `}
-              <code>SocialMediaMlApi:BaseUrl</code>
-              {` (empty `}
-              <code>ImpactMlApi:BaseUrl</code>
-              {` uses the same host) at that origin. Local Development often uses `}
-              <code>http://127.0.0.1:8002</code>
-              {` if port 8001 is blocked. Then `}
-              <code>GET /impact/analytics</code>
-              {` must return JSON from the running service; otherwise `}
-              <code>/api/impact</code>
-              {` includes only database aggregates.`}
-            </>
-          )}
-        </p>
-      </section>
     </div>
   )
 }

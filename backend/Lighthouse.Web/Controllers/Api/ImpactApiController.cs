@@ -200,7 +200,61 @@ public class ImpactApiController : ControllerBase
 
         var (safehousePerformance, outcomeFromCase, operationalCaseWindow) =
             await BuildOperationalSafehouseComparisonAsync(cancellationToken);
+        var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        var educationRows = await _db.EducationRecords.AsNoTracking()
+            .Select(e => new { e.ResidentId, e.RecordDate, e.ProgressPercent })
+            .ToListAsync(cancellationToken);
+        var educationRowsWithProgress = educationRows
+            .Where(e => e.ProgressPercent != null)
+            .Select(e => new { e.ResidentId, e.RecordDate, Progress = e.ProgressPercent!.Value })
+            .ToList();
+        var avgEducationAllTimeRounded = educationRowsWithProgress.Count == 0
+            ? (decimal?)null
+            : Math.Round(educationRowsWithProgress.Average(e => e.Progress), 2);
+        var firstMonth = new DateOnly(todayUtc.Year, todayUtc.Month, 1).AddMonths(-11);
+        var monthKeys = Enumerable.Range(0, 12)
+            .Select(i => firstMonth.AddMonths(i))
+            .ToList();
+        var educationAvgByMonth = educationRowsWithProgress
+            .GroupBy(e => new DateOnly(e.RecordDate.Year, e.RecordDate.Month, 1))
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Round(g.Average(x => x.Progress), 2));
+        var donationAmountByMonth = donations12MonthRows
+            .GroupBy(d => new DateOnly(d.DonationDate.Year, d.DonationDate.Month, 1))
+            .ToDictionary(
+                g => g.Key,
+                g => Math.Round(g.Sum(x => x.Amount ?? 0m), 2));
+        var educationMonthlyTrend = monthKeys
+            .Select(m => new
+            {
+                month = m.ToString("yyyy-MM"),
+                avgProgress = educationAvgByMonth.TryGetValue(m, out var avg) ? avg : (decimal?)null,
+                donations = donationAmountByMonth.TryGetValue(m, out var amt) ? amt : 0m
+            })
+            .ToList();
 
+        var donorOkrs = BuildDonorOkrs(donations);
+        var last90Start = todayUtc.AddDays(-89);
+        var last365Start = todayUtc.AddDays(-364);
+        var reintegratedLast90Days = residents.Count(r =>
+            r.DateClosed.HasValue
+            && r.DateClosed.Value >= last90Start
+            && (r.CaseStatus == "Closed" || r.ReintegrationStatus == "Completed"));
+        var reintegratedLast365Days = residents.Count(r =>
+            r.DateClosed.HasValue
+            && r.DateClosed.Value >= last365Start
+            && (r.CaseStatus == "Closed" || r.ReintegrationStatus == "Completed"));
+        var inCareNow = outcomeFromCase.ActiveResidentsLatest;
+        var closureShareOfActivePct = inCareNow <= 0
+            ? 0m
+            : Math.Round((reintegratedLast90Days * 100m) / inCareNow, 2);
+        var dollarsPerReintegration = reintegratedLast365Days <= 0
+            ? (decimal?)null
+            : Math.Round(donationsLast12Months / reintegratedLast365Days, 2);
+        var dollarsPerActiveResident = inCareNow <= 0
+            ? (decimal?)null
+            : Math.Round(donationsLast12Months / inCareNow, 2);
         var donorOkrs = BuildDonorOkrs(donations);
 
         return new
@@ -225,10 +279,40 @@ public class ImpactApiController : ControllerBase
             outcomeSignals = new
             {
                 donationsLast12Months = Math.Round(donationsLast12Months, 2),
+                donorsLast12Months,
+                avgDonationAmountLast12Months,
                 activeResidentsLatest = outcomeFromCase.ActiveResidentsLatest,
                 incidentsLatest = outcomeFromCase.IncidentsLatest,
-                avgEducationLatest = outcomeFromCase.AvgEducationLatest,
+                avgEducationLatest = avgEducationAllTimeRounded,
                 avgHealthLatest = outcomeFromCase.AvgHealthLatest
+            },
+            impactNarrative = new
+            {
+                inCareNow,
+                recentReintegrations = reintegratedLast90Days,
+                recentIncidents = outcomeFromCase.IncidentsLatest,
+                closureShareOfActivePct,
+                storyWindowLabel = $"Last 90 days ({last90Start:yyyy-MM-dd}–{todayUtc:yyyy-MM-dd} UTC)"
+            },
+            outcomePerDollar = new
+            {
+                donationsLast12Months = Math.Round(donationsLast12Months, 2),
+                reintegrationsLast12Months = reintegratedLast365Days,
+                activeResidentsNow = inCareNow,
+                dollarsPerReintegration,
+                dollarsPerActiveResident,
+                windowLabel = $"Last 12 months ({last365Start:yyyy-MM-dd}–{todayUtc:yyyy-MM-dd} UTC)"
+            },
+            educationInsights = new
+            {
+                avgProgressAllTime = avgEducationAllTimeRounded,
+                totalRecords = educationRows.Count,
+                nonNullProgressRecords = educationRowsWithProgress.Count,
+                distinctResidentsWithEducation = educationRowsWithProgress
+                    .Select(e => e.ResidentId)
+                    .Distinct()
+                    .Count(),
+                monthlyTrend = educationMonthlyTrend
             },
             safehousePerformance,
             donorOkrs,
@@ -241,7 +325,7 @@ public class ImpactApiController : ControllerBase
             {
                 new { key = "successRate", label = "Success Rate", definition = "Share of residents with case_status = Closed or reintegration status marked Completed." },
                 new { key = "retention", label = "Retention Trend", definition = "Share of supporters giving again month-over-month based on unique supporter IDs." },
-                new { key = "avgEducationLatest", label = "Avg Education Progress", definition = "Average education progress_percent on education_records in the last 30 days (UTC), across all active safehouses." },
+                new { key = "avgEducationLatest", label = "Avg Education Progress", definition = "All-time average education progress_percent across non-null education_records." },
                 new { key = "avgHealthLatest", label = "Avg Health Score", definition = "Average general_health_score on health_wellbeing_records in the last 30 days (UTC), across all active safehouses." },
                 new { key = "safehouseCaseComparison", label = "Safehouse Case Activity", definition = "Per safehouse: active resident census (case_status Active); incident_reports in last vs prior 30 days; average education progress and health scores from records in those windows. Deltas compare the two 30-day periods." },
                 new { key = "donorChurnOkr", label = "Donor churn (OKR)", definition = "Among distinct supporters with at least one donation in the trailing 12 months, churn risk counts those with no donation in the last 90 days. Churn rate = that count divided by the 12-month donor cohort." },
