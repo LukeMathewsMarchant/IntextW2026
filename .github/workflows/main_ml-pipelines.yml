@@ -33,6 +33,12 @@ jobs:
           grep -q "/reports/tier1-analytics" ml-service/app/main.py
           grep -q "/donations/analytics" ml-service/app/main.py
 
+      - name: Verify startup script does not build venv at runtime
+        run: |
+          # Ensure we never regress to runtime venv creation (breaks on App Service images without ensurepip).
+          ! grep -q "python3 -m venv" ml-service/startup.sh
+          grep -q "Using gunicorn from antenv" ml-service/startup.sh
+
   deploy:
     runs-on: ubuntu-latest
     needs: validate
@@ -69,8 +75,8 @@ jobs:
           BASE_URL="https://${HOSTNAME}"
           export BASE_URL
           echo "Testing ${BASE_URL}"
-          # Give the app a short warm-up window after restart/deploy.
-          sleep 20
+          # App Service + Oryx warm-up can take a few minutes.
+          sleep 30
           python - <<'PY'
           import json
           import time
@@ -84,7 +90,7 @@ jobs:
                   return json.loads(r.read().decode("utf-8"))
 
           last_error = None
-          for _ in range(6):
+          for _ in range(20):
               try:
                   health = fetch_json("/health")
                   openapi = fetch_json("/openapi.json")
@@ -96,6 +102,6 @@ jobs:
                   raise SystemExit(0)
               except Exception as ex:  # noqa: BLE001
                   last_error = ex
-                  time.sleep(10)
+                  time.sleep(15)
           raise SystemExit(f"Smoke test failed after retries: {last_error}")
           PY
