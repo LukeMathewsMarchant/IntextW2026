@@ -39,7 +39,8 @@ You do **not** manually zip-deploy the `ml-service` folder in normal operation. 
 
 ### Runtime data & optional paths
 
-- **`SOCIAL_MEDIA_DB_URL`** or **`ConnectionStrings__DefaultConnection`** — PostgreSQL for social posts, **donations**, and tier-1 program tables when available.
+- **`SOCIAL_MEDIA_DB_URL`** or **`ConnectionStrings__DefaultConnection`** — PostgreSQL for social posts, **donations**, tier-1 program tables, and **resident transfer risk** when available.
+- **Important:** set these on the **ML API Linux Web App** that runs the container, not only on the .NET backend. If they are missing on the Python service, `/residents/transfer-risk-summary` cannot use the live database (and the Docker image does not include `ml-pipelines/`).
 - Optional fallbacks if the full repo layout is not in the image (usually not needed when DB is set):
   - `SOCIAL_MEDIA_DATASET_PATH`, `DONATIONS_DATASET_PATH`, `DONATIONS_METRICS_PATH`, tier-1 CSV paths (see older comments in `app/main.py` / env examples).
 - Forecast artifact path (optional override):

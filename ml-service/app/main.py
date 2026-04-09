@@ -750,24 +750,58 @@ def _resident_transfer_risk_empty(load_warning: str = '', data_source: str = 'em
     }
 
 
+_RESIDENT_TRANSFER_RISK_DB_CONFIG_HINT = (
+    'This endpoint scores **active residents from PostgreSQL** (same pattern as social media and tier-1 analytics). '
+    'On the **ML API** App Service (the container running this Python service), add application settings '
+    '`SOCIAL_MEDIA_DB_URL` or `ConnectionStrings__DefaultConnection` with your Postgres connection string—the same '
+    'database the Lighthouse .NET backend uses. Save, restart the app, and redeploy the ML container if needed. '
+    'Without a DB URL here, the service cannot read `residents` / `incident_reports` / `education_records`.'
+)
+
+
+def _resolve_resident_transfer_scored_csv_path() -> Path | None:
+    """Prefer explicit env, then `/app/artifacts` (optional bundle), then local repo `ml-pipelines/artifacts`."""
+    env = (os.getenv('RESIDENT_TRANSFER_RISK_SCORED_PATH') or '').strip()
+    candidates: list[Path] = []
+    if env:
+        candidates.append(Path(env))
+    service_root = _artifact_root().resolve()
+    root = _repo_root()
+    candidates.extend(
+        [
+            service_root / 'artifacts' / 'resident_transfer_risk_scored_sample.csv',
+            root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_scored_sample.csv',
+        ]
+    )
+    for p in candidates:
+        if p.is_file():
+            return p
+    return None
+
+
+def _resolve_resident_transfer_metrics_csv_path(scored_path: Path) -> Path:
+    env = (os.getenv('RESIDENT_TRANSFER_RISK_METRICS_PATH') or '').strip()
+    if env:
+        return Path(env)
+    service_root = _artifact_root().resolve()
+    root = _repo_root()
+    for p in (
+        scored_path.parent / 'resident_transfer_risk_metrics.csv',
+        service_root / 'artifacts' / 'resident_transfer_risk_metrics.csv',
+        root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_metrics.csv',
+    ):
+        if p.is_file():
+            return p
+    return scored_path.parent / 'resident_transfer_risk_metrics.csv'
+
+
 def _build_resident_transfer_risk_from_artifacts_csv() -> dict[str, Any]:
     """Offline / dev: read precomputed scores from CSV when no database URL is configured."""
-    root = _repo_root()
-    scored_path = Path(
-        os.getenv(
-            'RESIDENT_TRANSFER_RISK_SCORED_PATH',
-            str(root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_scored_sample.csv'),
-        )
-    )
-    metrics_path = Path(
-        os.getenv(
-            'RESIDENT_TRANSFER_RISK_METRICS_PATH',
-            str(root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_metrics.csv'),
-        )
-    )
+    scored_path = _resolve_resident_transfer_scored_csv_path()
+    if scored_path is None:
+        return _resident_transfer_risk_empty(_RESIDENT_TRANSFER_RISK_DB_CONFIG_HINT, 'configuration-error')
 
-    if not scored_path.is_file():
-        return _resident_transfer_risk_empty(f'Resident transfer risk file not found: {scored_path}', 'missing-file')
+    metrics_path = _resolve_resident_transfer_metrics_csv_path(scored_path)
 
     try:
         scored = pd.read_csv(scored_path)
