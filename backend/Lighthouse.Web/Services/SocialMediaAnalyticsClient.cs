@@ -12,6 +12,8 @@ public class SocialMediaMlApiOptions
     public string AnalyticsPath { get; set; } = "/social-media/analytics";
     /// <summary>Optional; same Python service as social media. Defaults to /donations/analytics.</summary>
     public string DonationsAnalyticsPath { get; set; } = "/donations/analytics";
+    /// <summary>Notebook-aligned EDA JSON; defaults to /donations/explore-summary.</summary>
+    public string DonationsExploreSummaryPath { get; set; } = "/donations/explore-summary";
     /// <summary>Tier-1 program analytics (residents, education, health). Defaults to /reports/tier1-analytics.</summary>
     public string ProgramsTier1AnalyticsPath { get; set; } = "/reports/tier1-analytics";
     public string? ApiKey { get; set; }
@@ -68,6 +70,15 @@ public class SocialMediaAnalyticsClient
         return await _httpClient.GetFromJsonAsync<DonationsMlAnalyticsResponse>(path, JsonReadOptions, cancellationToken);
     }
 
+    public async Task<DonationsExploreSummaryResponse?> GetDonationsExploreSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var path = string.IsNullOrWhiteSpace(_options.DonationsExploreSummaryPath)
+            ? "/donations/explore-summary"
+            : _options.DonationsExploreSummaryPath;
+
+        return await _httpClient.GetFromJsonAsync<DonationsExploreSummaryResponse>(path, JsonReadOptions, cancellationToken);
+    }
+
     public async Task<ProgramsTier1AnalyticsResponse?> GetProgramsTier1AnalyticsAsync(CancellationToken cancellationToken = default)
     {
         var path = string.IsNullOrWhiteSpace(_options.ProgramsTier1AnalyticsPath)
@@ -122,6 +133,59 @@ public record DonationsMlPipelineModel(
     decimal? HoldoutR2Predictive,
     decimal? HoldoutMaeExplanatory,
     decimal? HoldoutR2Explanatory
+);
+
+public record DonationsExploreSummaryResponse(
+    string GeneratedAtUtc,
+    string DataSource,
+    string LoadWarning,
+    string EndpointVersion,
+    string NotebookRef,
+    DonationsExploreValueStats? EstimatedValue,
+    DonationsExploreIqr? IqrOutliers,
+    IReadOnlyList<DonationsExploreTypeMean> MeanByDonationType,
+    IReadOnlyList<DonationsExploreChannelMean> MeanByChannelSource,
+    DonationsExploreDataQuality? DataQuality
+);
+
+public record DonationsExploreValueStats(
+    int Count,
+    decimal Mean,
+    decimal Std,
+    decimal Min,
+    decimal Q25,
+    decimal Median,
+    decimal Q75,
+    decimal Max
+);
+
+public record DonationsExploreIqr(
+    decimal LowerBound,
+    decimal UpperBound,
+    int Count
+);
+
+public record DonationsExploreTypeMean(
+    string DonationType,
+    int GiftCount,
+    decimal MeanEstimatedValue
+);
+
+public record DonationsExploreChannelMean(
+    string ChannelSource,
+    int GiftCount,
+    decimal MeanEstimatedValue
+);
+
+public record DonationsExploreDataQuality(
+    int DuplicateDonationIds,
+    int MissingDonationDates,
+    string? DateRangeStart,
+    string? DateRangeEnd,
+    int NegativeEstimatedValues,
+    decimal MissingCampaignNameShare,
+    int DistinctDonationTypes,
+    int DistinctChannelSources
 );
 
 public record SocialMediaAnalyticsResponse(

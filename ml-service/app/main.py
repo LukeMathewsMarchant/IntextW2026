@@ -238,19 +238,14 @@ def _donations_analytics_empty(load_warning: str = '', data_source: str = 'empty
     }
 
 
-def _build_donations_analytics() -> dict[str, Any]:
+def _load_donations_prepared_dataframe() -> tuple[pd.DataFrame | None, str, str]:
     """
-    Donation trends for the admin dashboard (live DB preferred, CSV fallback, optional ML metrics).
-    Isolated from social-media logic; failures never affect /social-media/*.
+    Load donations from DB or CSV; coerce estimated_value; drop nulls.
+    Returns (None, data_source, load_warning) on failure; otherwise (df, data_source, load_warning).
+    Empty df means no usable rows (caller may distinguish via load_warning).
     """
     root = _repo_root()
     csv_path = Path(os.getenv('DONATIONS_DATASET_PATH', str(root / 'datasets' / 'donations.csv')))
-    metrics_path = Path(
-        os.getenv(
-            'DONATIONS_METRICS_PATH',
-            str(root / 'ml-pipelines' / 'artifacts' / 'donations_model_metrics.csv'),
-        )
-    )
 
     db_url = resolve_db_connection_value()
     data_source = 'empty'
@@ -267,31 +262,58 @@ def _build_donations_analytics() -> dict[str, Any]:
                     df = pd.read_csv(csv_path)
                     data_source = 'csv'
                 except Exception as ex2:
-                    return _donations_analytics_empty(f'Database: {ex}; CSV: {ex2}', 'error')
+                    return None, 'error', f'Database: {ex}; CSV: {ex2}'
             else:
-                return _donations_analytics_empty(load_warning, 'database-error')
+                return None, 'database-error', load_warning
     elif csv_path.is_file():
         try:
             df = pd.read_csv(csv_path)
             data_source = 'csv'
         except Exception as ex:
-            return _donations_analytics_empty(f'Failed to read donations CSV: {ex}', 'error')
+            return None, 'error', f'Failed to read donations CSV: {ex}'
     else:
-        return _donations_analytics_empty(f'Donations CSV not found: {csv_path}', 'missing-file')
+        return None, 'missing-file', f'Donations CSV not found: {csv_path}'
 
     if df.empty:
-        return _donations_analytics_empty('', 'empty')
+        return df, data_source, ''
 
     value_col = 'estimated_value'
     if value_col not in df.columns:
-        return _donations_analytics_empty('Column estimated_value missing in donations file.', 'error')
+        return None, 'error', 'Column estimated_value missing in donations file.'
 
     df = df.copy()
     df[value_col] = pd.to_numeric(df[value_col], errors='coerce')
     df = df.dropna(subset=[value_col])
 
     if df.empty:
-        return _donations_analytics_empty('No rows with numeric estimated_value.', 'empty')
+        return df, data_source, 'No rows with numeric estimated_value.'
+
+    return df, data_source, load_warning
+
+
+def _build_donations_analytics() -> dict[str, Any]:
+    """
+    Donation trends for the admin dashboard (live DB preferred, CSV fallback, optional ML metrics).
+    Isolated from social-media logic; failures never affect /social-media/*.
+    """
+    root = _repo_root()
+    metrics_path = Path(
+        os.getenv(
+            'DONATIONS_METRICS_PATH',
+            str(root / 'ml-pipelines' / 'artifacts' / 'donations_model_metrics.csv'),
+        )
+    )
+
+    loaded = _load_donations_prepared_dataframe()
+    df, data_source, load_warning = loaded
+    if df is None:
+        return _donations_analytics_empty(load_warning, data_source)
+    if df.empty:
+        if load_warning:
+            return _donations_analytics_empty(load_warning, 'empty')
+        return _donations_analytics_empty('', 'empty')
+
+    value_col = 'estimated_value'
 
     if 'donation_date' in df.columns:
         df['donation_date'] = pd.to_datetime(df['donation_date'], errors='coerce')
@@ -394,6 +416,124 @@ def _build_donations_analytics() -> dict[str, Any]:
     }
 
 
+def _donations_explore_empty(load_warning: str, data_source: str) -> dict[str, Any]:
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': data_source,
+        'loadWarning': load_warning,
+        'endpointVersion': '1.0.0',
+        'notebookRef': 'ml-pipelines/donations.ipynb §2 (distributions & exploration)',
+        'estimatedValue': None,
+        'iqrOutliers': None,
+        'meanByDonationType': [],
+        'meanByChannelSource': [],
+        'dataQuality': None,
+    }
+
+
+def _build_donations_explore_summary() -> dict[str, Any]:
+    """
+    EDA stats aligned with donations.ipynb early cells: value distribution, IQR outliers,
+    group means by type and channel, light data-quality counts.
+    """
+    df, data_source, load_warning = _load_donations_prepared_dataframe()
+    if df is None:
+        return _donations_explore_empty(load_warning, data_source)
+    if df.empty:
+        return _donations_explore_empty(load_warning or '', 'empty')
+
+    value_col = 'estimated_value'
+    ev = df[value_col]
+    desc = ev.describe()
+    q1 = float(ev.quantile(0.25))
+    q3 = float(ev.quantile(0.75))
+    iqr = q3 - q1
+    low = q1 - 1.5 * iqr
+    high = q3 + 1.5 * iqr
+    outlier_mask = (ev < low) | (ev > high)
+
+    mean_by_type: list[dict[str, Any]] = []
+    if 'donation_type' in df.columns:
+        g = df.groupby('donation_type', dropna=False)[value_col].agg(['mean', 'count']).reset_index()
+        g = g.sort_values('mean', ascending=False)
+        for _, row in g.iterrows():
+            mean_by_type.append(
+                {
+                    'donationType': str(row['donation_type']) if pd.notna(row['donation_type']) else 'Unknown',
+                    'giftCount': _safe_int(row['count']),
+                    'meanEstimatedValue': round(_safe_float(row['mean']), 2),
+                }
+            )
+
+    mean_by_channel: list[dict[str, Any]] = []
+    if 'channel_source' in df.columns:
+        g2 = df.groupby('channel_source', dropna=False)[value_col].agg(['mean', 'count']).reset_index()
+        g2 = g2.sort_values('mean', ascending=False)
+        for _, row in g2.iterrows():
+            mean_by_channel.append(
+                {
+                    'channelSource': str(row['channel_source']) if pd.notna(row['channel_source']) else 'Unknown',
+                    'giftCount': _safe_int(row['count']),
+                    'meanEstimatedValue': round(_safe_float(row['mean']), 2),
+                }
+            )
+
+    dup_ids = 0
+    if 'donation_id' in df.columns:
+        dup_ids = int(df['donation_id'].duplicated().sum())
+
+    missing_dates = 0
+    date_min: str | None = None
+    date_max: str | None = None
+    if 'donation_date' in df.columns:
+        ddt = pd.to_datetime(df['donation_date'], errors='coerce')
+        missing_dates = int(ddt.isna().sum())
+        valid = ddt.dropna()
+        if len(valid):
+            date_min = valid.min().isoformat()
+            date_max = valid.max().isoformat()
+
+    neg_ev = int((ev < 0).sum())
+    miss_campaign = 0.0
+    if 'campaign_name' in df.columns:
+        miss_campaign = round(float(df['campaign_name'].isna().mean()), 4)
+
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': data_source,
+        'loadWarning': load_warning,
+        'endpointVersion': '1.0.0',
+        'notebookRef': 'ml-pipelines/donations.ipynb §2 (distributions & exploration)',
+        'estimatedValue': {
+            'count': int(desc['count']),
+            'mean': round(_safe_float(desc['mean']), 2),
+            'std': round(_safe_float(desc['std']), 2),
+            'min': round(_safe_float(desc['min']), 2),
+            'q25': round(q1, 2),
+            'median': round(_safe_float(ev.median()), 2),
+            'q75': round(q3, 2),
+            'max': round(_safe_float(desc['max']), 2),
+        },
+        'iqrOutliers': {
+            'lowerBound': round(low, 2),
+            'upperBound': round(high, 2),
+            'count': int(outlier_mask.sum()),
+        },
+        'meanByDonationType': mean_by_type,
+        'meanByChannelSource': mean_by_channel,
+        'dataQuality': {
+            'duplicateDonationIds': dup_ids,
+            'missingDonationDates': missing_dates,
+            'dateRangeStart': date_min,
+            'dateRangeEnd': date_max,
+            'negativeEstimatedValues': neg_ev,
+            'missingCampaignNameShare': miss_campaign,
+            'distinctDonationTypes': int(df['donation_type'].nunique()) if 'donation_type' in df.columns else 0,
+            'distinctChannelSources': int(df['channel_source'].nunique()) if 'channel_source' in df.columns else 0,
+        },
+    }
+
+
 def _safe_load_donations_analytics() -> dict[str, Any]:
     try:
         return _build_donations_analytics()
@@ -401,10 +541,17 @@ def _safe_load_donations_analytics() -> dict[str, Any]:
         return _donations_analytics_empty(f'Donations analytics build failed: {ex}', 'error')
 
 
+def _safe_load_donations_explore_summary() -> dict[str, Any]:
+    try:
+        return _build_donations_explore_summary()
+    except Exception as ex:
+        return _donations_explore_empty(f'Explore summary failed: {ex}', 'error')
+
+
 app = FastAPI(
     title='Lighthouse ML API',
     description='Social media analytics, donations pipeline trends, and tier-1 program analytics for admin dashboard.',
-    version='1.2.0',
+    version='1.3.0',
 )
 _cache = _load_cached_or_build()
 @app.get('/health')
@@ -440,6 +587,12 @@ def social_media_analytics() -> dict[str, Any]:
 def donations_analytics() -> dict[str, Any]:
     """Trends + channel/type mix from live DB (fallback CSV); optional metrics from notebook artifacts."""
     return _safe_load_donations_analytics()
+
+
+@app.get('/donations/explore-summary')
+def donations_explore_summary() -> dict[str, Any]:
+    """Notebook-aligned EDA (distributions, IQR outliers, means by type/channel) for deploy verification."""
+    return _safe_load_donations_explore_summary()
 
 
 @app.get('/reports/tier1-analytics')

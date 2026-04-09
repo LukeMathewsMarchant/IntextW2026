@@ -32,6 +32,7 @@ jobs:
           python -m py_compile app/main.py
           grep -q "/reports/tier1-analytics" app/main.py
           grep -q "/donations/analytics" app/main.py
+          grep -q "/donations/explore-summary" app/main.py
           ! grep -q "python3 -m venv" startup.sh
           grep -q "Using gunicorn from antenv" startup.sh
 
@@ -141,6 +142,7 @@ jobs:
               openapi = fetch_json("/openapi.json")
               paths = openapi.get("paths", {})
               assert "/donations/analytics" in paths
+              assert "/donations/explore-summary" in paths
               assert "/reports/tier1-analytics" in paths
               build_id = (health.get("buildId") or "").lower()
               assert build_id == expected, f"buildId mismatch: {build_id} != {expected}"
