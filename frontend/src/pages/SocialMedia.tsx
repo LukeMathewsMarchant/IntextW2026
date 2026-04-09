@@ -101,37 +101,30 @@ export function SocialMedia() {
 
   return (
     <div>
-      <h1 className="h3 mb-2">Social Media Analytics</h1>
-      <p className="text-secondary mb-2">
-        Pipeline-backed insights showing which platforms are driving donations and where to focus posting effort.
-      </p>
-      <p className="small text-secondary mb-3">
-        All monetary amounts below are shown in <strong>US dollars (USD)</strong> for consistency with donor-facing
-        reporting.
-      </p>
+      <h1 className="h3 mb-3">Social Media Analytics</h1>
       {err ? <div className="alert alert-warning">{err}</div> : null}
 
-      <div className="row g-3 mb-3">
+      <div className="row g-2 mb-2">
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="small text-secondary">Total posts</div>
+            <div className="card-body p-2">
+              <div className="small text-secondary">Total Posts</div>
               <div className="h4 mb-0">{data?.summary.totalPosts ?? '—'}</div>
             </div>
           </div>
         </div>
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="small text-secondary">Donation referrals</div>
+            <div className="card-body p-2">
+              <div className="small text-secondary">Donation Referrals</div>
               <div className="h4 mb-0">{data?.summary.totalDonationReferrals?.toLocaleString() ?? '—'}</div>
             </div>
           </div>
         </div>
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="small text-secondary">Estimated donation value (USD)</div>
+            <div className="card-body p-2">
+              <div className="small text-secondary">Estimated Donation Value (USD)</div>
               <div className="h4 mb-0 text-break">
                 {data ? formatUsd(Math.round(data.summary.totalEstimatedDonationValuePhp)) : '—'}
               </div>
@@ -140,21 +133,20 @@ export function SocialMedia() {
         </div>
         <div className="col-md-3">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="small text-secondary">Average engagement rate</div>
+            <div className="card-body p-2">
+              <div className="small text-secondary">Average Engagement Rate</div>
               <div className="h4 mb-0">{data ? `${(data.summary.avgEngagementRate * 100).toFixed(2)}%` : '—'}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="row g-3 mb-3">
+      <div className="row g-2 mb-1">
         <div className="col-lg-7 min-w-0">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h2 className="h5">Platforms leading donation value</h2>
-              <p className="small text-secondary mb-2">Bar chart (top platforms). Full breakdown is in the table below.</p>
-              <div className="w-100 py-2" style={{ minWidth: 0 }}>
+            <div className="card-body p-2">
+              <h2 className="h4 mb-1">Platforms Leading Donation Value</h2>
+              <div className="w-100 mt-4" style={{ minWidth: 0 }}>
                 <div className="w-100" style={{ height: 440 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
@@ -189,7 +181,7 @@ export function SocialMedia() {
                   </ResponsiveContainer>
                 </div>
               </div>
-              <div className="table-responsive mt-3 mb-0">
+              <div className="table-responsive mb-0" style={{ marginTop: '-1.5rem' }}>
                 <table className="table table-sm mb-0 align-middle">
                   <thead>
                     <tr>
@@ -233,9 +225,9 @@ export function SocialMedia() {
         </div>
         <div className="col-lg-5 min-w-0">
           <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h2 className="h5">Where to post more</h2>
-              <div className="vstack gap-2">
+            <div className="card-body p-2">
+              <h2 className="h5 mb-2">Where to Post More</h2>
+              <div className="vstack gap-1">
                 {(data?.recommendations ?? []).slice(0, 4).map((r) => (
                   <div key={`${r.platform}-${r.priority}`} className="border rounded p-2">
                     <div className="d-flex justify-content-between align-items-center gap-2">
@@ -264,9 +256,9 @@ export function SocialMedia() {
       </div>
 
       <div className="card border-0 shadow-sm">
-        <div className="card-body">
-          <h2 className="h5">Best posting windows by platform</h2>
-          <p className="small text-secondary mb-2">Average donation value per window is shown in USD.</p>
+        <div className="card-body p-2">
+          <h2 className="h5 mb-2">Best Posting Windows by Platform</h2>
+          <p className="small text-secondary mb-1">Average donation value per window is shown in USD.</p>
           <div className="table-responsive">
             <table className="table table-sm mb-0">
               <thead>
@@ -296,7 +288,7 @@ export function SocialMedia() {
             </table>
           </div>
           {(data?.bestPostingWindows?.length ?? 0) === 0 ? <p className="small text-secondary mt-2 mb-0">No posting-window analytics yet.</p> : null}
-          <p className="small text-secondary mt-3 mb-0">Generated: {data?.generatedAtUtc ? new Date(data.generatedAtUtc).toLocaleString() : '—'}</p>
+          <p className="small text-secondary mt-2 mb-0">Generated: {data?.generatedAtUtc ? new Date(data.generatedAtUtc).toLocaleString() : '—'}</p>
         </div>
       </div>
     </div>
