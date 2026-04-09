@@ -55,94 +55,79 @@ export function PublicHome() {
         </div>
       </section>
 
-      <section id="our-impact" className="lh-impact lh-impact-whatwedo mt-2">
-        <p className="lh-impact-kicker text-center mb-2">What we do</p>
-        <h2 className="lh-impact-title text-center mb-4">Provide Safety. Healing. And Empowerment</h2>
-        <div className="row g-3 g-lg-4">
-          <div className="col-sm-6 col-lg-3">
-            <article className="lh-impact-item text-center h-100">
-              <div
-                className="lh-impact-icon-wrap lh-impact-icon-peach mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
-                style={{ minHeight: '140px' }}
-              >
-                <img src="/img/Safety.webp" alt="Safety support icon" className="lh-impact-icon" />
-                <span
-                  className="position-absolute fw-bold text-white text-center px-2"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
-                >
-                  Safety Support
-                </span>
+      <section id="our-impact" className="lh-home-whatwedo mt-2" aria-labelledby="what-we-do-heading">
+        <header className="lh-home-whatwedo-header text-center mx-auto mb-4 mb-lg-5">
+          <p className="lh-home-whatwedo-kicker mb-2">What we do</p>
+          <h2 id="what-we-do-heading" className="lh-home-whatwedo-title mb-3">
+            Safety, healing, justice, and empowerment
+          </h2>
+          <p className="lh-home-whatwedo-lead text-body-secondary mb-0">
+            Four pillars guide how we walk alongside survivors—from immediate protection to long-term independence.
+          </p>
+        </header>
+        <div className="row g-4">
+          <div className="col-sm-6 col-xl-3">
+            <article className="card border-0 shadow-sm h-100 lh-home-pillar-card overflow-hidden">
+              <div className="lh-home-pillar-media lh-home-pillar-media--peach">
+                <img src="/img/Safety.webp" alt="Illustration representing safety and shelter" className="lh-home-pillar-img" />
               </div>
-              <p className="lh-impact-item-copy mb-2">
-                Safety is the first focus at Light on a Hill Foundation because protection is the first step to healing.
-              </p>
-              <Link className="lh-impact-item-link" to="/impact">Learn how we make kids safe</Link>
+              <div className="card-body p-4 text-center d-flex flex-column">
+                <h3 className="h5 lh-home-pillar-title mb-2">Safety support</h3>
+                <p className="text-body-secondary small flex-grow-1 mb-3 lh-home-pillar-copy">
+                  Protection is the first step to healing—we prioritize safe shelter and immediate care.
+                </p>
+                <Link className="lh-home-pillar-link fw-semibold text-decoration-none" to="/impact">
+                  How we keep kids safe <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </article>
           </div>
-          <div className="col-sm-6 col-lg-3">
-            <article className="lh-impact-item text-center h-100">
-              <div
-                className="lh-impact-icon-wrap lh-impact-icon-green mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
-                style={{ minHeight: '140px' }}
-              >
-                <img src="/img/Healing.jpg" alt="Healing and education icon" className="lh-impact-icon" />
-                <span
-                  className="position-absolute fw-bold text-white text-center px-2"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
-                >
-                  Healing and
-                  <br />
-                  Education
-                </span>
+          <div className="col-sm-6 col-xl-3">
+            <article className="card border-0 shadow-sm h-100 lh-home-pillar-card overflow-hidden">
+              <div className="lh-home-pillar-media lh-home-pillar-media--green">
+                <img src="/img/Healing.jpg" alt="Illustration representing healing and education" className="lh-home-pillar-img" />
               </div>
-              <p className="lh-impact-item-copy mb-2">
-                Once a child trusts that they are safe, we guide them through emotional recovery and long-term healing.
-              </p>
-              <Link className="lh-impact-item-link" to="/impact">Learn how we help children heal</Link>
+              <div className="card-body p-4 text-center d-flex flex-column">
+                <h3 className="h5 lh-home-pillar-title mb-2">Healing &amp; education</h3>
+                <p className="text-body-secondary small flex-grow-1 mb-3 lh-home-pillar-copy">
+                  Trauma-informed support and learning pathways for emotional recovery and growth.
+                </p>
+                <Link className="lh-home-pillar-link fw-semibold text-decoration-none" to="/impact">
+                  How we help children heal <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </article>
           </div>
-          <div className="col-sm-6 col-lg-3">
-            <article className="lh-impact-item text-center h-100">
-              <div
-                className="lh-impact-icon-wrap lh-impact-icon-lilac mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
-                style={{ minHeight: '140px' }}
-              >
-                <img src="/img/Justice.webp" alt="Justice and advocacy icon" className="lh-impact-icon" />
-                <span
-                  className="position-absolute fw-bold text-white text-center px-2"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
-                >
-                  Justice and
-                  <br />
-                  Advocacy
-                </span>
+          <div className="col-sm-6 col-xl-3">
+            <article className="card border-0 shadow-sm h-100 lh-home-pillar-card overflow-hidden">
+              <div className="lh-home-pillar-media lh-home-pillar-media--lilac">
+                <img src="/img/Justice.webp" alt="Illustration representing justice and advocacy" className="lh-home-pillar-img" />
               </div>
-              <p className="lh-impact-item-copy mb-2">
-                We stand with children in legal and social support processes so justice is pursued with dignity and care.
-              </p>
-              <Link className="lh-impact-item-link" to="/impact">Learn how we seek justice</Link>
+              <div className="card-body p-4 text-center d-flex flex-column">
+                <h3 className="h5 lh-home-pillar-title mb-2">Justice &amp; advocacy</h3>
+                <p className="text-body-secondary small flex-grow-1 mb-3 lh-home-pillar-copy">
+                  Dignified support through legal and social processes so every child’s voice matters.
+                </p>
+                <Link className="lh-home-pillar-link fw-semibold text-decoration-none" to="/impact">
+                  How we pursue justice <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </article>
           </div>
-          <div className="col-sm-6 col-lg-3">
-            <article className="lh-impact-item text-center h-100">
-              <div
-                className="lh-impact-icon-wrap lh-impact-icon-gold mx-auto mb-3 d-flex align-items-center justify-content-center position-relative overflow-hidden"
-                style={{ minHeight: '140px' }}
-              >
-                <img src="/img/Empower.webp" alt="Empowerment and growth icon" className="lh-impact-icon" />
-                <span
-                  className="position-absolute fw-bold text-white text-center px-2"
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.55)', lineHeight: 1.2 }}
-                >
-                  Empowerment and
-                  <br />
-                  Growth
-                </span>
+          <div className="col-sm-6 col-xl-3">
+            <article className="card border-0 shadow-sm h-100 lh-home-pillar-card overflow-hidden">
+              <div className="lh-home-pillar-media lh-home-pillar-media--gold">
+                <img src="/img/Empower.webp" alt="Illustration representing empowerment and growth" className="lh-home-pillar-img" />
               </div>
-              <p className="lh-impact-item-copy mb-2">
-                Our goal is to help children move from victimhood to leadership through confidence, skills, and opportunity.
-              </p>
-              <Link className="lh-impact-item-link" to="/impact">Learn how we empower children</Link>
+              <div className="card-body p-4 text-center d-flex flex-column">
+                <h3 className="h5 lh-home-pillar-title mb-2">Empowerment &amp; growth</h3>
+                <p className="text-body-secondary small flex-grow-1 mb-3 lh-home-pillar-copy">
+                  Skills, confidence, and opportunity so survivors can lead their own futures.
+                </p>
+                <Link className="lh-home-pillar-link fw-semibold text-decoration-none" to="/impact">
+                  How we empower children <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </article>
           </div>
         </div>

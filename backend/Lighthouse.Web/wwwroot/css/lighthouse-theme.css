@@ -347,6 +347,123 @@ body.lh-body {
   padding-top: 1.25rem !important;
 }
 
+/* Home: “What we do” pillars — card layout */
+.lh-home-whatwedo {
+  background: var(--lh-card);
+  border: 1px solid var(--lh-border);
+  border-radius: 20px;
+  padding: 2rem 1.25rem 2.25rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.07);
+}
+
+@media (min-width: 992px) {
+  .lh-home-whatwedo {
+    padding: 2.75rem 2.5rem 3rem;
+  }
+}
+
+.lh-home-whatwedo-header {
+  max-width: 38rem;
+}
+
+.lh-home-whatwedo-kicker {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f05b2f;
+  margin-bottom: 0.5rem;
+}
+
+.lh-home-whatwedo-title {
+  font-size: clamp(1.5rem, 3.2vw, 2.35rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  color: var(--lh-primary);
+}
+
+.lh-home-whatwedo-lead {
+  font-size: 1.02rem;
+  line-height: 1.55;
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lh-home-pillar-card {
+  border-radius: 14px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lh-home-pillar-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1) !important;
+}
+
+.lh-home-pillar-media {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  position: relative;
+}
+
+.lh-home-pillar-media--peach {
+  background: linear-gradient(160deg, #fff6f5 0%, #ffd5cf 100%);
+}
+
+.lh-home-pillar-media--green {
+  background: linear-gradient(160deg, #f3fff9 0%, #c4f2df 100%);
+}
+
+.lh-home-pillar-media--lilac {
+  background: linear-gradient(160deg, #fbf7ff 0%, #e2ccff 100%);
+}
+
+.lh-home-pillar-media--gold {
+  background: linear-gradient(160deg, #fffdf1 0%, #ffedba 100%);
+}
+
+.lh-home-pillar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.lh-home-pillar-media--gold .lh-home-pillar-img {
+  object-position: 60% center;
+}
+
+.lh-home-pillar-card:hover .lh-home-pillar-img {
+  transform: scale(1.04);
+}
+
+.lh-home-pillar-title {
+  color: var(--lh-primary);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.lh-home-pillar-copy {
+  line-height: 1.55;
+  max-width: 18rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lh-home-pillar-link {
+  color: var(--lh-accent, #ffb200) !important;
+  font-size: 0.92rem;
+}
+
+.lh-home-pillar-link:hover {
+  color: color-mix(in srgb, var(--lh-accent, #ffb200) 85%, #000) !important;
+  text-decoration: underline !important;
+}
+
 .lh-impact-kicker {
   font-size: 0.95rem;
   font-style: italic;
