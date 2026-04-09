@@ -1,3 +1,4 @@
+// Thin fetch wrapper for cookie-auth JSON APIs on the .NET origin (VITE_API_URL in dev).
 function getApiBaseUrl() {
   const baseUrlRaw = import.meta.env.VITE_API_URL || ''
   return baseUrlRaw.endsWith('/') ? baseUrlRaw.slice(0, -1) : baseUrlRaw

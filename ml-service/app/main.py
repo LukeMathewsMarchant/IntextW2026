@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""Lighthouse ML microservice: analytics JSON for the .NET backend and admin UI.
+
+Endpoints include social summaries, donations trends/forecast, impact payloads, and tier-1 program
+analytics. Prefer PostgreSQL when env connection strings are set; otherwise CSV and in-repo artifacts.
+"""
+
 import json
 import os
 import threading
@@ -1189,6 +1195,7 @@ def _safe_load_tier1_analytics() -> dict[str, Any]:
         }
 
 
+# ASGI application for uvicorn (`uvicorn app.main:app`). Helper functions above build response payloads.
 app = FastAPI(
     title='Lighthouse ML API',
     description='Social media analytics, donations pipeline trends, and tier-1 program analytics for admin dashboard.',

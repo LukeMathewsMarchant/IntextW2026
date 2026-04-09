@@ -11,6 +11,7 @@ using Lighthouse.Web.Services;
 
 namespace Lighthouse.Web.Controllers.Api;
 
+// Cookie-based login/register/logout + email 2FA for the React SPA (credentials fetch from Vite).
 [Route("api/auth")]
 [ApiController]
 public class AuthApiController : ControllerBase
