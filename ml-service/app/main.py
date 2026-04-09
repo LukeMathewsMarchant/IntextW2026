@@ -6,9 +6,11 @@ Endpoints include social summaries, donations trends/forecast, impact payloads, 
 analytics. Prefer PostgreSQL when env connection strings are set; otherwise CSV and in-repo artifacts.
 """
 
+import copy
 import json
 import os
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -736,6 +738,10 @@ def _safe_load_donations_explore_summary() -> dict[str, Any]:
         return _donations_explore_empty(f'Explore summary failed: {ex}', 'error')
 
 
+_resident_transfer_risk_db_cache_lock = threading.Lock()
+_resident_transfer_risk_db_cache: dict[str, Any] = {'expiry': 0.0, 'payload': None}
+
+
 def _resident_transfer_risk_empty(load_warning: str = '', data_source: str = 'empty') -> dict[str, Any]:
     return {
         'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
@@ -904,8 +910,16 @@ def _build_resident_transfer_risk_summary() -> dict[str, Any]:
     """Production: score active residents from PostgreSQL (same env as social/tier-1). Dev without DB: CSV artifact."""
     conn = resolve_db_connection_value()
     if conn:
+        ttl = float(os.getenv('RESIDENT_TRANSFER_RISK_CACHE_TTL_SECONDS', '60'))
+        now = time.time()
+        if ttl > 0:
+            with _resident_transfer_risk_db_cache_lock:
+                pl = _resident_transfer_risk_db_cache.get('payload')
+                ex = float(_resident_transfer_risk_db_cache.get('expiry', 0.0))
+                if pl is not None and now < ex:
+                    return copy.deepcopy(pl)
         try:
-            return build_resident_transfer_risk_summary_from_database(conn)
+            body = build_resident_transfer_risk_summary_from_database(conn)
         except Exception as ex:
             return _resident_transfer_risk_empty(
                 'Live database scoring failed. '
@@ -913,6 +927,11 @@ def _build_resident_transfer_risk_summary() -> dict[str, Any]:
                 f'resident_transfer_risk_model.joblib is bundled in the container. Details: {ex}',
                 'database-error',
             )
+        if ttl > 0:
+            with _resident_transfer_risk_db_cache_lock:
+                _resident_transfer_risk_db_cache['payload'] = body
+                _resident_transfer_risk_db_cache['expiry'] = now + ttl
+        return body
     return _build_resident_transfer_risk_from_artifacts_csv()
 
 

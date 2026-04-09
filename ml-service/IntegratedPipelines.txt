@@ -73,7 +73,16 @@ Last updated: 2026-04-09
 - Website integration:
   - Public/impact and backend impact API integrations
 
+8) resident transfer risk (reach-out) pipeline
+- Source:
+  - Notebook path: ml-pipelines/resident_transfer_risk_pipeline.ipynb
+  - ml-pipelines/artifacts/resident_transfer_risk_model.joblib (+ metrics CSV; optional scored sample CSV for offline dev)
+  - ml-service app/resident_transfer_risk.py (live DB feature engineering aligned with notebook)
+  - Endpoint: GET /residents/transfer-risk-summary
+- Website integration:
+  - Admin -> Dashboard (“Residents to Reach Out” card; backend proxy GET /api/admin/analytics/residents-transfer-risk)
+
 Maintenance rule:
 - Update this file whenever a new pipeline-backed endpoint/card is added to the website.
 
-Total Pipelines Integrated (distinct .ipynb files connected via API): 8
+Total Pipelines Integrated (distinct .ipynb files connected via API): 9
