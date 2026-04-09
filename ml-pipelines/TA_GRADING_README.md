@@ -1,6 +1,6 @@
 # TA grading: ML pipelines vs website deployment
 
-This file is for **instructors and TAs**. It distinguishes notebooks whose outputs and contracts are **wired into the Lighthouse website** (via `ml-service` APIs and the admin app) from other notebooks the team **used to explore data and relationships** without treating them as production-facing analytics.
+This file is for **instructors and TAs**. It distinguishes notebooks whose outputs and contracts are **wired into the Lighthouse website** (via `ml-service` APIs and the app) from other notebooks the team **used to explore data and relationships** without treating them as production-facing analytics.
 
 **Production site:** [https://intext-w2026.vercel.app/](https://intext-w2026.vercel.app/) (“Light on a Hill Foundation”). Pipeline-backed **admin** pages use the same host with `/Admin/...` paths (see the table).
 
