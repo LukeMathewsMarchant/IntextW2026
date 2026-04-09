@@ -67,6 +67,24 @@ def _load_from_database(db_url: str) -> pd.DataFrame:
     return fetch_dataframe(db_url, query)
 
 
+def _load_donations_from_database(db_url: str) -> pd.DataFrame:
+    query = """
+        SELECT
+            donation_id,
+            supporter_id,
+            donation_type::text AS donation_type,
+            donation_date,
+            is_recurring,
+            campaign_name,
+            channel_source::text AS channel_source,
+            amount,
+            estimated_value,
+            referral_post_id
+        FROM donations
+    """
+    return fetch_dataframe(db_url, query)
+
+
 def _load_cached_or_build() -> dict[str, Any]:
     project_root = _artifact_root().parents[0]
     cache_path = Path(os.getenv('SOCIAL_MEDIA_CACHE_PATH', _artifact_root() / 'artifacts' / 'social_media_analytics_cache.json'))
@@ -222,7 +240,7 @@ def _donations_analytics_empty(load_warning: str = '', data_source: str = 'empty
 
 def _build_donations_analytics() -> dict[str, Any]:
     """
-    Donation trends for the admin dashboard (datasets/donations.csv + optional ML metrics).
+    Donation trends for the admin dashboard (live DB preferred, CSV fallback, optional ML metrics).
     Isolated from social-media logic; failures never affect /social-media/*.
     """
     root = _repo_root()
@@ -234,13 +252,32 @@ def _build_donations_analytics() -> dict[str, Any]:
         )
     )
 
-    if not csv_path.is_file():
-        return _donations_analytics_empty(f'Donations CSV not found: {csv_path}', 'missing-file')
+    db_url = resolve_db_connection_value()
+    data_source = 'empty'
+    load_warning = ''
 
-    try:
-        df = pd.read_csv(csv_path)
-    except Exception as ex:
-        return _donations_analytics_empty(f'Failed to read donations CSV: {ex}', 'error')
+    if db_url:
+        try:
+            df = _load_donations_from_database(db_url)
+            data_source = 'database'
+        except Exception as ex:
+            load_warning = f'Database query failed ({ex}); trying CSV fallback.'
+            if csv_path.is_file():
+                try:
+                    df = pd.read_csv(csv_path)
+                    data_source = 'csv'
+                except Exception as ex2:
+                    return _donations_analytics_empty(f'Database: {ex}; CSV: {ex2}', 'error')
+            else:
+                return _donations_analytics_empty(load_warning, 'database-error')
+    elif csv_path.is_file():
+        try:
+            df = pd.read_csv(csv_path)
+            data_source = 'csv'
+        except Exception as ex:
+            return _donations_analytics_empty(f'Failed to read donations CSV: {ex}', 'error')
+    else:
+        return _donations_analytics_empty(f'Donations CSV not found: {csv_path}', 'missing-file')
 
     if df.empty:
         return _donations_analytics_empty('', 'empty')
@@ -341,8 +378,8 @@ def _build_donations_analytics() -> dict[str, Any]:
 
     return {
         'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
-        'dataSource': 'csv',
-        'loadWarning': '',
+        'dataSource': data_source,
+        'loadWarning': load_warning,
         'summary': {
             'totalGifts': n,
             'totalEstimatedValue': round(total_val, 2),
@@ -370,7 +407,6 @@ app = FastAPI(
     version='1.2.0',
 )
 _cache = _load_cached_or_build()
-_donations_cache = _safe_load_donations_analytics()
 @app.get('/health')
 def health() -> dict[str, str]:
     return {
@@ -402,8 +438,8 @@ def social_media_analytics() -> dict[str, Any]:
 
 @app.get('/donations/analytics')
 def donations_analytics() -> dict[str, Any]:
-    """Trends + channel/type mix from donations.csv; optional metrics from donations notebook artifacts."""
-    return _donations_cache
+    """Trends + channel/type mix from live DB (fallback CSV); optional metrics from notebook artifacts."""
+    return _safe_load_donations_analytics()
 
 
 @app.get('/reports/tier1-analytics')
