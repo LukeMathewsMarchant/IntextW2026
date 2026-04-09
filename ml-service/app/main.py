@@ -731,6 +731,145 @@ def _safe_load_donations_explore_summary() -> dict[str, Any]:
         return _donations_explore_empty(f'Explore summary failed: {ex}', 'error')
 
 
+def _resident_transfer_risk_empty(load_warning: str = '', data_source: str = 'empty') -> dict[str, Any]:
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': data_source,
+        'loadWarning': load_warning,
+        'endpointVersion': '1.0.0',
+        'question': 'Which residents are at risk of transfer instead of closure?',
+        'summary': {
+            'scoredResidents': 0,
+            'highRiskResidents': 0,
+            'highRiskShare': 0.0,
+            'avgTransferProbability': 0.0,
+        },
+        'modelMetrics': None,
+        'riskTierCounts': [],
+        'topResidents': [],
+    }
+
+
+def _build_resident_transfer_risk_summary() -> dict[str, Any]:
+    root = _repo_root()
+    scored_path = Path(
+        os.getenv(
+            'RESIDENT_TRANSFER_RISK_SCORED_PATH',
+            str(root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_scored_sample.csv'),
+        )
+    )
+    metrics_path = Path(
+        os.getenv(
+            'RESIDENT_TRANSFER_RISK_METRICS_PATH',
+            str(root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_metrics.csv'),
+        )
+    )
+
+    if not scored_path.is_file():
+        return _resident_transfer_risk_empty(f'Resident transfer risk file not found: {scored_path}', 'missing-file')
+
+    try:
+        scored = pd.read_csv(scored_path)
+    except Exception as ex:
+        return _resident_transfer_risk_empty(f'Failed to read scored resident risk CSV: {ex}', 'error')
+
+    if scored.empty:
+        return _resident_transfer_risk_empty('Resident transfer risk scored file is empty.', 'empty')
+
+    if 'pred_transfer_prob' not in scored.columns:
+        return _resident_transfer_risk_empty('Column pred_transfer_prob missing in scored risk file.', 'error')
+
+    scored = scored.copy()
+    scored['pred_transfer_prob'] = pd.to_numeric(scored['pred_transfer_prob'], errors='coerce')
+    scored = scored.dropna(subset=['pred_transfer_prob'])
+    if scored.empty:
+        return _resident_transfer_risk_empty('No numeric prediction probabilities found.', 'empty')
+
+    tier_col = 'risk_tier' if 'risk_tier' in scored.columns else None
+    if tier_col is None:
+        scored['risk_tier'] = pd.cut(
+            scored['pred_transfer_prob'],
+            bins=[-0.001, 0.5, 0.75, 1.0],
+            labels=['Monitor', 'Medium', 'High'],
+        )
+        tier_col = 'risk_tier'
+
+    tier_counts: list[dict[str, Any]] = []
+    for label, count in scored[tier_col].fillna('Unknown').value_counts().items():
+        tier_counts.append({'tier': str(label), 'count': int(count)})
+
+    top_residents: list[dict[str, Any]] = []
+    resident_cols = ['resident_id', 'case_control_no', 'internal_code', 'assigned_social_worker', 'safehouse_id']
+    has_resident_identifiers = all(col in scored.columns for col in ['resident_id', 'case_control_no'])
+    if has_resident_identifiers:
+        tier_rank = {'High': 3, 'Medium': 2, 'Monitor': 1}
+        ranked = scored.copy()
+        ranked['__tier_rank'] = ranked[tier_col].astype(str).map(tier_rank).fillna(0)
+        ranked = ranked.sort_values(['__tier_rank', 'pred_transfer_prob'], ascending=[False, False]).head(5)
+        for _, row in ranked.iterrows():
+            top_residents.append(
+                {
+                    'residentId': _safe_int(row.get('resident_id')),
+                    'caseControlNo': str(row.get('case_control_no') or ''),
+                    'internalCode': str(row.get('internal_code') or ''),
+                    'assignedSocialWorker': str(row.get('assigned_social_worker') or ''),
+                    'safehouseId': str(row.get('safehouse_id') or ''),
+                    'riskTier': str(row.get(tier_col) or ''),
+                    'predTransferProb': round(_safe_float(row.get('pred_transfer_prob')), 4),
+                }
+            )
+
+    n = int(len(scored))
+    high_count = int((scored[tier_col].astype(str) == 'High').sum())
+    high_share = round(high_count / n, 4) if n else 0.0
+    avg_prob = round(float(scored['pred_transfer_prob'].mean()), 4) if n else 0.0
+
+    model_metrics: dict[str, Any] | None = None
+    if metrics_path.is_file():
+        try:
+            mdf = pd.read_csv(metrics_path)
+            if len(mdf):
+                row = mdf.iloc[0]
+                model_metrics = {
+                    'selectedModel': str(row.get('selected_model', '')),
+                    'threshold': _safe_float(row.get('threshold')),
+                    'rocAuc': _safe_float(row.get('roc_auc')),
+                    'avgPrecision': _safe_float(row.get('avg_precision')),
+                    'precisionAtThreshold': _safe_float(row.get('precision_at_threshold')),
+                    'recallAtThreshold': _safe_float(row.get('recall_at_threshold')),
+                    'f1AtThreshold': _safe_float(row.get('f1_at_threshold')),
+                }
+        except Exception:
+            model_metrics = None
+
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': 'artifact_csv',
+        'loadWarning': (
+            '' if has_resident_identifiers else
+            'Top resident identifiers are unavailable in the scored artifact. Re-run resident_transfer_risk_pipeline.ipynb to export resident_id and case fields in resident_transfer_risk_scored_sample.csv.'
+        ),
+        'endpointVersion': '1.0.0',
+        'question': 'Which residents are at risk of transfer instead of closure?',
+        'summary': {
+            'scoredResidents': n,
+            'highRiskResidents': high_count,
+            'highRiskShare': high_share,
+            'avgTransferProbability': avg_prob,
+        },
+        'modelMetrics': model_metrics,
+        'riskTierCounts': tier_counts,
+        'topResidents': top_residents,
+    }
+
+
+def _safe_load_resident_transfer_risk_summary() -> dict[str, Any]:
+    try:
+        return _build_resident_transfer_risk_summary()
+    except Exception as ex:
+        return _resident_transfer_risk_empty(f'Resident transfer risk summary failed: {ex}', 'error')
+
+
 _donations_forecast_cache: dict[str, Any] = {
     'signature': None,
     'payload': None,
@@ -1259,3 +1398,9 @@ def donations_next_month_forecast() -> dict[str, Any]:
 def reports_tier1_analytics() -> dict[str, Any]:
     """Residents, education, and health & wellbeing from live DB (when configured) or CSV + notebook artifacts."""
     return _safe_load_tier1_analytics()
+
+
+@app.get('/residents/transfer-risk-summary')
+def residents_transfer_risk_summary() -> dict[str, Any]:
+    """Resident transfer-risk summary from notebook artifacts for dashboard cards."""
+    return _safe_load_resident_transfer_risk_summary()

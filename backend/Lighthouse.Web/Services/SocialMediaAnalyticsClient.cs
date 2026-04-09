@@ -18,6 +18,8 @@ public class SocialMediaMlApiOptions
     public string DonationsForecastPath { get; set; } = "/donations/next-month-forecast";
     /// <summary>Tier-1 program analytics (residents, education, health). Defaults to /reports/tier1-analytics.</summary>
     public string ProgramsTier1AnalyticsPath { get; set; } = "/reports/tier1-analytics";
+    /// <summary>Residents transfer-risk summary for dashboard Program Enrollment card.</summary>
+    public string ResidentsTransferRiskSummaryPath { get; set; } = "/residents/transfer-risk-summary";
     public string? ApiKey { get; set; }
 }
 
@@ -97,6 +99,15 @@ public class SocialMediaAnalyticsClient
             : _options.ProgramsTier1AnalyticsPath;
 
         return await _httpClient.GetFromJsonAsync<ProgramsTier1AnalyticsResponse>(path, JsonReadOptions, cancellationToken);
+    }
+
+    public async Task<ResidentsTransferRiskSummaryResponse?> GetResidentsTransferRiskSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var path = string.IsNullOrWhiteSpace(_options.ResidentsTransferRiskSummaryPath)
+            ? "/residents/transfer-risk-summary"
+            : _options.ResidentsTransferRiskSummaryPath;
+
+        return await _httpClient.GetFromJsonAsync<ResidentsTransferRiskSummaryResponse>(path, JsonReadOptions, cancellationToken);
     }
 }
 
@@ -404,4 +415,45 @@ public record ReintegrationTrendRow(
     int SuccessCount,
     int EligibleCount,
     decimal SuccessRate
+);
+
+public record ResidentsTransferRiskSummaryResponse(
+    string GeneratedAtUtc,
+    string DataSource,
+    string LoadWarning,
+    string EndpointVersion,
+    string Question,
+    ResidentsTransferRiskHeadlineSummary Summary,
+    ResidentsTransferRiskModelMetrics? ModelMetrics,
+    IReadOnlyList<ResidentsTransferRiskTierCount> RiskTierCounts,
+    IReadOnlyList<ResidentsTransferRiskResidentRow> TopResidents
+);
+
+public record ResidentsTransferRiskHeadlineSummary(
+    int ScoredResidents,
+    int HighRiskResidents,
+    decimal HighRiskShare,
+    decimal AvgTransferProbability
+);
+
+public record ResidentsTransferRiskModelMetrics(
+    string SelectedModel,
+    decimal Threshold,
+    decimal RocAuc,
+    decimal AvgPrecision,
+    decimal PrecisionAtThreshold,
+    decimal RecallAtThreshold,
+    decimal F1AtThreshold
+);
+
+public record ResidentsTransferRiskTierCount(string Tier, int Count);
+
+public record ResidentsTransferRiskResidentRow(
+    int ResidentId,
+    string CaseControlNo,
+    string InternalCode,
+    string AssignedSocialWorker,
+    string SafehouseId,
+    string RiskTier,
+    decimal PredTransferProb
 );

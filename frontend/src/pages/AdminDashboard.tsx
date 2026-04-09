@@ -46,6 +46,39 @@ type DonationsMlPayload = {
   } | null
 }
 
+type ResidentsTransferRiskPayload = {
+  generatedAtUtc: string
+  dataSource: string
+  loadWarning: string
+  endpointVersion: string
+  question: string
+  summary: {
+    scoredResidents: number
+    highRiskResidents: number
+    highRiskShare: number
+    avgTransferProbability: number
+  }
+  modelMetrics: {
+    selectedModel: string
+    threshold: number
+    rocAuc: number
+    avgPrecision: number
+    precisionAtThreshold: number
+    recallAtThreshold: number
+    f1AtThreshold: number
+  } | null
+  riskTierCounts: Array<{ tier: string; count: number }>
+  topResidents: Array<{
+    residentId: number
+    caseControlNo: string
+    internalCode: string
+    assignedSocialWorker: string
+    safehouseId: string
+    riskTier: string
+    predTransferProb: number
+  }>
+}
+
 const DONATION_TYPE_LABELS = ['Monetary', 'In-kind', 'Time', 'Skills', 'Social media'] as const
 
 function enumLikeToLabel(value: string | number | null | undefined, labels: readonly string[], fallback: string) {
@@ -95,6 +128,20 @@ function parseIsoDate(value: string | null) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
+function transferRiskTierLabel(tier: string) {
+  const t = tier.trim().toLowerCase()
+  if (t === 'high') return 'Needs immediate review'
+  if (t === 'medium') return 'Needs follow-up'
+  if (t === 'monitor') return 'Stable / monitor'
+  return tier
+}
+
+function transferRiskActionHint(highRiskCount: number) {
+  if (highRiskCount <= 0) return 'No residents are currently flagged as urgent. Continue weekly monitoring.'
+  if (highRiskCount === 1) return '1 resident needs immediate case review this week.'
+  return `${highRiskCount} residents need immediate case review this week.`
+}
+
 export function AdminDashboard() {
   const [metrics, setMetrics] = useState<{ activeSupporters: number; totalDonationValue: number; donationsLast90Days: number } | null>(null)
   const [residentCount, setResidentCount] = useState<number | null>(null)
@@ -110,6 +157,8 @@ export function AdminDashboard() {
   const [err, setErr] = useState<string | null>(null)
   const [donationsMl, setDonationsMl] = useState<DonationsMlPayload | null>(null)
   const [donationsMlErr, setDonationsMlErr] = useState<string | null>(null)
+  const [residentsTransferRisk, setResidentsTransferRisk] = useState<ResidentsTransferRiskPayload | null>(null)
+  const [residentsTransferRiskErr, setResidentsTransferRiskErr] = useState<string | null>(null)
   const contributionCountByType = recentActivity.reduce<Record<string, number>>((acc, item) => {
     acc[item.typeLabel] = (acc[item.typeLabel] ?? 0) + 1
     return acc
@@ -197,6 +246,20 @@ export function AdminDashboard() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    fetchJson<ResidentsTransferRiskPayload>('/api/admin/analytics/residents-transfer-risk')
+      .then((data) => {
+        if (!cancelled) setResidentsTransferRisk(data)
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setResidentsTransferRiskErr(e.message)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   function markActivityRead() {
     const now = new Date()
     setCutoffDate(now)
@@ -230,7 +293,7 @@ export function AdminDashboard() {
             <div>
               <div className="text-secondary small">Active donors</div>
               <div className="lh-kpi-value lh-kpi-value-strong mt-1">{metrics ? metrics.activeSupporters : '—'}</div>
-              <div className="lh-kpi-meta text-success small mt-1">Current active supporters</div>
+              <div className="lh-kpi-meta text-success small mt-1">Current active donors</div>
             </div>
             <span className="text-primary fs-4">&#9829;</span>
           </div>
@@ -240,19 +303,19 @@ export function AdminDashboard() {
             <div>
               <div className="text-secondary small">Active residents</div>
               <div className="lh-kpi-value lh-kpi-value-strong mt-1">{residentCount ?? '—'}</div>
-              <div className="lh-kpi-meta text-danger small mt-1">Current resident records</div>
+              <div className="lh-kpi-meta text-success small mt-1">Current resident records</div>
             </div>
             <span className="text-secondary fs-4">&#128101;</span>
           </div>
         </div>
-        <div className="lh-kpi-card lh-kpi-success">
+        <div className="lh-kpi-card">
           <div className="d-flex justify-content-between align-items-start">
             <div>
-              <div className="small opacity-90">Donations (90 days)</div>
-              <div className="lh-kpi-value mt-1">{metrics ? metrics.donationsLast90Days : '—'}</div>
-              <div className="lh-kpi-meta mt-1">Live rolling count</div>
+              <div className="text-secondary small">Donations (90 days)</div>
+              <div className="lh-kpi-value lh-kpi-value-strong mt-1">{metrics ? metrics.donationsLast90Days : '—'}</div>
+              <div className="lh-kpi-meta text-success small mt-1">Live rolling count</div>
             </div>
-            <span className="lh-kpi-icon fs-4">&#128200;</span>
+            <span className="text-secondary fs-4">&#128200;</span>
           </div>
         </div>
       </div>
@@ -260,10 +323,9 @@ export function AdminDashboard() {
       <div className="row g-3 mb-4">
         <div className="col-lg-8">
           <div className="lh-chart-card h-100">
-            <div className="fw-semibold mb-1">Donation trends</div>
-            <div className="text-secondary small mb-2">
-              From the donations pipeline (ml-service / <code className="small">datasets/donations.csv</code>).{' '}
-              <Link to="/Admin/Analytics">Reports &amp; analytics</Link> for channel mix and tables.
+            <div className="fw-semibold fs-4 mb-1">Donation trends</div>
+            <div className="text-secondary small mb-1">
+              Monthly donation activity over time to quickly spot high and low giving periods.
             </div>
             {donationsMlErr ? (
               <div className="alert alert-warning py-2 small mb-0">
@@ -275,7 +337,7 @@ export function AdminDashboard() {
             ) : null}
             {donationsMl && donationsMl.monthlyTotals.length > 0 ? (
               <>
-                <div style={{ width: '100%', height: 240 }}>
+                <div style={{ width: '100%', height: 240, marginTop: '8px' }}>
                   <ResponsiveContainer>
                     <BarChart
                       data={donationsMl.monthlyTotals.map((m) => ({
@@ -290,29 +352,6 @@ export function AdminDashboard() {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="d-flex flex-wrap gap-3 mt-2 small text-secondary">
-                  <span>
-                    Gifts: <strong className="text-body">{donationsMl.summary.totalGifts}</strong>
-                  </span>
-                  <span>
-                    Total est. value:{' '}
-                    <strong className="text-body">{donationsMl.summary.totalEstimatedValue.toLocaleString()}</strong>
-                  </span>
-                  {donationsMl.pipelineModel ? (
-                    <span>
-                      Holdout MAE / R²:{' '}
-                      <strong className="text-body">
-                        {donationsMl.pipelineModel.holdoutMaePredictive != null
-                          ? donationsMl.pipelineModel.holdoutMaePredictive.toFixed(1)
-                          : '—'}{' '}
-                        /{' '}
-                        {donationsMl.pipelineModel.holdoutR2Predictive != null
-                          ? donationsMl.pipelineModel.holdoutR2Predictive.toFixed(3)
-                          : '—'}
-                      </strong>
-                    </span>
-                  ) : null}
-                </div>
               </>
             ) : donationsMl && donationsMl.monthlyTotals.length === 0 ? (
               <p className="small text-secondary mb-0">No monthly rows in the pipeline dataset (empty or filtered).</p>
@@ -323,11 +362,58 @@ export function AdminDashboard() {
         </div>
         <div className="col-lg-4">
           <div className="lh-chart-card h-100">
-            <div className="fw-semibold mb-1">Program enrollment</div>
-            <div className="text-secondary small mb-3">Residents per program and safehouse</div>
-            <div className="lh-chart-placeholder" style={{ height: 200 }}>
-              Available after data import
-            </div>
+            <div className="fw-semibold mb-1">Residents to Reach Out</div>
+            <div className="text-secondary small mb-1">Residents likely to transfer instead of close (early warning)</div>
+            {residentsTransferRiskErr ? (
+              <div className="alert alert-warning py-2 small mb-2">
+                Program enrollment analytics unavailable ({residentsTransferRiskErr}).
+              </div>
+            ) : null}
+            {residentsTransferRisk?.loadWarning ? (
+              <div className="alert alert-info py-2 small mb-2">{residentsTransferRisk.loadWarning}</div>
+            ) : null}
+            {residentsTransferRisk ? (
+              <>
+                {residentsTransferRisk.riskTierCounts?.length ? (
+                  <div style={{ width: '100%', height: 150 }} className="mb-1">
+                    <ResponsiveContainer>
+                      <BarChart
+                        data={residentsTransferRisk.riskTierCounts.map((r) => ({
+                          tier: transferRiskTierLabel(r.tier),
+                          count: r.count,
+                        }))}
+                      >
+                        <XAxis dataKey="tier" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
+                        <Tooltip formatter={(value) => [`${value}`, 'Residents']} />
+                        <Bar dataKey="count" fill="var(--bs-success)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : null}
+                {residentsTransferRisk.topResidents?.length ? (
+                  <div className="mt-1">
+                    <div className="small fw-semibold mb-1">Residents</div>
+                    <ul
+                      className="list-unstyled mb-1 overflow-auto"
+                      style={{ height: 48, fontSize: '0.9rem' }}
+                    >
+                      {residentsTransferRisk.topResidents.map((r) => (
+                        <li key={`${r.residentId}-${r.caseControlNo}`} className="py-0 border-bottom border-light-subtle">
+                          <strong>{r.caseControlNo || `Resident #${r.residentId}`}</strong>
+                          {' '}({transferRiskTierLabel(r.riskTier)} · {(r.predTransferProb * 100).toFixed(1)}%)
+                          {r.assignedSocialWorker ? ` — SW ${r.assignedSocialWorker}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="small text-secondary mt-1">No residents to prioritize yet.</div>
+                )}
+              </>
+            ) : !residentsTransferRiskErr ? (
+              <div className="text-secondary small">Loading program enrollment analytics…</div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -393,7 +479,7 @@ export function AdminDashboard() {
             <div className="row g-2">
               <div className="col-6">
                 <Link className="btn btn-primary w-100 lh-btn-pill btn-sm" to="/Admin/DonorsContributions">
-                  Donors & contrib
+                  Donor Stats
                 </Link>
               </div>
               <div className="col-6">

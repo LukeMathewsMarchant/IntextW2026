@@ -674,7 +674,7 @@ body.lh-body {
 
 .lh-kpi-card {
   border-radius: var(--lh-radius);
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid var(--lh-border);
   background: var(--lh-card);
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
@@ -733,8 +733,8 @@ body.lh-body {
   border-radius: var(--lh-radius);
   border: 1px solid var(--lh-border);
   background: var(--lh-card);
-  padding: 1.25rem;
-  min-height: 280px;
+  padding: 1rem;
+  min-height: 255px;
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
