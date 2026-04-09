@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react'
+
 type Props = {
   title: string
-  message: string
+  message: ReactNode
   confirmLabel?: string
   onConfirm: () => void
   onCancel: () => void
@@ -25,7 +27,7 @@ export function ConfirmModal({ title, message, confirmLabel = 'Delete', onConfir
             <button type="button" className="btn-close" aria-label="Close" onClick={onCancel} />
           </div>
           <div className="modal-body">
-            <p className="mb-0">{message}</p>
+            {typeof message === 'string' ? <p className="mb-0">{message}</p> : message}
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-outline-secondary" onClick={onCancel}>
