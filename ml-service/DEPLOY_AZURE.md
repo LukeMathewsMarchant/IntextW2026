@@ -83,6 +83,9 @@ On the **backend** App Service (or `appsettings` for the environment):
 - `SocialMediaMlApi__DonationsExploreSummaryPath=/donations/explore-summary` (optional; default)
 - `SocialMediaMlApi__ProgramsTier1AnalyticsPath=/reports/tier1-analytics` (optional; default)
 - `SocialMediaMlApi__ApiKey=` (optional)
+- `ImpactMlApi__Enabled=true`
+- `ImpactMlApi__BaseUrl=` (optional; leave empty to inherit `SocialMediaMlApi__BaseUrl`)
+- `ImpactMlApi__AnalyticsPath=/impact/analytics` (optional; default)
 
 Redeploy the **backend** when you add new proxy routes or change client code.
 
@@ -92,6 +95,11 @@ Verify (admin session where required):
 - `GET .../api/admin/analytics/donations-ml`
 - `GET .../api/admin/analytics/donations-explore`
 - `GET .../api/admin/analytics/programs-tier1`
+
+Verify (public impact):
+
+- `GET .../api/impact`
+- Confirm `pipelineInsights` is present when ml-service `GET /impact/analytics` is reachable.
 
 ---
 
@@ -113,13 +121,15 @@ curl -fsS "$BASE_URL/openapi.json" | jq '.info, (.paths | keys)'
 curl -fsS "$BASE_URL/donations/analytics" | jq '.dataSource, .summary'
 curl -fsS "$BASE_URL/donations/explore-summary" | jq '.endpointVersion, .generatedAtUtc, .dataSource'
 curl -fsS "$BASE_URL/reports/tier1-analytics" | jq '.generatedAtUtc, .residents.dataSource'
+curl -fsS "$BASE_URL/impact/analytics" | jq '.pipelineName, .generatedAtUtc, .metricHighlights'
 ```
 
 Expected:
 
 - `/health`: `status: ok`, `buildId` = deployed commit SHA.
-- OpenAPI lists routes you care about (`/donations/analytics`, `/donations/explore-summary`, `/reports/tier1-analytics`, etc.).
+- OpenAPI lists routes you care about (`/donations/analytics`, `/donations/explore-summary`, `/reports/tier1-analytics`, `/impact/analytics`, etc.).
 - Donations endpoints: usually `dataSource: "database"` in production when DB is configured.
+- `/impact/analytics` returns pipeline metadata (`pipelineName`, `generatedAtUtc`) and highlights payload for Lighthouse merge.
 
 ---
 
