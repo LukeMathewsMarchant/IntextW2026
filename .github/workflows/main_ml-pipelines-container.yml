@@ -29,7 +29,7 @@ jobs:
         run: |
           cd ml-service
           pip install -r requirements.txt
-          python -m py_compile app/main.py
+          python -m py_compile app/main.py app/resident_transfer_risk.py
           grep -q "/reports/tier1-analytics" app/main.py
           grep -q "/donations/analytics" app/main.py
           grep -q "/donations/explore-summary" app/main.py
@@ -55,13 +55,17 @@ jobs:
           registry: ${{ secrets.ACR_LOGIN_SERVER }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
-      - name: Ensure forecast model artifact is bundled
+      - name: Ensure forecast and resident transfer risk artifacts are bundled
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p ml-service/artifacts
           cp ml-pipelines/artifacts/donation_prediction_next_month_model.joblib \
             ml-service/artifacts/donation_prediction_next_month_model.joblib
+          cp ml-pipelines/artifacts/resident_transfer_risk_model.joblib \
+            ml-service/artifacts/resident_transfer_risk_model.joblib
+          cp ml-pipelines/artifacts/resident_transfer_risk_metrics.csv \
+            ml-service/artifacts/resident_transfer_risk_metrics.csv
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:

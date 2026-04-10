@@ -6,4 +6,5 @@ numpy==2.1.2
 gunicorn==23.0.0
 psycopg[binary]==3.2.9
 joblib==1.4.2
-scikit-learn
+# Pin to the sklearn version used when exporting resident_transfer_risk_model.joblib (see notebook output / InconsistentVersionWarning).
+scikit-learn==1.5.2

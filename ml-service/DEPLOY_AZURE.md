@@ -39,12 +39,19 @@ You do **not** manually zip-deploy the `ml-service` folder in normal operation. 
 
 ### Runtime data & optional paths
 
-- **`SOCIAL_MEDIA_DB_URL`** or **`ConnectionStrings__DefaultConnection`** — PostgreSQL for social posts, **donations**, and tier-1 program tables when available.
+- **`SOCIAL_MEDIA_DB_URL`** or **`ConnectionStrings__DefaultConnection`** — PostgreSQL for social posts, **donations**, tier-1 program tables, and **resident transfer risk** when available.
+- **Important:** set these on the **ML API Linux Web App** that runs the container, not only on the .NET backend. If they are missing on the Python service, `/residents/transfer-risk-summary` cannot use the live database (and the Docker image does not include `ml-pipelines/`).
 - Optional fallbacks if the full repo layout is not in the image (usually not needed when DB is set):
   - `SOCIAL_MEDIA_DATASET_PATH`, `DONATIONS_DATASET_PATH`, `DONATIONS_METRICS_PATH`, tier-1 CSV paths (see older comments in `app/main.py` / env examples).
 - Forecast artifact path (optional override):
   - `DONATIONS_FORECAST_MODEL_PATH=/app/artifacts/donation_prediction_next_month_model.joblib`
   - default runtime expects the model inside the container image under `/app/artifacts/`.
+- **Resident transfer risk** (`GET /residents/transfer-risk-summary`, admin dashboard):
+  - In **production**, use the same PostgreSQL settings as social/tier-1 (`SOCIAL_MEDIA_DB_URL` or `ConnectionStrings__DefaultConnection`). The service reads **`residents`**, **`incident_reports`**, and **`education_records`**, engineers the same early-window features as `resident_transfer_risk_pipeline.ipynb`, runs the bundled **`resident_transfer_risk_model.joblib`**, and returns **`dataSource: "database"`**.
+  - GitHub Actions copies `resident_transfer_risk_model.joblib` and `resident_transfer_risk_metrics.csv` from `ml-pipelines/artifacts/` into `ml-service/artifacts/` before the Docker build (same pattern as the donations forecast model).
+  - **scikit-learn version:** `requirements.txt` pins `scikit-learn` to match the version used when `joblib.dump` ran in `resident_transfer_risk_pipeline.ipynb` (currently **1.5.2**). Unpickling with a newer sklearn can fail (e.g. missing `_RemainderColsList` on `ColumnTransformer`). After upgrading sklearn in the service, re-run the notebook and commit a fresh `.joblib`.
+  - **Performance:** The service only loads **active** residents with an enrollment date, and only **incident/education rows in each resident’s first 30 days after enrollment** (same logic as the notebook). The sklearn pipeline is **loaded once per process**, and the JSON response is cached in memory for **60 seconds** by default (`RESIDENT_TRANSFER_RISK_CACHE_TTL_SECONDS`, set to `0` to disable). For very large tables, indexes on `incident_reports(resident_id, incident_date)` and `education_records(resident_id, record_date)` help.
+  - If **no** DB URL is set (typical local dev), the endpoint falls back to the precomputed scored CSV under `ml-pipelines/artifacts/` (`dataSource: "artifact_csv"`).
 
 Local-only / artifact refresh (optional):
 
@@ -61,7 +68,7 @@ cd ml-service
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m py_compile app/main.py
+python -m py_compile app/main.py app/resident_transfer_risk.py
 ```
 
 Optional: build a social cache file for offline work:
@@ -86,6 +93,7 @@ On the **backend** App Service (or `appsettings` for the environment):
 - `SocialMediaMlApi__DonationsExploreSummaryPath=/donations/explore-summary` (optional; default)
 - `SocialMediaMlApi__DonationsForecastPath=/donations/next-month-forecast` (optional; default)
 - `SocialMediaMlApi__ProgramsTier1AnalyticsPath=/reports/tier1-analytics` (optional; default)
+- `SocialMediaMlApi__ResidentsTransferRiskSummaryPath=/residents/transfer-risk-summary` (optional; default)
 - `SocialMediaMlApi__ApiKey=` (optional)
 - `ImpactMlApi__Enabled=true`
 - `ImpactMlApi__BaseUrl=` (optional; leave empty to inherit `SocialMediaMlApi__BaseUrl`)
@@ -100,6 +108,7 @@ Verify (admin session where required):
 - `GET .../api/admin/analytics/donations-explore`
 - `GET .../api/admin/analytics/donations-forecast`
 - `GET .../api/admin/analytics/programs-tier1`
+- `GET .../api/admin/analytics/residents-transfer-risk`
 
 Verify (public impact):
 
@@ -127,13 +136,14 @@ curl -fsS "$BASE_URL/donations/analytics" | jq '.dataSource, .summary'
 curl -fsS "$BASE_URL/donations/explore-summary" | jq '.endpointVersion, .generatedAtUtc, .dataSource'
 curl -fsS "$BASE_URL/donations/next-month-forecast" | jq '.endpointVersion, .predictedMonth, .predictedTotalEstimatedValue, .predictionRange'
 curl -fsS "$BASE_URL/reports/tier1-analytics" | jq '.generatedAtUtc, .residents.dataSource, .safehousePerformance.dataSource, .reintegration.summary'
+curl -fsS "$BASE_URL/residents/transfer-risk-summary" | jq '.generatedAtUtc, .summary, .riskTierCounts'
 curl -fsS "$BASE_URL/impact/analytics" | jq '.pipelineName, .generatedAtUtc, .metricHighlights'
 ```
 
 Expected:
 
 - `/health`: `status: ok`, `buildId` = deployed commit SHA.
-- OpenAPI lists routes you care about (`/donations/analytics`, `/donations/explore-summary`, `/donations/next-month-forecast`, `/reports/tier1-analytics`, `/impact/analytics`, etc.).
+- OpenAPI lists routes you care about (`/donations/analytics`, `/donations/explore-summary`, `/donations/next-month-forecast`, `/reports/tier1-analytics`, `/residents/transfer-risk-summary`, `/impact/analytics`, etc.).
 - Donations endpoints: usually `dataSource: "database"` in production when DB is configured.
 - Tier-1 endpoint includes non-null `safehousePerformance` and `reintegration` blocks.
 - `/impact/analytics` returns pipeline metadata (`pipelineName`, `generatedAtUtc`) and highlights payload for Lighthouse merge.
@@ -146,7 +156,7 @@ Expected:
 
 1. Add or change routes in `ml-service/app/main.py` (and dependencies if needed).
 2. CI validates: `py_compile`, route greps, `startup.sh` safety checks (see `main_ml-pipelines-container.yml`).
-3. Local: `python -m py_compile app/main.py` (and `bash -n startup.sh` if you touch it).
+3. Local: `python -m py_compile app/main.py app/resident_transfer_risk.py` (and `bash -n startup.sh` if you touch it).
 4. If `main.py` imports a new package (for example `joblib`, `scikit-learn`), add it to `ml-service/requirements.txt` in the same PR.
 
 ### After merge

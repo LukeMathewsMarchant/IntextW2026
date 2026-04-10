@@ -4,6 +4,12 @@ import { formatUsd } from '../utils/formatUsd'
 
 const DONOR_PAGE_SIZE = 50
 
+const phpFmt = new Intl.NumberFormat('en-PH', {
+  style: 'currency',
+  currency: 'PHP',
+  maximumFractionDigits: 0,
+})
+
 type Okr = {
   activeSupporters: number
   totalDonationValue: number
@@ -77,7 +83,7 @@ export function AdminOkr() {
           <div className="col-md-6 col-xl-3">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-body">
-                <div className="text-secondary small">Donations (90d)</div>
+                <div className="text-secondary small">Donations Made In The Last 90 Days</div>
                 <div className="display-6">{okr.donationsLast90Days}</div>
               </div>
             </div>
@@ -151,22 +157,6 @@ export function AdminOkr() {
             {okr.donorRecencyTotalCount === 0 ? (
               <p className="small text-secondary mb-0">No donation rows yet.</p>
             ) : null}
-          </div>
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="text-secondary small">Resident education progress outcomes</div>
-                <p className="mb-0 small">Available after data import.</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <div className="text-secondary small">Resident health and reintegration success rate</div>
-                <p className="mb-0 small">Available after data import.</p>
-              </div>
-            </div>
           </div>
         </div>
       ) : (

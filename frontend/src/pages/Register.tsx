@@ -47,7 +47,17 @@ export function Register() {
             </div>
             <div className="mb-3">
               <label className="form-label" htmlFor="password">Password</label>
-              <input id="password" className="form-control" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input
+                id="password"
+                className="form-control"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={12}
+                autoComplete="new-password"
+              />
+              <div className="form-text">Use at least 12 characters (same rule as the server).</div>
             </div>
             <div className="mb-3">
               <label className="form-label" htmlFor="confirmPassword">Confirm password</label>

@@ -11,6 +11,7 @@ using Lighthouse.Web.Services;
 
 namespace Lighthouse.Web.Controllers.Api;
 
+// Cookie-based login/register/logout + email 2FA for the React SPA (credentials fetch from Vite).
 [Route("api/auth")]
 [ApiController]
 public class AuthApiController : ControllerBase
@@ -61,7 +62,7 @@ public class AuthApiController : ControllerBase
 
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
-            return Unauthorized(new { error = "Invalid login attempt." });
+            return Unauthorized(new { error = "No account was found for this email address." });
 
         var result = await _signInManager.PasswordSignInAsync(user, req.Password, isPersistent: true, lockoutOnFailure: true);
         if (result.RequiresTwoFactor)
@@ -77,8 +78,12 @@ public class AuthApiController : ControllerBase
             }
         }
 
+        if (result.IsLockedOut)
+            return Unauthorized(new { error = "Too many failed sign-in attempts. Try again later." });
+        if (result.IsNotAllowed)
+            return Unauthorized(new { error = "This account is not allowed to sign in." });
         if (!result.Succeeded)
-            return Unauthorized(new { error = "Invalid login attempt." });
+            return Unauthorized(new { error = "Incorrect password." });
 
         var roles = await _userManager.GetRolesAsync(user);
         return Ok(new { isAuthenticated = true, requiresTwoFactor = false, name = user.Email, roles });
@@ -121,6 +126,10 @@ public class AuthApiController : ControllerBase
 
         if (!string.Equals(req.Password, req.ConfirmPassword, StringComparison.Ordinal))
             return BadRequest(new { error = "Passwords do not match." });
+
+        var minLen = _userManager.Options.Password.RequiredLength;
+        if (req.Password.Length < minLen)
+            return BadRequest(new { error = $"Password must be at least {minLen} characters long." });
 
         var existing = await _userManager.FindByEmailAsync(email);
         if (existing is not null)

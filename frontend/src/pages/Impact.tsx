@@ -49,7 +49,6 @@ type PipelineInsights = {
 }
 
 type ImpactResponse = {
-  chips?: string[]
   kpis?: { livesImpacted: number; safehouses: number; activePrograms: number; successRate: number }
   retention?: RetentionPoint[]
   retentionDetail?: RetentionDetail | null
@@ -57,8 +56,6 @@ type ImpactResponse = {
   dataFreshness?: {
     generatedAtUtc: string
     latestSafehouseMetricMonth: string | null
-    /** Rolling case-activity window for safehouse comparison (UTC). */
-    operationalCaseWindow?: string | null
   }
   outcomeSignals?: {
     donationsLast12Months: number
@@ -82,6 +79,41 @@ type ImpactResponse = {
     activeResidentsNow: number
     dollarsPerReintegration: number | null
     dollarsPerActiveResident: number | null
+    windowLabel: string
+  }
+  upcomingCaseConferences?: {
+    next30Days: number
+    windowLabel: string
+  }
+  riskLevels?: {
+    low: number
+    medium: number
+    high: number
+    critical: number
+  }
+  residentPipeline?: {
+    intake: number
+    assessment: number
+    activeCare: number
+    preReintegration: number
+    reintegrated: number
+  }
+  givingInAction?: {
+    metricKey: string
+    headline: string
+    value: number | null
+    context: string
+  }
+  spreadingTheWord?: {
+    totalReachThisMonth: number | null
+    totalReachLabel: string
+    mostEffectivePlatform: string
+    mostEffectivePlatformSharePct: number
+    socialDonationsCountThisMonth?: number
+    socialDonationsAmountThisMonth?: number
+    donationReferralsFromSocialPosts: number
+    /** All platforms in the window (by dollar), for auditing 100% / single-bucket cases. */
+    platformBreakdown?: { platform: string; giftCount: number; totalAmount: number; sharePct: number }[]
     windowLabel: string
   }
   educationInsights?: {
@@ -157,14 +189,11 @@ export function Impact() {
   }
 
   if (!data) {
-    return <div className="text-secondary">Loading impact data...</div>
+    return <div className="text-body-secondary">Loading impact data...</div>
   }
-  const chips = data.chips ?? []
   const kpis = data.kpis ?? { livesImpacted: 0, safehouses: 0, activePrograms: 0, successRate: 0 }
   const retention = data.retention ?? []
-  const retentionDetail = data.retentionDetail ?? null
   const supportMix = data.supportMix ?? []
-  const freshness = data.dataFreshness ?? { generatedAtUtc: new Date().toISOString(), latestSafehouseMetricMonth: null }
   const outcomeSignals = {
     donationsLast12Months: data.outcomeSignals?.donationsLast12Months ?? 0,
     donorsLast12Months: data.outcomeSignals?.donorsLast12Months ?? 0,
@@ -198,102 +227,51 @@ export function Impact() {
     dollarsPerActiveResident: data.outcomePerDollar?.dollarsPerActiveResident ?? null,
     windowLabel: data.outcomePerDollar?.windowLabel ?? 'Last 12 months (UTC)'
   }
-  const educationInsights = data.educationInsights ?? {
-    avgProgressAllTime: null,
-    totalRecords: 0,
-    nonNullProgressRecords: 0,
-    distinctResidentsWithEducation: 0,
-    monthlyTrend: [] as Array<{ month: string; avgProgress: number | null; donations: number }>,
+  const upcomingCaseConferences = data.upcomingCaseConferences ?? { next30Days: 0, windowLabel: '' }
+  const riskLevels = data.riskLevels ?? { low: 0, medium: 0, high: 0, critical: 0 }
+  const residentPipeline = data.residentPipeline ?? { intake: 0, assessment: 0, activeCare: 0, preReintegration: 0, reintegrated: 0 }
+  const givingInAction = data.givingInAction ?? {
+    metricKey: 'estimatedMonthlyCostPerGirlInCare',
+    headline: 'Monthly equivalent',
+    value: null,
+    context: '',
   }
-  const donationChannels = data.donationChannelPerformance ?? []
-  const socialPostTraction = data.socialPostTraction ?? []
+  const spreadingTheWord = data.spreadingTheWord ?? {
+    totalReachThisMonth: null,
+    totalReachLabel: 'No published reach snapshot in this window',
+    mostEffectivePlatform: 'N/A',
+    mostEffectivePlatformSharePct: 0,
+    socialDonationsCountThisMonth: 0,
+    socialDonationsAmountThisMonth: 0,
+    donationReferralsFromSocialPosts: 0,
+    platformBreakdown: [],
+    windowLabel: '',
+  }
+  const socialGivingCount = spreadingTheWord.socialDonationsCountThisMonth ?? 0
+  const socialGivingAmount = spreadingTheWord.socialDonationsAmountThisMonth ?? 0
+  const platformIsUnlabeled =
+    spreadingTheWord.mostEffectivePlatform === 'Unknown/Unlabeled' || spreadingTheWord.mostEffectivePlatform === 'N/A'
+  const platformBreakdown = spreadingTheWord.platformBreakdown ?? []
   const allocationBreakdown = data.donationAllocationBreakdown ?? []
-  const socialPlatformPerformance = data.socialMediaPlatformPerformance ?? []
-  const socialAllocationBreakdown = data.socialMediaAllocationBreakdown ?? []
-  const normalizeSocialApp = (raw: string) => {
-    const name = raw.trim()
-    const lower = name.toLowerCase()
-    if (!name || /unknown|unlabeled|not set|n\/a/.test(lower)) return 'Unknown/Unlabeled'
-    if (/instagram|insta/.test(lower)) return 'Instagram'
-    if (/facebook|fb/.test(lower)) return 'Facebook'
-    if (/tiktok|tik tok/.test(lower)) return 'TikTok'
-    if (/youtube|yt/.test(lower)) return 'YouTube'
-    if (/x\/twitter|twitter|x$/.test(lower)) return 'X / Twitter'
-    return name
-  }
-
-  const buckets = new Map<string, { channel: string; donations: number; totalAmount: number }>()
-  socialPlatformPerformance.forEach((row) => {
-    const channel = normalizeSocialApp(row.channel)
-    const current = buckets.get(channel)
-    if (current) {
-      current.donations += row.donations
-      current.totalAmount += row.totalAmount
-    } else {
-      buckets.set(channel, { channel, donations: row.donations, totalAmount: row.totalAmount })
-    }
-  })
-
-  let normalizedSocialPlatformPerformance = Array.from(buckets.values())
-    .map((row) => ({ ...row, share: 0 }))
-    .sort((a, b) => b.totalAmount - a.totalAmount)
-
-  const socialTotal = normalizedSocialPlatformPerformance.reduce((sum, row) => sum + row.totalAmount, 0)
-  normalizedSocialPlatformPerformance = normalizedSocialPlatformPerformance.map((row) => ({
-    ...row,
-    share: socialTotal <= 0 ? 0 : Math.round((row.totalAmount / socialTotal) * 10000) / 100,
-  }))
-
-  const large = normalizedSocialPlatformPerformance.filter((row) => row.share >= 5)
-  const small = normalizedSocialPlatformPerformance.filter((row) => row.share < 5)
-  if (small.length > 1) {
-    const other = small.reduce(
-      (acc, row) => ({
-        channel: 'Other',
-        donations: acc.donations + row.donations,
-        totalAmount: acc.totalAmount + row.totalAmount,
-        share: acc.share + row.share,
-      }),
-      { channel: 'Other', donations: 0, totalAmount: 0, share: 0 }
-    )
-    normalizedSocialPlatformPerformance = [...large, other].sort((a, b) => b.totalAmount - a.totalAmount)
-  }
-
-  if (normalizedSocialPlatformPerformance.length > 5) {
-    const keep = normalizedSocialPlatformPerformance.slice(0, 4)
-    const tail = normalizedSocialPlatformPerformance.slice(4)
-    const other = tail.reduce(
-      (acc, row) => ({
-        channel: 'Other',
-        donations: acc.donations + row.donations,
-        totalAmount: acc.totalAmount + row.totalAmount,
-        share: acc.share + row.share,
-      }),
-      { channel: 'Other', donations: 0, totalAmount: 0, share: 0 }
-    )
-    normalizedSocialPlatformPerformance = [...keep, other]
-  }
-  const donationChannelAmountRaw = donationChannels.reduce((sum, row) => sum + row.totalAmount, 0)
-  const totalDonationChannelAmount = donationChannelAmountRaw || 1
-  const socialPlatformAmountRaw = normalizedSocialPlatformPerformance.reduce((sum, row) => sum + row.totalAmount, 0)
-  const totalSocialPlatformAmount = socialPlatformAmountRaw || 1
-  const maxSocialPlatformAmount =
-    normalizedSocialPlatformPerformance.length > 0
-      ? Math.max(...normalizedSocialPlatformPerformance.map((s) => s.totalAmount))
-      : 1
-  const maxPostDonationValue = socialPostTraction.length > 0 ? Math.max(...socialPostTraction.map((row) => row.donationValue)) : 1
-  const postDonationValueRaw = socialPostTraction.reduce((sum, row) => sum + row.donationValue, 0)
-  const totalPostDonationValue = postDonationValueRaw || 1
   const allocationAmountRaw = allocationBreakdown.reduce((sum, row) => sum + row.amountAllocated, 0)
   const totalAllocationAmount = allocationAmountRaw || 1
-  const socialAllocationAmountRaw = socialAllocationBreakdown.reduce((sum, row) => sum + row.amountAllocated, 0)
-  const totalSocialAllocationAmount = socialAllocationAmountRaw || 1
-  const socialAppsChartHeightPx = 460
-  const educationTrendMax = educationInsights.monthlyTrend.length > 0
-    ? Math.max(...educationInsights.monthlyTrend.map((p) => p.avgProgress ?? 0), 1)
-    : 1
   const highlightColor = '#f3b11d'
-  const mutedColor = '#c3c8d1'
+  /** Theme-aware bar fill (non-highlighted allocation rows). */
+  const mutedBarFill = 'var(--bs-secondary)'
+  const supportMixDescriptions: Record<string, string> = {
+    'Safety & shelter': 'Keeps girls in secure homes with daily supervision, food, and immediate protection.',
+    'Healing & education': 'Funds counseling, schooling support, and learning plans that rebuild confidence.',
+    'Justice services': 'Supports legal coordination, documentation, and survivor advocacy follow-through.',
+    Empowerment: 'Builds practical life and reintegration readiness through coaching and skill-building.',
+  }
+  const pipelineStages = [
+    { key: 'intake', label: 'Intake', value: residentPipeline.intake },
+    { key: 'assessment', label: 'Assessment', value: residentPipeline.assessment },
+    { key: 'activeCare', label: 'Active Care', value: residentPipeline.activeCare },
+    { key: 'preReintegration', label: 'Pre-Reintegration', value: residentPipeline.preReintegration },
+    { key: 'reintegrated', label: 'Reintegrated', value: residentPipeline.reintegrated },
+  ]
+  const maxPipelineValue = Math.max(...pipelineStages.map((s) => s.value), 1)
 
   return (
     <div className="vstack gap-4">
@@ -301,16 +279,7 @@ export function Impact() {
         <p className="lh-impact-kicker text-center mb-2">Impact Dashboard</p>
         <h1 className="lh-impact-title text-center mb-2">From Crisis to Reintegration</h1>
         <p className="lh-section-sub text-center mb-3">
-          Operational snapshot from your case data: donations, channels, programs, and resident outcomes.
-        </p>
-        <div className="d-flex flex-wrap justify-content-center gap-2 text-center">
-          {chips.map((chip) => (
-            <span key={chip} className="lh-impact-chip">{chip}</span>
-          ))}
-        </div>
-        <p className="text-secondary small text-center mt-3 mb-0">
-          Data freshness: generated {new Date(freshness.generatedAtUtc).toLocaleString()} UTC
-          {freshness.operationalCaseWindow ? ` | case activity window: ${freshness.operationalCaseWindow}` : ''}
+          See how your support powers safe care, healing services, and long-term reintegration for girls in our network.
         </p>
       </section>
 
@@ -322,68 +291,402 @@ export function Impact() {
               <div className="row g-2 row-cols-1 row-cols-md-3">
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary text-uppercase">In care now</div>
-                    <div className="h4 mb-1 text-dark">{impactNarrative.inCareNow.toLocaleString()}</div>
-                    <div className="small text-secondary">Active resident census</div>
+                    <div className="small text-body-secondary text-uppercase">In care now</div>
+                    <div className="h4 mb-1 text-body-emphasis">{impactNarrative.inCareNow.toLocaleString()}</div>
+                    <div className="small text-body-secondary">Girls currently receiving care and support</div>
                   </div>
                 </div>
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary text-uppercase">Recent incidents</div>
-                    <div className="h4 mb-1 text-dark">{impactNarrative.recentIncidents.toLocaleString()}</div>
-                    <div className="small text-secondary">Current 30-day window</div>
+                    <div className="small text-body-secondary text-uppercase">Recent protection incidents</div>
+                    <div className="h4 mb-1 text-body-emphasis">{impactNarrative.recentIncidents.toLocaleString()}</div>
+                    <div className="small text-body-secondary">Current 30-day window</div>
                   </div>
                 </div>
                 <div className="col">
                   <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary text-uppercase">Reintegrations (90d)</div>
-                    <div className="h4 mb-1 text-dark">{impactNarrative.recentReintegrations.toLocaleString()}</div>
-                    <div className="small text-secondary">
+                    <div className="small text-body-secondary text-uppercase">Reintegrations (90d)</div>
+                    <div className="h4 mb-1 text-body-emphasis">{impactNarrative.recentReintegrations.toLocaleString()}</div>
+                    <div className="small text-body-secondary">
                       {impactNarrative.closureShareOfActivePct}% of active census
                     </div>
                   </div>
                 </div>
               </div>
-              <p className="small text-secondary mb-0 mt-3">{impactNarrative.storyWindowLabel}</p>
+              <p className="small text-body-secondary mb-0 mt-3">{impactNarrative.storyWindowLabel}</p>
             </div>
             <div className="col-lg-5">
               <h2 className="h5 mb-3">Outcome per dollar lens</h2>
               <div className="d-flex flex-column gap-2">
                 <div className="bg-body-tertiary rounded p-3">
-                  <div className="small text-secondary text-uppercase">Dollars per reintegrated case</div>
-                  <div className="h4 mb-1 text-dark">
+                  <div className="small text-body-secondary fw-semibold">Donations per closure</div>
+                  <div className="h4 mb-1 text-body-emphasis">
                     {outcomePerDollar.dollarsPerReintegration == null
                       ? 'N/A'
                       : `$${outcomePerDollar.dollarsPerReintegration.toLocaleString()}`}
                   </div>
-                  <div className="small text-secondary">
-                    ${outcomePerDollar.donationsLast12Months.toLocaleString()} / {outcomePerDollar.reintegrationsLast12Months.toLocaleString()} reintegrations
+                  <div className="small text-body-secondary">
+                    ${outcomePerDollar.donationsLast12Months.toLocaleString()} ÷{' '}
+                    {outcomePerDollar.reintegrationsLast12Months.toLocaleString()} closures in period
                   </div>
+                  {outcomePerDollar.dollarsPerReintegration != null ? (
+                    <p className="small text-body-secondary mb-0 mt-2">
+                      On average, donations in this period work out to about{' '}
+                      <strong>${outcomePerDollar.dollarsPerReintegration.toLocaleString()}</strong> per girl who closed
+                      her case in this period — an illustration of the giving that makes each reintegration possible.
+                    </p>
+                  ) : null}
                 </div>
                 <div className="bg-body-tertiary rounded p-3">
-                  <div className="small text-secondary text-uppercase">Dollars per active resident</div>
-                  <div className="h4 mb-1 text-dark">
+                  <div className="small text-body-secondary fw-semibold">Giving share per girl in care (today)</div>
+                  <div className="h4 mb-1 text-body-emphasis">
                     {outcomePerDollar.dollarsPerActiveResident == null
                       ? 'N/A'
                       : `$${outcomePerDollar.dollarsPerActiveResident.toLocaleString()}`}
                   </div>
-                  <div className="small text-secondary">
-                    {outcomePerDollar.activeResidentsNow.toLocaleString()} active residents in latest census
+                  <div className="small text-body-secondary">
+                    {outcomePerDollar.activeResidentsNow.toLocaleString()} active residents (latest census)
                   </div>
+                  {outcomePerDollar.dollarsPerActiveResident != null ? (
+                    <p className="small text-body-secondary mb-0 mt-2">
+                      If donations from the last 12 months were shared evenly across the{' '}
+                      {outcomePerDollar.activeResidentsNow.toLocaleString()} girls currently in care, each girl&apos;s
+                      share would be about{' '}
+                      <strong>${outcomePerDollar.dollarsPerActiveResident.toLocaleString()}</strong> — a window into
+                      the scale of support our donors collectively provide.
+                    </p>
+                  ) : null}
                 </div>
               </div>
-              <p className="small text-secondary mb-0 mt-3">{outcomePerDollar.windowLabel}</p>
+              <p className="small text-body-secondary mb-0 mt-3">{outcomePerDollar.windowLabel}</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="card border-0 shadow-sm" aria-label="Live trends from API">
+      <section className="card border-0 shadow-sm" aria-label="Your Giving In Action">
+        <div className="card-body p-4 text-center">
+          <p className="small text-body-secondary text-uppercase mb-2">Your Giving In Action</p>
+          <h2 className="h3 mb-1">{givingInAction.headline}</h2>
+          <div className="display-5 fw-semibold text-body-emphasis mb-2">
+            {givingInAction.value == null ? 'N/A' : `$${givingInAction.value.toLocaleString()}`}
+          </div>
+          {givingInAction.value != null ? (
+            <p className="small text-body-secondary mb-0">
+              Spread across 12 months, that share works out to roughly{' '}
+              <strong>${givingInAction.value.toLocaleString()}</strong> per month — an illustration of the ongoing
+              commitment behind every girl&apos;s care, not a fixed sponsorship rate.
+            </p>
+          ) : (
+            <p className="small text-body-secondary mb-0">{givingInAction.context}</p>
+          )}
+        </div>
+      </section>
+
+      <section className="card border-0 shadow-sm" aria-label="Your Impact in Action">
         <div className="card-body p-4">
-          <h2 className="h5 mb-2">Live trends &amp; snapshot</h2>
-          <div className="row g-4 align-items-stretch">
-            <div className="col-lg-7">
-              <h3 className="h6 mb-2">Supporter repeat rate by month</h3>
+          <h2 className="h5 mb-2">Your Impact in Action</h2>
+          <p className="small text-body-secondary mb-3">
+            This section shows where resources are going and what those services do for girls in care.
+          </p>
+          <div className="d-flex flex-column gap-2">
+            {supportMix.length === 0 ? (
+              <p className="small text-body-secondary mb-0">No support mix data in this response.</p>
+            ) : (
+              supportMix.map((m) => (
+                <div key={m.name} className="lh-impact-trend-block">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span>{m.name}</span>
+                    <strong>{m.value}%</strong>
+                  </div>
+                  <div className="lh-impact-trend-bar">
+                    <span
+                      style={{
+                        width: `${animateCharts ? m.value : 0}%`,
+                        transition: 'width 900ms ease-out',
+                        background: m.color,
+                      }}
+                    ></span>
+                  </div>
+                  <div className="small text-body-secondary mt-1">
+                    {supportMixDescriptions[m.name] ?? 'Program-area investment supporting resident care outcomes.'}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Education card kept commented for potential reuse elsewhere.
+      <section className="card border-0 shadow-sm" aria-label="Education">
+        <div className="card-body p-4">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 className="h5 mb-0">Education</h2>
+            <small className="text-body-secondary">Case database education records</small>
+          </div>
+          <div className="row g-3 mb-3">
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-body-secondary">Avg progress (all-time)</div>
+                <div className="h5 mb-0 text-body-emphasis">
+                  {educationInsights.avgProgressAllTime == null ? 'N/A' : `${educationInsights.avgProgressAllTime}%`}
+                </div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-body-secondary">Residents with education records</div>
+                <div className="h5 mb-0 text-body-emphasis">{educationInsights.distinctResidentsWithEducation.toLocaleString()}</div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-body-secondary">Total education rows</div>
+                <div className="h5 mb-0 text-body-emphasis">{educationInsights.totalRecords.toLocaleString()}</div>
+              </div>
+            </div>
+            <div className="col-sm-6 col-lg-3">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-body-secondary">Rows with progress value</div>
+                <div className="h5 mb-0 text-body-emphasis">{educationInsights.nonNullProgressRecords.toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+          <h3 className="h6 mb-2">Monthly education progress (last 12 months)</h3>
+          {educationInsights.monthlyTrend.length === 0 ? (
+            <p className="small text-body-secondary mb-0">No monthly education trend data yet.</p>
+          ) : (
+            <div className="row g-2">
+              {educationInsights.monthlyTrend.map((point) => (
+                <div key={point.month} className="col-6 col-md-4 col-lg-2">
+                  <div className="bg-body-tertiary rounded p-2 h-100">
+                    <div className="small fw-semibold text-body-emphasis">{point.month}</div>
+                    <div className="small text-body-secondary mb-1">
+                      {point.avgProgress == null ? 'Progress: N/A' : `Progress: ${point.avgProgress}%`}
+                    </div>
+                    <div className="progress" style={{ height: 6 }} role="img" aria-label={`${point.month} education progress`}>
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${animateCharts ? Math.max(((point.avgProgress ?? 0) / educationTrendMax) * 100, point.avgProgress == null ? 0 : 4) : 0}%`,
+                          transition: 'width 900ms ease-out',
+                          backgroundColor: highlightColor,
+                        }}
+                      />
+                    </div>
+                    <div className="small text-body-secondary mt-1">Donations: ${point.donations.toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+      */}
+
+      <section aria-label="Key metrics at a glance">
+        <div className="row g-2 g-md-3">
+        <div className="col-6 col-md-4 col-lg">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body py-3 px-3">
+              <div className="small text-body-secondary text-uppercase">Active supporters</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.livesImpacted.toLocaleString()}</div>
+              <div className="small text-body-secondary mt-1">People currently standing with our mission</div>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-4 col-lg">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body py-3 px-3">
+              <div className="small text-body-secondary text-uppercase">Active safehouses</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.safehouses.toLocaleString()}</div>
+              <div className="small text-body-secondary mt-1">Homes currently providing frontline care</div>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-4 col-lg">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body py-3 px-3">
+              <div className="small text-body-secondary text-uppercase">Partner programs</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.activePrograms.toLocaleString()}</div>
+              <div className="small text-body-secondary mt-1">Programs helping girls heal and thrive</div>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-4 col-lg">
+          <div className="card border-0 shadow-sm h-100">
+            
+            <div className="card-body py-3 px-3">
+              <div className="small text-body-secondary text-uppercase">Closure / reintegration rate</div>
+              <div className="h4 mb-0 text-body-emphasis">{kpis.successRate}%</div>
+              <div className="small text-body-secondary mt-1">Girls who reached closure or reintegration</div>
+            </div>
+          </div>
+        </div>
+        <div className="col-6 col-md-4 col-lg">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body py-3 px-3">
+              <div className="small text-body-secondary text-uppercase">Donations (12 mo)</div>
+              <div className="h4 mb-0 text-body-emphasis">${outcomeSignals.donationsLast12Months.toLocaleString()}</div>
+              <div className="small text-body-secondary mt-1">Total giving invested in the last 12 months</div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section aria-label="Case flow and risk overview">
+        <div className="row g-3">
+        <div className="col-12 col-lg-5">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body p-4">
+              <div className="small text-body-secondary text-uppercase">Upcoming case conferences</div>
+              <div className="display-6 fw-semibold text-body-emphasis">{upcomingCaseConferences.next30Days.toLocaleString()}</div>
+              <div className="small text-body-secondary">{upcomingCaseConferences.windowLabel}</div>
+            </div>
+          </div>
+        </div>
+        <div className="col-12 col-lg-7">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body p-4">
+              <h2 className="h6 mb-3">Current resident risk levels</h2>
+              <div className="d-flex flex-wrap gap-2">
+                <span className="badge rounded-pill text-bg-success">Low: {riskLevels.low.toLocaleString()}</span>
+                <span className="badge rounded-pill text-bg-warning">Medium: {riskLevels.medium.toLocaleString()}</span>
+                <span className="badge rounded-pill" style={{ backgroundColor: 'var(--bs-orange)', color: 'var(--bs-white)' }}>
+                  High: {riskLevels.high.toLocaleString()}
+                </span>
+                <span className="badge rounded-pill text-bg-danger">Critical: {riskLevels.critical.toLocaleString()}</span>
+              </div>
+              <p className="small text-body-secondary mb-0 mt-3">
+                This view helps donors understand the current complexity of care needs across the program.
+              </p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section className="row g-3">
+        <div className="col-12 col-xl-7">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body p-4">
+              <h2 className="h4 mb-1">Where Your Donation Goes</h2>
+              <p className="small text-body-secondary mb-3">
+                This shows how recorded donations are allocated across program areas in the database.
+              </p>
+              <div className="d-flex flex-column gap-2">
+                {allocationBreakdown.length === 0 ? (
+                  <p className="small text-body-secondary mb-0">No allocation records yet.</p>
+                ) : (
+                  allocationBreakdown.map((row) => (
+                    <div key={row.programArea} className="bg-body-tertiary rounded p-2">
+                      <div className="d-flex justify-content-between">
+                        <strong>{row.programArea}</strong>
+                        <span>${row.amountAllocated.toLocaleString()}</span>
+                      </div>
+                      <div className="small text-body-secondary">{row.allocationCount} allocations</div>
+                      <div className="progress mt-2" role="img" aria-label={`${row.programArea} allocation amount`}>
+                        <div
+                          className="progress-bar"
+                          style={{
+                            width: `${animateCharts ? Math.max((row.amountAllocated / totalAllocationAmount) * 100, 2) : 0}%`,
+                            transition: 'width 900ms ease-out',
+                            backgroundColor:
+                              row.amountAllocated === Math.max(...allocationBreakdown.map((a) => a.amountAllocated))
+                                ? highlightColor
+                                : mutedBarFill
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <p className="small text-body-secondary mb-0 mt-3">
+                <strong>Why this matters:</strong> donors can see exactly how giving is translated into real services.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="col-12 col-xl-5">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body p-4">
+              <h2 className="h4 mb-1">Donor Momentum</h2>
+              <p className="small text-body-secondary mb-3">
+                Consistent giving helps us keep staffing, shelter, and case planning stable month after month.
+              </p>
+              <div className="row g-2">
+                <div className="col-6">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-body-secondary">Distinct donors (12 months)</div>
+                    <div className="h5 mb-0 text-body-emphasis">{outcomeSignals.donorsLast12Months.toLocaleString()}</div>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="bg-body-tertiary rounded p-3 h-100">
+                    <div className="small text-body-secondary">Average gift (12 months)</div>
+                    <div className="h5 mb-0 text-body-emphasis">
+                      {outcomeSignals.avgDonationAmountLast12Months == null
+                        ? 'N/A'
+                        : `$${outcomeSignals.avgDonationAmountLast12Months.toLocaleString()}`}
+                    </div>
+                  </div>
+                </div>
+                <div className="col-12">
+                  <div className="bg-body-tertiary rounded p-3">
+                    <div className="small text-body-secondary">Donors active (last 90 days)</div>
+                    <div className="h5 mb-0 text-body-emphasis">{donorOkrs.donorsLast90Days.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+              <p className="small text-body-secondary mb-0 mt-3">{donorOkrs.windowLabel}</p>
+            </div>
+          </div>
+        </div>
+        <div className="col-12">
+          <div className="card border border-secondary-subtle shadow-sm lh-impact-pipeline-card">
+            <div className="card-body p-4">
+              <h2 className="h4 mb-2 text-body-emphasis">Resident Journey Pipeline</h2>
+              <p className="small text-body-secondary mb-3">
+                A stage view of how girls are progressing through care and reintegration.
+              </p>
+              <div className="d-flex flex-wrap align-items-center gap-2">
+                {pipelineStages.map((stage, idx) => (
+                  <div key={stage.key} className="d-flex align-items-center">
+                    <div
+                      className="rounded-3 p-3 text-center bg-body-secondary border border-secondary-subtle shadow-sm lh-impact-pipeline-stage"
+                      style={{ minWidth: 132 }}
+                    >
+                      <div className="small fw-medium text-body-emphasis lh-sm">{stage.label}</div>
+                      <div className="fs-5 fw-semibold text-body-emphasis mt-1">{stage.value.toLocaleString()}</div>
+                      <div className="progress mt-2 bg-secondary-subtle" style={{ height: 6 }} role="presentation">
+                        <div
+                          className="progress-bar"
+                          style={{
+                            width: `${animateCharts ? Math.max((stage.value / maxPipelineValue) * 100, stage.value > 0 ? 6 : 0) : 0}%`,
+                            transition: 'width 900ms ease-out',
+                            backgroundColor: highlightColor,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {idx < pipelineStages.length - 1 ? (
+                      <div className="mx-1 mx-sm-2 fs-5 text-body-secondary" aria-hidden>
+                        →
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="col-12">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body p-4">
+              <h2 className="h4 mb-2">Supporters Who Continue Giving</h2>
               <div className="lh-impact-mini-chart">
                 {retention.map((d, idx) => (
                   <div key={`${d.month}-${idx}`} className="lh-impact-mini-col text-center">
@@ -399,477 +702,96 @@ export function Impact() {
                         }}
                       ></span>
                     </div>
-                    <small className="text-secondary">{d.month}</small>
+                    <small className="text-body-secondary">{d.month}</small>
                   </div>
                 ))}
               </div>
-              {retention.length === 0 ? (
-                <p className="small text-secondary mb-0">Not enough monthly donation history yet to plot retention.</p>
-              ) : null}
-            </div>
-            <div className="col-lg-5">
-              <h3 className="h6 mb-2">Where support goes (program mix)</h3>
-              <div className="d-flex flex-column gap-2">
-                {supportMix.length === 0 ? (
-                  <p className="small text-secondary mb-0">No support mix data in this response.</p>
-                ) : (
-                  supportMix.map((m) => (
-                    <div key={m.name} className="lh-impact-trend-block">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span>{m.name}</span>
-                        <strong>{m.value}%</strong>
-                      </div>
-                      <div className="lh-impact-trend-bar">
-                        <span
-                          style={{
-                            width: `${animateCharts ? m.value : 0}%`,
-                            transition: 'width 900ms ease-out',
-                            background: m.color,
-                          }}
-                        ></span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="card border-0 shadow-sm" aria-label="Education">
-        <div className="card-body p-4">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h2 className="h5 mb-0">Education</h2>
-            <small className="text-secondary">Case database education records</small>
-          </div>
-          <div className="row g-3 mb-3">
-            <div className="col-sm-6 col-lg-3">
-              <div className="bg-body-tertiary rounded p-3 h-100">
-                <div className="small text-secondary">Avg progress (all-time)</div>
-                <div className="h5 mb-0 text-body-emphasis">
-                  {educationInsights.avgProgressAllTime == null ? 'N/A' : `${educationInsights.avgProgressAllTime}%`}
-                </div>
-              </div>
-            </div>
-            <div className="col-sm-6 col-lg-3">
-              <div className="bg-body-tertiary rounded p-3 h-100">
-                <div className="small text-secondary">Residents with education records</div>
-                <div className="h5 mb-0 text-body-emphasis">{educationInsights.distinctResidentsWithEducation.toLocaleString()}</div>
-              </div>
-            </div>
-            <div className="col-sm-6 col-lg-3">
-              <div className="bg-body-tertiary rounded p-3 h-100">
-                <div className="small text-secondary">Total education rows</div>
-                <div className="h5 mb-0 text-body-emphasis">{educationInsights.totalRecords.toLocaleString()}</div>
-              </div>
-            </div>
-            <div className="col-sm-6 col-lg-3">
-              <div className="bg-body-tertiary rounded p-3 h-100">
-                <div className="small text-secondary">Rows with progress value</div>
-                <div className="h5 mb-0 text-body-emphasis">{educationInsights.nonNullProgressRecords.toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-          <h3 className="h6 mb-2">Monthly education progress (last 12 months)</h3>
-          {educationInsights.monthlyTrend.length === 0 ? (
-            <p className="small text-secondary mb-0">No monthly education trend data yet.</p>
-          ) : (
-            <div className="row g-2">
-              {educationInsights.monthlyTrend.map((point) => (
-                <div key={point.month} className="col-6 col-md-4 col-lg-2">
-                  <div className="bg-body-tertiary rounded p-2 h-100">
-                    <div className="small fw-semibold text-body-emphasis">{point.month}</div>
-                    <div className="small text-secondary mb-1">
-                      {point.avgProgress == null ? 'Progress: N/A' : `Progress: ${point.avgProgress}%`}
-                    </div>
-                    <div className="progress" style={{ height: 6 }} role="img" aria-label={`${point.month} education progress`}>
-                      <div
-                        className="progress-bar"
-                        style={{
-                          width: `${animateCharts ? Math.max(((point.avgProgress ?? 0) / educationTrendMax) * 100, point.avgProgress == null ? 0 : 4) : 0}%`,
-                          transition: 'width 900ms ease-out',
-                          backgroundColor: highlightColor,
-                        }}
-                      />
-                    </div>
-                    <div className="small text-secondary mt-1">Donations: ${point.donations.toLocaleString()}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="row g-2 g-md-3" aria-label="Key metrics at a glance">
-        <div className="col-6 col-md-4 col-lg">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body py-3 px-3">
-              <div className="small text-secondary text-uppercase">Active supporters</div>
-              <div className="h4 mb-0 text-body-emphasis">{kpis.livesImpacted.toLocaleString()}</div>
-              <div className="small text-secondary mt-1">Supporters with status Active</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-4 col-lg">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body py-3 px-3">
-              <div className="small text-secondary text-uppercase">Active safehouses</div>
-              <div className="h4 mb-0 text-body-emphasis">{kpis.safehouses.toLocaleString()}</div>
-              <div className="small text-secondary mt-1">In network (status Active)</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-4 col-lg">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body py-3 px-3">
-              <div className="small text-secondary text-uppercase">Partner programs</div>
-              <div className="h4 mb-0 text-body-emphasis">{kpis.activePrograms.toLocaleString()}</div>
-              <div className="small text-secondary mt-1">Partner records in case data</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-4 col-lg">
-          <div className="card border-0 shadow-sm h-100">
-            
-            <div className="card-body py-3 px-3">
-              <div className="small text-secondary text-uppercase">Closure / reintegration rate</div>
-              <div className="h4 mb-0 text-body-emphasis">{kpis.successRate}%</div>
-              <div className="small text-secondary mt-1">Residents closed or reintegrated</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-4 col-lg">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body py-3 px-3">
-              <div className="small text-secondary text-uppercase">Donations (12 mo)</div>
-              <div className="h4 mb-0 text-body-emphasis">${outcomeSignals.donationsLast12Months.toLocaleString()}</div>
-              <div className="small text-secondary mt-1">Sum of recorded amounts</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="row g-3">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-4">
-              <h2 className="h4 mb-1">Social Media & Donation Intelligence</h2>
-              <p className="small text-secondary mb-3">
-                Answers: which channel drives donations, which post labels convert best, and where donated funds are allocated.
-              </p>
-              <div className="row g-3">
-                <div className="col-lg-4">
-                  <h3 className="h6 mb-2">Donations by Channel Source <span className="text-secondary">(${donationChannelAmountRaw.toLocaleString()} total)</span></h3>
-                  <div className="d-flex flex-column gap-2">
-                    {donationChannels.length === 0 ? (
-                      <p className="small text-secondary mb-0">No donation channel data yet.</p>
-                    ) : donationChannels.map((row) => (
-                      <div key={row.channel} className="bg-body-tertiary rounded p-2">
-                        <div className="d-flex justify-content-between"><strong>{row.channel}</strong><span>{row.share}%</span></div>
-                        <div className="small text-secondary">{row.donations} donations | ${row.totalAmount.toLocaleString()}</div>
-                        <div className="progress mt-2" role="img" aria-label={`${row.channel} total donation value`}>
-                          <div
-                            className="progress-bar"
-                            style={{
-                              width: `${animateCharts ? Math.max((row.totalAmount / totalDonationChannelAmount) * 100, 2) : 0}%`,
-                              transition: 'width 900ms ease-out',
-                              backgroundColor: row.totalAmount === Math.max(...donationChannels.map((d) => d.totalAmount)) ? highlightColor : mutedColor
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="col-lg-4">
-                  <h3 className="h6 mb-2">Top Converting Post / Campaign Labels <span className="text-secondary">(${postDonationValueRaw.toLocaleString()} total)</span></h3>
-                  <div className="d-flex flex-column gap-2">
-                    {socialPostTraction.length === 0 ? (
-                      <p className="small text-secondary mb-0">No post-linked donation data yet.</p>
-                    ) : socialPostTraction.map((row) => (
-                      <div key={row.postLabel} className="bg-body-tertiary rounded p-2">
-                        <div className="fw-semibold">{row.postLabel}</div>
-                        <div className="small text-secondary">{row.referrals} referrals | ${row.donationValue.toLocaleString()} total</div>
-                        <div className="progress mt-2" role="img" aria-label={`${row.postLabel} campaign donation value`}>
-                          <div
-                            className="progress-bar"
-                            style={{
-                              width: `${animateCharts ? Math.max((row.donationValue / totalPostDonationValue) * 100, 2) : 0}%`,
-                              transition: 'width 900ms ease-out',
-                              backgroundColor: row.donationValue === maxPostDonationValue ? highlightColor : mutedColor
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="col-lg-4">
-                  <h3 className="h6 mb-2">Donation Allocation Breakdown <span className="text-secondary">(${allocationAmountRaw.toLocaleString()} total)</span></h3>
-                  <div className="d-flex flex-column gap-2">
-                    {allocationBreakdown.length === 0 ? (
-                      <p className="small text-secondary mb-0">No allocation records yet.</p>
-                    ) : allocationBreakdown.map((row) => (
-                      <div key={row.programArea} className="bg-body-tertiary rounded p-2">
-                        <div className="d-flex justify-content-between"><strong>{row.programArea}</strong><span>${row.amountAllocated.toLocaleString()}</span></div>
-                        <div className="small text-secondary">{row.allocationCount} allocations</div>
-                        <div className="progress mt-2" role="img" aria-label={`${row.programArea} allocation amount`}>
-                          <div
-                            className="progress-bar"
-                            style={{
-                              width: `${animateCharts ? Math.max((row.amountAllocated / totalAllocationAmount) * 100, 2) : 0}%`,
-                              transition: 'width 900ms ease-out',
-                              backgroundColor: row.amountAllocated === Math.max(...allocationBreakdown.map((a) => a.amountAllocated)) ? highlightColor : mutedColor
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-4">
-              <h2 className="h4 mb-1 text-body-emphasis">Social Media Donations: App Performance and Allocation</h2>
-              <p className="small text-body-secondary mb-3">Shows which social apps convert and where those social-source funds are allocated.</p>
-              <div className="row g-3">
-                <div className="col-lg-6">
-                  <h3 className="h6 mb-2 text-body-emphasis">Apps Driving Social Donations <span className="text-body-secondary">(${socialPlatformAmountRaw.toLocaleString()} total)</span></h3>
-                  {normalizedSocialPlatformPerformance.length === 0 ? (
-                      <p className="small text-body-secondary mb-0">No social-media-labeled donation data yet.</p>
-                  ) : (
-                    <div className="bg-body-tertiary rounded p-3">
-                      <div
-                        className="d-flex gap-2 align-items-stretch"
-                        style={{ height: `${socialAppsChartHeightPx}px` }}
-                        role="img"
-                        aria-label="Apps driving social donations vertical chart"
-                      >
-                        {normalizedSocialPlatformPerformance.map((row) => (
-                          <div key={row.channel} className="d-flex flex-column align-items-center flex-fill h-100">
-                            <div className="small fw-semibold text-body-emphasis mb-1">{row.share}%</div>
-                            <div className="d-flex align-items-end justify-content-center w-100 flex-grow-1">
-                              <div
-                                className="rounded-top"
-                                style={{
-                                  width: '62%',
-                                  height: `${animateCharts ? Math.max((row.totalAmount / totalSocialPlatformAmount) * 100, 6) : 0}%`,
-                                  transition: 'height 900ms ease-out',
-                                  backgroundColor: row.totalAmount === maxSocialPlatformAmount ? highlightColor : mutedColor,
-                                  minHeight: animateCharts ? '2rem' : 0,
-                                }}
-                                title={`${row.channel}: ${row.donations} donations, $${row.totalAmount.toLocaleString()}`}
-                              />
-                            </div>
-                            <div className="small text-center mt-2 text-body-emphasis fw-semibold text-break">{row.channel}</div>
-                            <div className="small text-body-secondary text-center">
-                              {row.donations} | ${row.totalAmount.toLocaleString()}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="col-lg-6">
-                  <h3 className="h6 mb-2 text-body-emphasis">Where Social Donations Go <span className="text-body-secondary">(${socialAllocationAmountRaw.toLocaleString()} total)</span></h3>
-                  <div className="d-flex flex-column gap-2">
-                    {socialAllocationBreakdown.length === 0 ? (
-                      <p className="small text-body-secondary mb-0">No allocations linked to social-source donations yet.</p>
-                    ) : socialAllocationBreakdown.map((row) => (
-                      <div key={row.programArea} className="bg-body-tertiary rounded p-2">
-                        <div className="d-flex justify-content-between text-body-emphasis"><strong>{row.programArea}</strong><span>${row.amountAllocated.toLocaleString()}</span></div>
-                        <div className="small text-body-secondary">{row.allocationCount} allocations</div>
-                        <div className="progress mt-2" role="img" aria-label={`${row.programArea} social allocation amount`}>
-                          <div
-                            className="progress-bar"
-                            style={{
-                              width: `${animateCharts ? Math.max((row.amountAllocated / totalSocialAllocationAmount) * 100, 2) : 0}%`,
-                              transition: 'width 900ms ease-out',
-                              backgroundColor: row.amountAllocated === Math.max(...socialAllocationBreakdown.map((a) => a.amountAllocated)) ? highlightColor : mutedColor
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-4">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                <h2 className="h4 mb-0">Donation Allocation vs Outcome Signals</h2>
-                <small className="text-secondary">
-                  Donation value, donor count, and average gift: last 12 months. Residents and incidents: current operational window.
-                </small>
-              </div>
-              <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-3">
-                <div className="col">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Donations (last 12 months)</div>
-                    <div className="h5 mb-0">${outcomeSignals.donationsLast12Months.toLocaleString()}</div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Active residents (census)</div>
-                    <div className="h5 mb-0">{outcomeSignals.activeResidentsLatest.toLocaleString()}</div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Incidents (last 30 days)</div>
-                    <div className="h5 mb-0">{outcomeSignals.incidentsLatest.toLocaleString()}</div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Distinct donors (12 months)</div>
-                    <div className="h5 mb-0">{outcomeSignals.donorsLast12Months.toLocaleString()}</div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-secondary">Avg donation amount (12 months)</div>
-                    <div className="h5 mb-0">
-                      {outcomeSignals.avgDonationAmountLast12Months == null
-                        ? 'N/A'
-                        : `$${outcomeSignals.avgDonationAmountLast12Months.toLocaleString()}`}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-12">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body p-4">
-              <h2 className="h4 mb-1">Retention Trend</h2>
-              <p className="text-secondary mb-0 mt-3 small">
+              <p className="text-body-secondary mb-0 mt-3 small">
                 {retentionHeadline?.kind === 'undefined' && (
                   <>
-                    Month-over-month repeat rate for <strong>{retentionHeadline.monthLabel}</strong>:{' '}
-                    <strong className="text-dark">not defined</strong> — there were no supporters who donated in the{' '}
-                    <em>prior</em> calendar month, so “% who came back” has no denominator.
+                    For <strong>{retentionHeadline.monthLabel}</strong>, repeat rate is not defined yet because there were no prior-month donors.
                   </>
                 )}
                 {retentionHeadline?.kind === 'pct' && retentionHeadline.prior != null && retentionHeadline.returning != null && (
                   <>
-                    Repeat rate for <strong>{retentionHeadline.monthLabel}</strong>:{' '}
-                    <strong className="text-dark">{retentionHeadline.value}%</strong>{' '}
-                    ({retentionHeadline.returning.toLocaleString()} of {retentionHeadline.prior.toLocaleString()} prior-month supporters gave again).
+                    Latest repeat rate is <strong className="text-body-emphasis">{retentionHeadline.value}%</strong> — {retentionHeadline.returning.toLocaleString()} of{' '}
+                    {retentionHeadline.prior.toLocaleString()} prior-month supporters gave again.
                   </>
                 )}
                 {retentionHeadline?.kind === 'pct' && retentionHeadline.prior == null && (
                   <>
-                    Latest month on chart (repeat rate): <strong className="text-dark">{retentionHeadline.value}%</strong>
-                    {retentionHeadline.monthLabel ? ` (${retentionHeadline.monthLabel})` : ''}.
+                    Latest month repeat rate is <strong className="text-body-emphasis">{retentionHeadline.value}%</strong>.
                   </>
                 )}
                 {!retentionHeadline && (
                   <>
-                    Month-over-month repeat rate is not shown yet — we need at least two months of supporter donation history to compute it (it is not the same as total donors in the latest month).
+                    We need at least two months of donation history to display supporter repeat rate.
                   </>
                 )}
               </p>
-              {retentionDetail && (
-                <div className="border-top pt-3 mt-3">
-                  <h3 className="h6 mb-2">Latest month ({retentionDetail.monthLabel})</h3>
-                  <p className="small text-secondary mb-2">
-                    Unique supporters = distinct donor IDs with at least one gift in that calendar month. “Returning” gave in the prior month too; the others had no gift in the prior month (often new or lapsed).
-                  </p>
-                  <div className="row g-2 small">
-                    <div className="col-sm-6 col-md-4">
-                      <div className="bg-body-tertiary rounded p-2 h-100">
-                        <div className="text-secondary">Unique supporters</div>
-                        <div className="fw-semibold">{retentionDetail.uniqueSupportersThisMonth.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <div className="col-sm-6 col-md-4">
-                      <div className="bg-body-tertiary rounded p-2 h-100">
-                        <div className="text-secondary">Donation rows</div>
-                        <div className="fw-semibold">{retentionDetail.donationRowsThisMonth.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <div className="col-sm-6 col-md-4">
-                      <div className="bg-body-tertiary rounded p-2 h-100">
-                        <div className="text-secondary">Prior month supporters</div>
-                        <div className="fw-semibold">{retentionDetail.uniqueSupportersPriorMonth.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <div className="col-sm-6 col-md-4">
-                      <div className="bg-body-tertiary rounded p-2 h-100">
-                        <div className="text-secondary">Returning (both months)</div>
-                        <div className="fw-semibold text-body-emphasis">{retentionDetail.returningSupporters.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    <div className="col-sm-6 col-md-4">
-                      <div className="bg-body-tertiary rounded p-2 h-100">
-                        <div className="text-secondary">No gift prior month</div>
-                        <div className="fw-semibold">{retentionDetail.noGiftInPriorMonth.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
-        <div className="col-12">
-          <div
-            className="card shadow-sm h-100 overflow-hidden"
-            style={{ borderLeft: `4px solid ${highlightColor}` }}
-            aria-label="Donor churn OKR from donation records"
-          >
-            <div className="card-body p-4">
-              <div className="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2">
-                <h2 className="h4 mb-0 text-body-emphasis">Donor churn (OKR view)</h2>
-                <small className="text-body-secondary">{donorOkrs.windowLabel}</small>
-              </div>
-              <p className="text-body-secondary small mb-3">{donorOkrs.summary}</p>
-              <div className="row g-3 align-items-stretch">
-                <div className="col-sm-6 col-xl-4">
-                  <div className="rounded p-3 h-100" style={{ background: 'rgba(243, 177, 29, 0.15)' }}>
-                    <div className="small text-body-secondary text-uppercase fw-semibold mb-1">Churn risk (12→90 day)</div>
-                    <div className="display-6 fw-semibold text-body-emphasis">{donorOkrs.churnRatePct}%</div>
-                    <div className="small text-body-secondary mt-2">
-                      {donorOkrs.donorsStaleYearNot90.toLocaleString()} of {donorOkrs.donorsLast365Days.toLocaleString()} year donors
-                      with no gift in the last 90 days.
-                    </div>
-                  </div>
-                </div>
-                <div className="col-sm-6 col-xl-4">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-body-secondary">Donors active (last 90 days)</div>
-                    <div className="h3 mb-0 text-body-emphasis">{donorOkrs.donorsLast90Days.toLocaleString()}</div>
-                    <div className="small text-body-secondary mt-2">Distinct supporters with ≥1 donation in the rolling 90-day window.</div>
-                  </div>
-                </div>
-                <div className="col-sm-12 col-xl-4">
-                  <div className="bg-body-tertiary rounded p-3 h-100">
-                    <div className="small text-body-secondary">12-month donor cohort</div>
-                    <div className="h3 mb-0 text-body-emphasis">{donorOkrs.donorsLast365Days.toLocaleString()}</div>
-                    <div className="small text-body-secondary mt-2">
-                      All-time distinct donors with a gift on record: {donorOkrs.distinctDonorsAllTime.toLocaleString()}. Pair with the
-                      retention chart for month-over-month repeat behavior.
-                    </div>
-                  </div>
+      </section>
+
+      <section className="card border-0 shadow-sm" aria-label="Spreading the Word">
+        <div className="card-body p-4">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 className="h5 mb-0">Spreading the Word</h2>
+            <small className="text-body-secondary">{spreadingTheWord.windowLabel}</small>
+          </div>
+          <div className="row g-3">
+            <div className="col-md-6">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-body-secondary text-uppercase">Social-channel giving (rolling 90 days)</div>
+                <div className="h4 mb-1 text-body-emphasis">${socialGivingAmount.toLocaleString()}</div>
+                <div className="small text-body-secondary">
+                  {socialGivingCount.toLocaleString()} gift{socialGivingCount === 1 ? '' : 's'} recorded with channel &quot;SocialMedia&quot;
                 </div>
               </div>
-              <p className="small text-body-secondary mb-0 mt-3">
-                <strong>Other questions to explore:</strong> channel quality past 90 days, gift-size upgrades, reactivation after lapses.
-              </p>
+            </div>
+            <div className="col-md-6">
+              <div className="bg-body-tertiary rounded p-3 h-100">
+                <div className="small text-body-secondary text-uppercase">Largest share of social gifts (rolling 90 days)</div>
+                {socialGivingCount === 0 ? (
+                  <div className="small text-body-secondary mt-2 mb-0">No social-channel donations in the last 90 days yet.</div>
+                ) : platformIsUnlabeled ? (
+                  <>
+                    <div className="fw-semibold text-body-emphasis mt-1">Platform not detected in text</div>
+                    <div className="small text-body-secondary mt-1 mb-0">
+                      Add platform names (Instagram, Facebook, TikTok, etc.) in campaign or notes so we can show which app drove each gift.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h4 mb-1 text-body-emphasis">
+                      {spreadingTheWord.mostEffectivePlatform}{' '}
+                      <span className="fs-6 text-body-secondary">({spreadingTheWord.mostEffectivePlatformSharePct}% of last 90 days&apos; social gifts)</span>
+                    </div>
+                    {platformBreakdown.length > 0 ? (
+                      <ul className="small text-body-secondary mb-0 ps-3">
+                        {platformBreakdown.map((row) => (
+                          <li key={row.platform}>
+                            <span className="text-body-emphasis">{row.platform}</span>: {row.sharePct}% of dollars (
+                            {row.giftCount} gift{row.giftCount === 1 ? '' : 's'}, ${row.totalAmount.toLocaleString()})
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="col-12">
+              <div className="bg-body-tertiary rounded p-3">
+                <div className="small text-body-secondary text-uppercase">Gifts tied to a specific social post</div>
+                <div className="h5 mb-0 text-body-emphasis">{spreadingTheWord.donationReferralsFromSocialPosts.toLocaleString()}</div>
+                <div className="small text-body-secondary mt-1 mb-0">
+                  {spreadingTheWord.donationReferralsFromSocialPosts === 0
+                    ? 'When a donation is linked to a specific social post, it will show up here.'
+                    : 'Donations in this window that are linked to a specific social post.'}
+                </div>
+              </div>
             </div>
           </div>
         </div>

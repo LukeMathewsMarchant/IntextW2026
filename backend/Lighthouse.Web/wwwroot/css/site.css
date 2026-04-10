@@ -3,6 +3,9 @@
 html {
   position: relative;
   min-height: 100%;
+  /* Keep layout width stable when scrollability toggles (scrollbar track always reserved). */
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 .btn:focus,

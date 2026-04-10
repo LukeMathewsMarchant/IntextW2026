@@ -1,0 +1,2 @@
+selected_model,threshold,roc_auc,avg_precision,precision_at_threshold,recall_at_threshold,f1_at_threshold
+random_forest,0.3797825631265862,1.0,1.0,0.5,1.0,0.6666666666666666

@@ -1,0 +1,22 @@
+# Copy to set-ml-service-db.ps1 (gitignored locally), then run after: az login
+# Use the SAME Postgres connection string as your Lighthouse .NET backend App Service.
+#
+#   az webapp config appsettings list -g YOUR_RG -n YOUR_DOTNET_APP --query "[?name=='ConnectionStrings__DefaultConnection'].value" -o tsv
+#
+# Then set it on the ML Linux Web App (the one running this Docker container):
+
+param(
+    [Parameter(Mandatory = $true)][string]$ResourceGroup,
+    [Parameter(Mandatory = $true)][string]$MlWebAppName,
+    [Parameter(Mandatory = $true)][string]$PostgresConnectionString
+)
+
+az webapp config appsettings set `
+    --name $MlWebAppName `
+    --resource-group $ResourceGroup `
+    --settings "ConnectionStrings__DefaultConnection=$PostgresConnectionString" `
+    "WEBSITES_PORT=8000" `
+    "SCM_DO_BUILD_DURING_DEPLOYMENT=false"
+
+az webapp restart --name $MlWebAppName --resource-group $ResourceGroup
+Write-Host "Done. Check https://$MlWebAppName.azurewebsites.net/health"

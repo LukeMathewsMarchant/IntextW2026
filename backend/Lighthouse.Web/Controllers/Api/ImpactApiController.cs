@@ -4,6 +4,8 @@ using Lighthouse.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Globalization;
+using Npgsql;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -150,12 +152,13 @@ public class ImpactApiController : ControllerBase
         var allocations = await _db.DonationAllocations.AsNoTracking().ToListAsync(cancellationToken);
         var retention = BuildRetention(donations);
         var retentionDetail = BuildRetentionDetail(donations);
-        var donationsLast12Months = donations
-            .Where(d => d.DonationDate >= DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12)))
-            .Sum(d => d.Amount ?? 0m);
+        var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        var last12MonthsStart = todayUtc.AddDays(-364);
         var donations12MonthRows = donations
-            .Where(d => d.DonationDate >= DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-12)))
+            .Where(d => d.DonationDate >= last12MonthsStart && d.DonationDate <= todayUtc)
             .ToList();
+        var donationsLast12Months = donations12MonthRows
+            .Sum(d => d.Amount ?? 0m);
         var donorsLast12Months = donations12MonthRows
             .Where(d => d.SupporterId > 0)
             .Select(d => d.SupporterId)
@@ -247,7 +250,6 @@ public class ImpactApiController : ControllerBase
 
         var (safehousePerformance, outcomeFromCase, operationalCaseWindow) =
             await BuildOperationalSafehouseComparisonAsync(cancellationToken);
-        var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow.Date);
         var educationRows = await _db.EducationRecords.AsNoTracking()
             .Select(e => new { e.ResidentId, e.RecordDate, e.ProgressPercent })
             .ToListAsync(cancellationToken);
@@ -284,6 +286,7 @@ public class ImpactApiController : ControllerBase
         var donorOkrs = BuildDonorOkrs(donations);
         var last90Start = todayUtc.AddDays(-89);
         var last365Start = todayUtc.AddDays(-364);
+        var spreadingWindowStart = todayUtc.AddDays(-89);
         var reintegratedLast90Days = residents.Count(r =>
             r.DateClosed.HasValue
             && r.DateClosed.Value >= last90Start
@@ -302,10 +305,66 @@ public class ImpactApiController : ControllerBase
         var dollarsPerActiveResident = inCareNow <= 0
             ? (decimal?)null
             : Math.Round(donationsLast12Months / inCareNow, 2);
+        var estimatedMonthlyCostPerGirlInCare = inCareNow <= 0
+            ? (decimal?)null
+            : Math.Round(donationsLast12Months / (inCareNow * 12m), 2);
+
+        var upcomingCaseConferencesNext30Days = await _db.InterventionPlans.AsNoTracking()
+            .CountAsync(p => p.CaseConferenceDate.HasValue
+                && p.CaseConferenceDate.Value >= todayUtc
+                && p.CaseConferenceDate.Value <= todayUtc.AddDays(30), cancellationToken);
+
+        var riskLevelBreakdown = BuildRiskLevelBreakdown(residents);
+        var residentPipeline = BuildResidentPipeline(residents);
+        var (spreadingReachThisMonth, spreadingReachLabel) = await BuildTotalReachInWindowAsync(spreadingWindowStart, cancellationToken);
+        var donationReferralsFromSocialPosts = donations
+            .Count(d => d.DonationDate >= spreadingWindowStart
+                && d.DonationDate <= todayUtc
+                && d.ReferralPostId.HasValue);
+        var socialDonationsThisMonth = socialDonations
+            .Where(d => d.DonationDate >= spreadingWindowStart && d.DonationDate <= todayUtc)
+            .ToList();
+        var socialDonationsCountThisMonth = socialDonationsThisMonth.Count;
+        var socialDonationsAmountThisMonth = Math.Round(socialDonationsThisMonth.Sum(d => d.Amount ?? 0m), 2);
+        var postPlatformById = await BuildPostPlatformLookupAsync(socialDonationsThisMonth, cancellationToken);
+        var socialPlatformPerformanceThisMonth = socialDonationsThisMonth
+            .GroupBy(d => GetDonationPlatform(d, postPlatformById))
+            .Select(g => new ChannelPerformancePoint(
+                g.Key,
+                g.Count(),
+                Math.Round(g.Sum(x => x.Amount ?? 0m), 2)))
+            .OrderByDescending(x => x.TotalAmount)
+            .ToList();
+        var socialMonthTotal = socialPlatformPerformanceThisMonth.Sum(x => x.TotalAmount);
+        socialPlatformPerformanceThisMonth = socialPlatformPerformanceThisMonth
+            .Select(c => c with
+            {
+                Share = socialMonthTotal <= 0m ? 0m : Math.Round((c.TotalAmount / socialMonthTotal) * 100m, 2)
+            })
+            .OrderByDescending(c => c.TotalAmount)
+            .ToList();
+        var labeledPlatformThisMonth = socialPlatformPerformanceThisMonth
+            .FirstOrDefault(p => !string.Equals(p.Channel, "Unknown/Unlabeled", StringComparison.OrdinalIgnoreCase));
+        var topPlatformRow = labeledPlatformThisMonth ?? socialPlatformPerformanceThisMonth.FirstOrDefault();
+        var mostEffectivePlatform = topPlatformRow?.Channel ?? "N/A";
+        var mostEffectivePlatformSharePct = topPlatformRow?.Share ?? 0m;
+        var platformAttributionNote = socialDonationsCountThisMonth == 0
+            ? "No donations with channel SocialMedia in the last 90 days yet."
+            : labeledPlatformThisMonth == null
+                ? "Social gifts are logged, but we could not map referral posts to a known platform; missing links fall back to campaign/notes text."
+                : "Share of last-90-days social-channel donation dollars by platform (from linked social_media_posts when available, else campaign/notes fallback).";
+        var platformBreakdown = socialPlatformPerformanceThisMonth
+            .Select(p => new
+            {
+                platform = p.Channel,
+                giftCount = p.Donations,
+                totalAmount = p.TotalAmount,
+                sharePct = p.Share
+            })
+            .ToList();
 
         return new
         {
-            chips = new[] { "Source: INTEX case data", $"Coverage: {safehouseCount} safehouses", $"Updated: {DateTime.UtcNow:yyyy-MM-dd}" },
             kpis = new
             {
                 livesImpacted = activeSupporters,
@@ -348,6 +407,35 @@ public class ImpactApiController : ControllerBase
                 dollarsPerReintegration,
                 dollarsPerActiveResident,
                 windowLabel = $"Last 12 months ({last365Start:yyyy-MM-dd}–{todayUtc:yyyy-MM-dd} UTC)"
+            },
+            upcomingCaseConferences = new
+            {
+                next30Days = upcomingCaseConferencesNext30Days,
+                windowLabel = $"Next 30 days ({todayUtc:yyyy-MM-dd}–{todayUtc.AddDays(30):yyyy-MM-dd} UTC)"
+            },
+            riskLevels = riskLevelBreakdown,
+            residentPipeline,
+            givingInAction = new
+            {
+                metricKey = "estimatedMonthlyCostPerGirlInCare",
+                headline = "Monthly equivalent",
+                value = estimatedMonthlyCostPerGirlInCare,
+                context = estimatedMonthlyCostPerGirlInCare == null
+                    ? "Not enough active resident data yet."
+                    : ""
+            },
+            spreadingTheWord = new
+            {
+                totalReachThisMonth = spreadingReachThisMonth,
+                totalReachLabel = spreadingReachLabel,
+                mostEffectivePlatform,
+                mostEffectivePlatformSharePct,
+                socialDonationsCountThisMonth,
+                socialDonationsAmountThisMonth,
+                donationReferralsFromSocialPosts,
+                platformAttributionNote,
+                platformBreakdown,
+                windowLabel = $"{spreadingWindowStart:yyyy-MM-dd} through {todayUtc:yyyy-MM-dd} UTC (rolling 90 days)"
             },
             educationInsights = new
             {
@@ -569,6 +657,63 @@ public class ImpactApiController : ControllerBase
         };
     }
 
+    private async Task<Dictionary<int, string>> BuildPostPlatformLookupAsync(
+        IReadOnlyCollection<Donation> socialDonationsInWindow,
+        CancellationToken cancellationToken)
+    {
+        var ids = socialDonationsInWindow
+            .Where(d => d.ReferralPostId.HasValue)
+            .Select(d => d.ReferralPostId!.Value)
+            .Distinct()
+            .ToArray();
+        if (ids.Length == 0)
+            return new Dictionary<int, string>();
+
+        await using var conn = (NpgsqlConnection)_db.Database.GetDbConnection();
+        if (conn.State != System.Data.ConnectionState.Open)
+            await conn.OpenAsync(cancellationToken);
+
+        await using var existsCmd = new NpgsqlCommand(@"
+            select exists (
+                select 1
+                from information_schema.tables
+                where table_schema = 'public' and table_name = 'social_media_posts'
+            )", conn);
+        var tableExists = (bool?)await existsCmd.ExecuteScalarAsync(cancellationToken) ?? false;
+        if (!tableExists)
+            return new Dictionary<int, string>();
+
+        await using var cmd = new NpgsqlCommand(@"
+            select post_id, platform
+            from public.social_media_posts
+            where post_id = any(@ids)", conn);
+        cmd.Parameters.AddWithValue("ids", ids);
+
+        var map = new Dictionary<int, string>();
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var postId = reader.GetInt32(0);
+            var platform = reader.IsDBNull(1) ? null : reader.GetString(1);
+            if (!string.IsNullOrWhiteSpace(platform))
+                map[postId] = platform.Trim();
+        }
+
+        return map;
+    }
+
+    private static string GetDonationPlatform(Donation donation, IReadOnlyDictionary<int, string> postPlatformById)
+    {
+        if (donation.ReferralPostId.HasValue
+            && postPlatformById.TryGetValue(donation.ReferralPostId.Value, out var platform)
+            && !string.IsNullOrWhiteSpace(platform))
+        {
+            return platform;
+        }
+
+        return InferPlatform(donation.CampaignName, donation.Notes);
+    }
+
     private static string InferPlatform(string? campaignName, string? notes)
     {
         var text = $"{campaignName} {notes}".ToLowerInvariant();
@@ -582,8 +727,194 @@ public class ImpactApiController : ControllerBase
             return "YouTube";
         if (text.Contains("twitter") || text.Contains("x "))
             return "X / Twitter";
+        if (text.Contains("whatsapp"))
+            return "WhatsApp";
         return "Unknown/Unlabeled";
     }
+
+    private static object BuildRiskLevelBreakdown(IReadOnlyCollection<Resident> residents)
+    {
+        var buckets = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Low"] = 0,
+            ["Medium"] = 0,
+            ["High"] = 0,
+            ["Critical"] = 0
+        };
+
+        foreach (var resident in residents)
+        {
+            var normalized = NormalizeRiskLevel(resident.CurrentRiskLevel);
+            if (normalized != null)
+                buckets[normalized]++;
+        }
+
+        return new
+        {
+            low = buckets["Low"],
+            medium = buckets["Medium"],
+            high = buckets["High"],
+            critical = buckets["Critical"]
+        };
+    }
+
+    private static object BuildResidentPipeline(IReadOnlyCollection<Resident> residents)
+    {
+        var intake = 0;
+        var assessment = 0;
+        var activeCare = 0;
+        var preReintegration = 0;
+        var reintegrated = 0;
+
+        foreach (var resident in residents)
+        {
+            var caseStatus = resident.CaseStatus?.Trim() ?? string.Empty;
+            var reintegration = resident.ReintegrationStatus?.Trim() ?? string.Empty;
+
+            if (IsClosedOrReintegrated(caseStatus, reintegration))
+            {
+                reintegrated++;
+                continue;
+            }
+
+            if (IsPreReintegration(reintegration))
+            {
+                preReintegration++;
+                continue;
+            }
+
+            if (caseStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
+            {
+                activeCare++;
+                continue;
+            }
+
+            if (caseStatus.Contains("Assess", StringComparison.OrdinalIgnoreCase))
+            {
+                assessment++;
+                continue;
+            }
+
+            intake++;
+        }
+
+        return new
+        {
+            intake,
+            assessment,
+            activeCare,
+            preReintegration,
+            reintegrated
+        };
+    }
+
+    private async Task<(int? Reach, string Label)> BuildTotalReachInWindowAsync(DateOnly windowStart, CancellationToken cancellationToken)
+    {
+        var latestPublished = await _db.PublicImpactSnapshots.AsNoTracking()
+            .Where(s => s.IsPublished && s.SnapshotDate >= windowStart)
+            .OrderByDescending(s => s.SnapshotDate)
+            .Select(s => s.MetricPayloadJson)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(latestPublished))
+            return (null, "No published reach snapshot in this window");
+
+        try
+        {
+            using var doc = JsonDocument.Parse(latestPublished);
+            if (TryExtractReachValue(doc.RootElement, out var reach))
+                return (reach, "From public impact snapshot payload");
+        }
+        catch
+        {
+            // Best-effort parse only; silently fall back to null.
+        }
+
+        return (null, "Reach metric unavailable in snapshot payload");
+    }
+
+    private static bool TryExtractReachValue(JsonElement element, out int reach)
+    {
+        reach = 0;
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var prop in element.EnumerateObject())
+            {
+                if (prop.Name.Contains("reach", StringComparison.OrdinalIgnoreCase)
+                    && TryReadIntLike(prop.Value, out var value))
+                {
+                    reach = value;
+                    return true;
+                }
+
+                if (TryExtractReachValue(prop.Value, out value))
+                {
+                    reach = value;
+                    return true;
+                }
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                if (TryExtractReachValue(item, out var value))
+                {
+                    reach = value;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryReadIntLike(JsonElement value, out int parsed)
+    {
+        parsed = 0;
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out parsed))
+            return true;
+
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            var s = value.GetString();
+            if (!string.IsNullOrWhiteSpace(s)
+                && int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out parsed))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string? NormalizeRiskLevel(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        var s = raw.Trim().ToLowerInvariant();
+        if (s.StartsWith("crit"))
+            return "Critical";
+        if (s.StartsWith("high"))
+            return "High";
+        if (s.StartsWith("med"))
+            return "Medium";
+        if (s.StartsWith("low"))
+            return "Low";
+        return null;
+    }
+
+    private static bool IsClosedOrReintegrated(string caseStatus, string reintegrationStatus) =>
+        caseStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase)
+        || reintegrationStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase)
+        || reintegrationStatus.Contains("reintegrat", StringComparison.OrdinalIgnoreCase) && reintegrationStatus.Contains("complete", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPreReintegration(string reintegrationStatus) =>
+        reintegrationStatus.Contains("progress", StringComparison.OrdinalIgnoreCase)
+        || reintegrationStatus.Contains("pre", StringComparison.OrdinalIgnoreCase)
+        || reintegrationStatus.Contains("planned", StringComparison.OrdinalIgnoreCase)
+        || reintegrationStatus.Contains("ready", StringComparison.OrdinalIgnoreCase);
 
     private static IReadOnlyList<RetentionPoint> BuildRetention(IReadOnlyCollection<Models.Entities.Donation> donations)
     {

@@ -330,10 +330,10 @@ export function AdminDonorsContributions() {
       })
       setSupporterForm(emptySupporter)
       setShowSupporterModal(false)
-      setSuccessMsg('Supporter created successfully.')
+      setSuccessMsg('Donor created successfully.')
       await load()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to create supporter.')
+      setErr(e instanceof Error ? e.message : 'Failed to create donor.')
     } finally {
       setBusy(false)
     }
@@ -345,7 +345,7 @@ export function AdminDonorsContributions() {
     if (!existing) return
     const name = editingSupporterName.trim()
     if (!name) {
-      setErr('Supporter name is required.')
+      setErr('Donor name is required.')
       return
     }
     try {
@@ -364,7 +364,7 @@ export function AdminDonorsContributions() {
       setEditingSupporterEmail('')
       await load()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to update supporter.')
+      setErr(e instanceof Error ? e.message : 'Failed to update donor.')
     } finally {
       setBusy(false)
     }
@@ -383,7 +383,7 @@ export function AdminDonorsContributions() {
       }
       await load()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Failed to delete supporter. Remove dependent donations first if this donor has activity.')
+      setErr(e instanceof Error ? e.message : 'Failed to delete donor. Remove dependent donations first if this donor has activity.')
     } finally {
       setBusy(false)
     }
@@ -393,7 +393,7 @@ export function AdminDonorsContributions() {
     const sid = Number(donationForm.supporterId)
     const amt = Number(donationForm.amount)
     if (!Number.isFinite(sid) || sid <= 0 || !Number.isFinite(amt) || amt <= 0) {
-      setErr('Supporter ID and amount are required for donation create.')
+      setErr('Donor ID and amount are required for donation create.')
       return
     }
     try {
@@ -587,7 +587,7 @@ export function AdminDonorsContributions() {
   return (
     <div>
       <h1 className="h3 mb-2">Donors & Contributions</h1>
-      <p className="text-secondary mb-3">Supporters on this page are donor profiles. You can add/edit/delete supporters, add/edit/delete donations, and view allocations with safehouse/program labels.</p>
+      <p className="text-secondary mb-3">Donors on this page are donor profiles. You can add/edit/delete donors, add/edit/delete donations, and view allocations with safehouse/program labels.</p>
       {err ? <div className="alert alert-warning">{err}</div> : null}
       {successMsg ? <div className="alert alert-success">{successMsg}</div> : null}
 
@@ -596,20 +596,20 @@ export function AdminDonorsContributions() {
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
             <h2 className="h5 mb-0">
               {viewMode === 'supporters'
-                ? 'Supporters'
+                ? 'Donors'
                 : viewMode === 'contributions'
                   ? 'Contributions and allocations'
                   : 'Donations needing allocations'}
             </h2>
             <div className="d-flex flex-wrap gap-2">
               <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowSupporterModal(true)}>
-                Add supporter
+                Add Donor
               </button>
               <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowDonationModal(true)}>
                 Add contribution
               </button>
               <button type="button" className={`btn btn-sm ${viewMode === 'supporters' ? 'btn-secondary' : 'btn-outline-secondary'}`} onClick={() => setViewMode('supporters')}>
-                Supporters
+                Donors
               </button>
               <button type="button" className={`btn btn-sm ${viewMode === 'contributions' ? 'btn-secondary' : 'btn-outline-secondary'}`} onClick={() => setViewMode('contributions')}>
                 Contributions
@@ -714,7 +714,7 @@ export function AdminDonorsContributions() {
               </div>
               <div className="d-flex align-items-center justify-content-between mt-2">
                 <div className="small text-secondary">
-                  Page {supportersPage} of {totalSupportersPages} ({filteredSupporters.length} supporters)
+                  Page {supportersPage} of {totalSupportersPages} ({filteredSupporters.length} donors)
                 </div>
                 <div className="d-flex gap-2">
                   <button
@@ -735,7 +735,7 @@ export function AdminDonorsContributions() {
                   </button>
                 </div>
               </div>
-              {filteredSupporters.length === 0 ? <p className="small text-secondary mb-0">No supporter rows yet. Add one above.</p> : null}
+              {filteredSupporters.length === 0 ? <p className="small text-secondary mb-0">No donor rows yet. Add one above.</p> : null}
             </>
           ) : viewMode === 'contributions' ? (
             <>
@@ -1117,7 +1117,7 @@ export function AdminDonorsContributions() {
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.45)', zIndex: 1050 }}>
           <div className="card border-0 shadow-sm" style={{ width: 'min(680px, 92vw)' }}>
             <div className="card-body">
-              <h3 className="h5 mb-3">Add supporter</h3>
+              <h3 className="h5 mb-3">Add Donor</h3>
               <div className="row g-2">
                 <div className="col-md-6">
                   <input className="form-control" placeholder="Display name" value={supporterForm.displayName} onChange={(e) => setSupporterForm((p) => ({ ...p, displayName: e.target.value }))} />
@@ -1134,7 +1134,7 @@ export function AdminDonorsContributions() {
               </div>
               <div className="d-flex gap-2 mt-3">
                 <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={createSupporter}>
-                  Create supporter
+                  Create donor
                 </button>
                 <button
                   type="button"
@@ -1160,7 +1160,7 @@ export function AdminDonorsContributions() {
               <h3 className="h5 mb-3">Add contribution</h3>
               <div className="row g-2">
                 <div className="col-md-4">
-                  <input className="form-control" placeholder="Supporter ID" value={donationForm.supporterId} onChange={(e) => setDonationForm((p) => ({ ...p, supporterId: e.target.value }))} />
+                  <input className="form-control" placeholder="Donor ID" value={donationForm.supporterId} onChange={(e) => setDonationForm((p) => ({ ...p, supporterId: e.target.value }))} />
                 </div>
                 <div className="col-md-4">
                   <input className="form-control" type="number" min={1} placeholder="Amount" value={donationForm.amount} onChange={(e) => setDonationForm((p) => ({ ...p, amount: e.target.value }))} />
@@ -1210,10 +1210,10 @@ export function AdminDonorsContributions() {
               </div>
             ) : (
               <div>
-                <p className="mb-2">Are you sure you want to delete this supporter?</p>
+                <p className="mb-2">Are you sure you want to delete this donor?</p>
                 <p className="mb-1">This will also delete related records:</p>
                 <ul className="mb-0">
-                  <li>All contributions by this supporter</li>
+                  <li>All contributions by this donor</li>
                   <li>Donation allocations linked to those contributions</li>
                   <li>In-kind donation items linked to those contributions</li>
                 </ul>

@@ -1,3 +1,5 @@
+// Lighthouse.Web entry point: configures Postgres + Identity, registers MVC/API and SPA hosting,
+// CORS for the Vite dev server, HTTP clients to the Python ML service, and production error pages.
 using DotNetEnv;
 using Lighthouse.Web.Authorization;
 using Lighthouse.Web.Data;
@@ -43,10 +45,12 @@ builder.Host.UseSerilog((ctx, lc) =>
             retainedFileCountLimit: 14);
 });
 
+// --- PostgreSQL ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? "Host=127.0.0.1;Port=5432;Database=postgres;Username=postgres;Password=postgres";
 
+// Map C# enums to Postgres enum types (must match DB schema names).
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<SupporterType>("supporter_type");
 dataSourceBuilder.MapEnum<RelationshipType>("relationship_type");
@@ -90,6 +94,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     // Suppress this warning so startup doesn't log a misleading stack trace.
     .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
+// --- ASP.NET Core Identity (cookie auth shared by Razor + /api/* JSON endpoints) ---
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -113,6 +118,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireNonAlphanumeric = false;
 });
 
+// Cross-site SPA on Vite (localhost:5173) uses credentialed API calls; None + Secure matches that setup.
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -133,6 +139,7 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "X-XSRF-TOKEN";
 });
 
+// --- App services & ML HTTP clients (Python FastAPI base URL from configuration) ---
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<DonationAnalyticsService>();
@@ -188,6 +195,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// --- Startup data (non-fatal if DB is down during local dev) ---
 if (app.Environment.IsDevelopment()
     && connectionString.Contains("YOUR_PROJECT", StringComparison.OrdinalIgnoreCase))
 {
@@ -218,6 +226,7 @@ catch (Exception ex)
 if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 
+// --- Pipeline order: CORS before auth; static files; then endpoints ---
 app.UseCors("FrontendIntegration");
 
 app.UseSerilogRequestLogging();
@@ -238,6 +247,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// MVC + Razor for a few public pages; JSON lives under Controllers/Api/*.
 app.MapControllers();
 
 app.MapControllerRoute("impact", "impact", new { controller = "Home", action = "Impact" });

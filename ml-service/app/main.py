@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+"""Lighthouse ML microservice: analytics JSON for the .NET backend and admin UI.
+
+Endpoints include social summaries, donations trends/forecast, impact payloads, and tier-1 program
+analytics. Prefer PostgreSQL when env connection strings are set; otherwise CSV and in-repo artifacts.
+"""
+
+import copy
 import json
 import os
 import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,6 +25,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from app.db_access import fetch_dataframe, resolve_db_connection_value
+from app.resident_transfer_risk import (
+    _normalize_tier_series_for_counts,
+    _risk_tier_from_probabilities,
+    build_resident_transfer_risk_summary_from_database,
+)
 from app.tier1_analytics import safe_build_tier1_analytics
 
 
@@ -725,6 +738,210 @@ def _safe_load_donations_explore_summary() -> dict[str, Any]:
         return _donations_explore_empty(f'Explore summary failed: {ex}', 'error')
 
 
+_resident_transfer_risk_db_cache_lock = threading.Lock()
+_resident_transfer_risk_db_cache: dict[str, Any] = {'expiry': 0.0, 'payload': None}
+
+
+def _resident_transfer_risk_empty(load_warning: str = '', data_source: str = 'empty') -> dict[str, Any]:
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': data_source,
+        'loadWarning': load_warning,
+        'endpointVersion': '1.0.0',
+        'question': 'Which residents are at risk of transfer instead of closure?',
+        'summary': {
+            'scoredResidents': 0,
+            'highRiskResidents': 0,
+            'highRiskShare': 0.0,
+            'avgTransferProbability': 0.0,
+        },
+        'modelMetrics': None,
+        'riskTierCounts': [],
+        'topResidents': [],
+    }
+
+
+_RESIDENT_TRANSFER_RISK_DB_CONFIG_HINT = (
+    'This endpoint scores **active residents from PostgreSQL** (same pattern as social media and tier-1 analytics). '
+    'On the **ML API** App Service (the container running this Python service), add application settings '
+    '`SOCIAL_MEDIA_DB_URL` or `ConnectionStrings__DefaultConnection` with your Postgres connection string—the same '
+    'database the Lighthouse .NET backend uses. Save, restart the app, and redeploy the ML container if needed. '
+    'Without a DB URL here, the service cannot read `residents` / `incident_reports` / `education_records`.'
+)
+
+
+def _resolve_resident_transfer_scored_csv_path() -> Path | None:
+    """Prefer explicit env, then `/app/artifacts` (optional bundle), then local repo `ml-pipelines/artifacts`."""
+    env = (os.getenv('RESIDENT_TRANSFER_RISK_SCORED_PATH') or '').strip()
+    candidates: list[Path] = []
+    if env:
+        candidates.append(Path(env))
+    service_root = _artifact_root().resolve()
+    root = _repo_root()
+    candidates.extend(
+        [
+            service_root / 'artifacts' / 'resident_transfer_risk_scored_sample.csv',
+            root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_scored_sample.csv',
+        ]
+    )
+    for p in candidates:
+        if p.is_file():
+            return p
+    return None
+
+
+def _resolve_resident_transfer_metrics_csv_path(scored_path: Path) -> Path:
+    env = (os.getenv('RESIDENT_TRANSFER_RISK_METRICS_PATH') or '').strip()
+    if env:
+        return Path(env)
+    service_root = _artifact_root().resolve()
+    root = _repo_root()
+    for p in (
+        scored_path.parent / 'resident_transfer_risk_metrics.csv',
+        service_root / 'artifacts' / 'resident_transfer_risk_metrics.csv',
+        root / 'ml-pipelines' / 'artifacts' / 'resident_transfer_risk_metrics.csv',
+    ):
+        if p.is_file():
+            return p
+    return scored_path.parent / 'resident_transfer_risk_metrics.csv'
+
+
+def _build_resident_transfer_risk_from_artifacts_csv() -> dict[str, Any]:
+    """Offline / dev: read precomputed scores from CSV when no database URL is configured."""
+    scored_path = _resolve_resident_transfer_scored_csv_path()
+    if scored_path is None:
+        return _resident_transfer_risk_empty(_RESIDENT_TRANSFER_RISK_DB_CONFIG_HINT, 'configuration-error')
+
+    metrics_path = _resolve_resident_transfer_metrics_csv_path(scored_path)
+
+    try:
+        scored = pd.read_csv(scored_path)
+    except Exception as ex:
+        return _resident_transfer_risk_empty(f'Failed to read scored resident risk CSV: {ex}', 'error')
+
+    if scored.empty:
+        return _resident_transfer_risk_empty('Resident transfer risk scored file is empty.', 'empty')
+
+    if 'pred_transfer_prob' not in scored.columns:
+        return _resident_transfer_risk_empty('Column pred_transfer_prob missing in scored risk file.', 'error')
+
+    scored = scored.copy()
+    scored['pred_transfer_prob'] = pd.to_numeric(scored['pred_transfer_prob'], errors='coerce')
+    scored = scored.dropna(subset=['pred_transfer_prob'])
+    if scored.empty:
+        return _resident_transfer_risk_empty('No numeric prediction probabilities found.', 'empty')
+
+    tier_col = 'risk_tier' if 'risk_tier' in scored.columns else None
+    if tier_col is None:
+        scored['risk_tier'] = _risk_tier_from_probabilities(scored['pred_transfer_prob'])
+        tier_col = 'risk_tier'
+    else:
+        scored[tier_col] = _normalize_tier_series_for_counts(scored[tier_col])
+
+    tier_counts: list[dict[str, Any]] = []
+    for label, count in _normalize_tier_series_for_counts(scored[tier_col]).value_counts().items():
+        tier_counts.append({'tier': str(label), 'count': int(count)})
+
+    top_residents: list[dict[str, Any]] = []
+    has_resident_identifiers = all(col in scored.columns for col in ['resident_id', 'case_control_no'])
+    if has_resident_identifiers:
+        tier_rank = {'high': 3, 'medium': 2, 'monitor': 1}
+        ranked = scored.copy()
+        ranked['__tier_rank'] = ranked[tier_col].astype(str).str.strip().str.lower().map(tier_rank).fillna(0)
+        ranked = ranked.sort_values(['__tier_rank', 'pred_transfer_prob'], ascending=[False, False]).head(5)
+        for _, row in ranked.iterrows():
+            top_residents.append(
+                {
+                    'residentId': _safe_int(row.get('resident_id')),
+                    'caseControlNo': str(row.get('case_control_no') or ''),
+                    'internalCode': str(row.get('internal_code') or ''),
+                    'assignedSocialWorker': str(row.get('assigned_social_worker') or ''),
+                    'safehouseId': str(row.get('safehouse_id') or ''),
+                    'riskTier': str(row.get(tier_col) or ''),
+                    'predTransferProb': round(_safe_float(row.get('pred_transfer_prob')), 4),
+                }
+            )
+
+    n = int(len(scored))
+    high_count = int(scored[tier_col].astype(str).str.strip().str.lower().eq('high').sum())
+    high_share = round(high_count / n, 4) if n else 0.0
+    avg_prob = round(float(scored['pred_transfer_prob'].mean()), 4) if n else 0.0
+
+    model_metrics: dict[str, Any] | None = None
+    if metrics_path.is_file():
+        try:
+            mdf = pd.read_csv(metrics_path)
+            if len(mdf):
+                row = mdf.iloc[0]
+                model_metrics = {
+                    'selectedModel': str(row.get('selected_model', '')),
+                    'threshold': _safe_float(row.get('threshold')),
+                    'rocAuc': _safe_float(row.get('roc_auc')),
+                    'avgPrecision': _safe_float(row.get('avg_precision')),
+                    'precisionAtThreshold': _safe_float(row.get('precision_at_threshold')),
+                    'recallAtThreshold': _safe_float(row.get('recall_at_threshold')),
+                    'f1AtThreshold': _safe_float(row.get('f1_at_threshold')),
+                }
+        except Exception:
+            model_metrics = None
+
+    return {
+        'generatedAtUtc': datetime.now(timezone.utc).isoformat(),
+        'dataSource': 'artifact_csv',
+        'loadWarning': (
+            '' if has_resident_identifiers else
+            'Top resident identifiers are unavailable in the scored artifact. Re-run resident_transfer_risk_pipeline.ipynb to export resident_id and case fields in resident_transfer_risk_scored_sample.csv.'
+        ),
+        'endpointVersion': '1.0.0',
+        'question': 'Which residents are at risk of transfer instead of closure?',
+        'summary': {
+            'scoredResidents': n,
+            'highRiskResidents': high_count,
+            'highRiskShare': high_share,
+            'avgTransferProbability': avg_prob,
+        },
+        'modelMetrics': model_metrics,
+        'riskTierCounts': tier_counts,
+        'topResidents': top_residents,
+    }
+
+
+def _build_resident_transfer_risk_summary() -> dict[str, Any]:
+    """Production: score active residents from PostgreSQL (same env as social/tier-1). Dev without DB: CSV artifact."""
+    conn = resolve_db_connection_value()
+    if conn:
+        ttl = float(os.getenv('RESIDENT_TRANSFER_RISK_CACHE_TTL_SECONDS', '60'))
+        now = time.time()
+        if ttl > 0:
+            with _resident_transfer_risk_db_cache_lock:
+                pl = _resident_transfer_risk_db_cache.get('payload')
+                ex = float(_resident_transfer_risk_db_cache.get('expiry', 0.0))
+                if pl is not None and now < ex:
+                    return copy.deepcopy(pl)
+        try:
+            body = build_resident_transfer_risk_summary_from_database(conn)
+        except Exception as ex:
+            return _resident_transfer_risk_empty(
+                'Live database scoring failed. '
+                'Check DB connectivity, residents/incident_reports/education_records, and that '
+                f'resident_transfer_risk_model.joblib is bundled in the container. Details: {ex}',
+                'database-error',
+            )
+        if ttl > 0:
+            with _resident_transfer_risk_db_cache_lock:
+                _resident_transfer_risk_db_cache['payload'] = body
+                _resident_transfer_risk_db_cache['expiry'] = now + ttl
+        return body
+    return _build_resident_transfer_risk_from_artifacts_csv()
+
+
+def _safe_load_resident_transfer_risk_summary() -> dict[str, Any]:
+    try:
+        return _build_resident_transfer_risk_summary()
+    except Exception as ex:
+        return _resident_transfer_risk_empty(f'Resident transfer risk summary failed: {ex}', 'error')
+
+
 _donations_forecast_cache: dict[str, Any] = {
     'signature': None,
     'payload': None,
@@ -1189,6 +1406,7 @@ def _safe_load_tier1_analytics() -> dict[str, Any]:
         }
 
 
+# ASGI application for uvicorn (`uvicorn app.main:app`). Helper functions above build response payloads.
 app = FastAPI(
     title='Lighthouse ML API',
     description='Social media analytics, donations pipeline trends, and tier-1 program analytics for admin dashboard.',
@@ -1252,3 +1470,9 @@ def donations_next_month_forecast() -> dict[str, Any]:
 def reports_tier1_analytics() -> dict[str, Any]:
     """Residents, education, and health & wellbeing from live DB (when configured) or CSV + notebook artifacts."""
     return _safe_load_tier1_analytics()
+
+
+@app.get('/residents/transfer-risk-summary')
+def residents_transfer_risk_summary() -> dict[str, Any]:
+    """Resident transfer-risk: live PostgreSQL + bundled model when DB is configured; else CSV artifact (local dev)."""
+    return _safe_load_resident_transfer_risk_summary()

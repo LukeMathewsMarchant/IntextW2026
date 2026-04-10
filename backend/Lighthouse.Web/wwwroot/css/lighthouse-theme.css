@@ -42,11 +42,14 @@ html {
 body.lh-body {
   margin-bottom: 0;
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--lh-surface);
-  color: var(--lh-ink);
+  /* Solid base + decorative radials pinned to the viewport so they don’t shift when
+     content height/scrollbars change (e.g. typing in filter boxes). */
+  background-color: var(--lh-surface);
   background-image:
     radial-gradient(circle at 8% 8%, rgba(31, 47, 107, 0.05) 0, rgba(31, 47, 107, 0) 34%),
     radial-gradient(circle at 94% 3%, rgba(179, 25, 66, 0.04) 0, rgba(179, 25, 66, 0) 28%);
+  background-attachment: fixed, fixed;
+  color: var(--lh-ink);
 }
 
 .lh-main {
@@ -692,6 +695,23 @@ body.lh-body {
   background: linear-gradient(180deg, #3b5998 0%, var(--lh-primary) 100%);
 }
 
+/* Dark mode: stop mixing toward white so bars stay on-card contrast */
+[data-bs-theme="dark"] .lh-impact-trend-bar {
+  background: color-mix(in srgb, var(--lh-primary-soft) 72%, var(--lh-card));
+}
+[data-bs-theme="dark"] .lh-impact-mini-bar-wrap {
+  background: color-mix(in srgb, var(--lh-primary-soft) 68%, var(--lh-card));
+}
+
+/* Impact: resident journey pipeline — lift card and stage tiles in dark mode */
+[data-bs-theme="dark"] .lh-impact-pipeline-card {
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.42) !important;
+}
+[data-bs-theme="dark"] .lh-impact-pipeline-stage {
+  background: color-mix(in srgb, var(--lh-card) 94%, var(--lh-primary-soft)) !important;
+  border-color: color-mix(in srgb, var(--lh-border) 80%, var(--lh-primary-soft)) !important;
+}
+
 .lh-impact-timeline {
   margin: 0 0 0.9rem;
   padding-left: 1.05rem;
@@ -811,7 +831,7 @@ body.lh-body {
 
 .lh-kpi-card {
   border-radius: var(--lh-radius);
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid var(--lh-border);
   background: var(--lh-card);
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
@@ -870,8 +890,8 @@ body.lh-body {
   border-radius: var(--lh-radius);
   border: 1px solid var(--lh-border);
   background: var(--lh-card);
-  padding: 1.25rem;
-  min-height: 280px;
+  padding: 1rem;
+  min-height: 255px;
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
